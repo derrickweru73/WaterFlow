@@ -1,3 +1,20 @@
 from django.shortcuts import render
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-# Create your views here.
+from .serializers import RegisterSerializer
+
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+
+
+class ProtectedTestView(APIView):
+    def get(self, request):
+        return Response({
+            "message": "JWT authentication is working",
+            "username": request.user.username,
+        })

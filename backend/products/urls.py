@@ -12,6 +12,10 @@ from .views import (
     InventoryCreateView,
     InventoryUpdateView,
     InventoryDeleteView,
+    CartView,
+    CartItemCreateView,
+    CartItemUpdateView,
+    CartItemDeleteView,
 )
 
 urlpatterns = [
@@ -65,5 +69,25 @@ urlpatterns = [
         "management/inventory/<int:pk>/delete/",
         InventoryDeleteView.as_view(),
         name="inventory-delete",
+    ),
+        path(
+        "cart/",
+        CartView.as_view(),
+        name="cart",
+    ),
+    path(
+        "cart/items/",
+        CartItemCreateView.as_view(),
+        name="cart-item-create",
+    ),
+    path(
+        "cart/items/<int:pk>/",
+        CartItemUpdateView.as_view(),
+        name="cart-item-update",
+    ),
+    path(
+        "cart/items/<int:pk>/delete/",
+        CartItemDeleteView.as_view(),
+        name="cart-item-delete",
     ),
 ]

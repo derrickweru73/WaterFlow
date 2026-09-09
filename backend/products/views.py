@@ -1,17 +1,32 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated
-
-
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Cart, CartItem
 from .cart_serializers import CartSerializer, CartItemSerializer
-from .models import Category, Product, Inventory
-from .permissions import IsManagement
-from .serializers import CategorySerializer, ProductSerializer
 from .inventory_serializers import InventorySerializer
+from .models import (
+    Category,
+    Product,
+    Inventory,
+    Cart,
+    CartItem,
+    Order,
+    OrderItem,
+    Payment,
+)
+from .order_serializers import OrderSerializer
+from .permissions import IsManagement
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    PaymentSerializer,
+)
+
+
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -235,3 +250,235 @@ class CartItemDeleteView(APIView):
         cart_item.delete()
 
         return Response(status=204)
+
+
+
+class OrderCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        cart = get_object_or_404(
+            Cart,
+            user=request.user,
+        )
+
+        cart_items = cart.items.select_related(
+            "product"
+        ).all()
+
+        if not cart_items.exists():
+            return Response(
+                {"detail": "Your cart is empty."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery_address = request.data.get("delivery_address")
+
+        if not delivery_address:
+            return Response(
+                {"delivery_address": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        total_amount = 0
+        order_items = []
+
+        for cart_item in cart_items:
+            product = cart_item.product
+            inventory = getattr(product, "inventory", None)
+
+            if inventory is None:
+                return Response(
+                    {
+                        "detail": (
+                            f"{product.name} has no inventory record."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if cart_item.quantity > inventory.quantity:
+                return Response(
+                    {
+                        "detail": (
+                            f"Only {inventory.quantity} units of "
+                            f"{product.name} are available."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            unit_price = product.price
+            subtotal = unit_price * cart_item.quantity
+
+            total_amount += subtotal
+
+            order_items.append({
+                "product": product,
+                "quantity": cart_item.quantity,
+                "unit_price": unit_price,
+                "subtotal": subtotal,
+            })
+
+        order = Order.objects.create(
+            customer=request.user,
+            total_amount=total_amount,
+            delivery_address=delivery_address,
+            status=Order.Status.PENDING_PAYMENT,
+        )
+
+        for item in order_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item["product"],
+                quantity=item["quantity"],
+                unit_price=item["unit_price"],
+                subtotal=item["subtotal"],
+            )
+
+        cart.items.all().delete()
+
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CustomerOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            Order.objects
+            .filter(customer=self.request.user)
+            .prefetch_related("items__product")
+            .order_by("-created_at")
+        )
+
+
+class CustomerOrderDetailView(generics.RetrieveAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            Order.objects
+            .filter(customer=self.request.user)
+            .prefetch_related("items__product")
+        )
+
+
+class ManagementOrderListView(generics.ListAPIView):
+    queryset = (
+        Order.objects
+        .select_related("customer")
+        .prefetch_related("items__product")
+        .order_by("-created_at")
+    )
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class ManagementOrderDetailView(generics.RetrieveAPIView):
+    queryset = (
+        Order.objects
+        .select_related("customer")
+        .prefetch_related("items__product")
+    )
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class ManagementOrderStatusUpdateView(APIView):
+    permission_classes = [IsAuthenticated, IsManagement]
+
+    def patch(self, request, pk):
+        order = get_object_or_404(
+            Order,
+            pk=pk,
+        )
+
+        new_status = request.data.get("status")
+
+        valid_statuses = [
+            choice[0]
+            for choice in Order.Status.choices
+        ]
+
+        if new_status not in valid_statuses:
+            return Response(
+                {
+                    "status": [
+                        "Invalid order status."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order.status = new_status
+        order.save(update_fields=["status", "updated_at"])
+
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_200_OK,
+        )
+
+class PaymentCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        order_id = request.data.get("order_id")
+        phone_number = request.data.get("phone_number")
+
+        if not order_id:
+            return Response(
+                {"order_id": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not phone_number:
+            return Response(
+                {"phone_number": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order = get_object_or_404(
+            Order,
+            id=order_id,
+            customer=request.user,
+        )
+
+        if order.status != Order.Status.PENDING_PAYMENT:
+            return Response(
+                {
+                    "detail": (
+                        "This order is not awaiting payment."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if Payment.objects.filter(order=order).exists():
+            return Response(
+                {
+                    "detail": (
+                        "A payment already exists for this order."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payment = Payment.objects.create(
+            order=order,
+            amount=order.total_amount,
+            phone_number=phone_number,
+            status=Payment.Status.PENDING,
+        )
+
+        return Response(
+            PaymentSerializer(payment).data,
+            status=status.HTTP_201_CREATED,
+        )

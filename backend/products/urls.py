@@ -22,6 +22,7 @@ from .views import (
     ManagementOrderListView,
     ManagementOrderDetailView,
     ManagementOrderStatusUpdateView,
+    PaymentCreateView,
 )
 
 urlpatterns = [
@@ -127,4 +128,9 @@ urlpatterns = [
         ManagementOrderStatusUpdateView.as_view(),
         name="management-order-status",
     ),
+    path(
+    "payments/",
+    PaymentCreateView.as_view(),
+    name="payment-create",
+),
 ]

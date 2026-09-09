@@ -1,5 +1,5 @@
 from django.urls import path
-
+from .payment_callbacks import MpesaCallbackView
 from .views import (
     CategoryListView,
     ProductListView,
@@ -23,6 +23,7 @@ from .views import (
     ManagementOrderDetailView,
     ManagementOrderStatusUpdateView,
     PaymentCreateView,
+    
 )
 
 urlpatterns = [
@@ -132,5 +133,12 @@ urlpatterns = [
     "payments/",
     PaymentCreateView.as_view(),
     name="payment-create",
+   ),
+
+   path(
+    "payments/mpesa/callback/",
+    MpesaCallbackView.as_view(),
+    name="mpesa-callback",
 ),
+ 
 ]

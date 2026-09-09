@@ -16,6 +16,12 @@ from .views import (
     CartItemCreateView,
     CartItemUpdateView,
     CartItemDeleteView,
+    OrderCreateView,
+    CustomerOrderListView,
+    CustomerOrderDetailView,
+    ManagementOrderListView,
+    ManagementOrderDetailView,
+    ManagementOrderStatusUpdateView,
 )
 
 urlpatterns = [
@@ -89,5 +95,36 @@ urlpatterns = [
         "cart/items/<int:pk>/delete/",
         CartItemDeleteView.as_view(),
         name="cart-item-delete",
+    ),
+        path(
+        "orders/",
+        OrderCreateView.as_view(),
+        name="order-create",
+    ),
+    path(
+        "my-orders/",
+        CustomerOrderListView.as_view(),
+        name="customer-orders",
+    ),
+    path(
+        "my-orders/<int:pk>/",
+        CustomerOrderDetailView.as_view(),
+        name="customer-order-detail",
+    ),
+
+    path(
+        "management/orders/",
+        ManagementOrderListView.as_view(),
+        name="management-order-list",
+    ),
+    path(
+        "management/orders/<int:pk>/",
+        ManagementOrderDetailView.as_view(),
+        name="management-order-detail",
+    ),
+    path(
+        "management/orders/<int:pk>/status/",
+        ManagementOrderStatusUpdateView.as_view(),
+        name="management-order-status",
     ),
 ]

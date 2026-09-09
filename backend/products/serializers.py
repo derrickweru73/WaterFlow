@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, Product, Inventory
+from .models import Category, Product, Inventory, Payment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -44,4 +44,30 @@ class ProductSerializer(serializers.ModelSerializer):
             "inventory",
             "is_active",
             "created_at",
+        ]
+
+class PaymentSerializer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "order_id",
+            "amount",
+            "phone_number",
+            "mpesa_receipt_number",
+            "checkout_request_id",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "amount",
+            "mpesa_receipt_number",
+            "checkout_request_id",
+            "status",
+            "created_at",
+            "updated_at",
         ]

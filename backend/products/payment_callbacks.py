@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from deliveries.models import Delivery
+
 from .models import Payment, Order
 
 
@@ -45,7 +47,9 @@ class MpesaCallbackView(APIView):
 
         if result_code != 0:
             payment.status = Payment.Status.FAILED
-            payment.save(update_fields=["status", "updated_at"])
+            payment.save(
+                update_fields=["status", "updated_at"]
+            )
 
             return Response(
                 {
@@ -68,6 +72,7 @@ class MpesaCallbackView(APIView):
         with transaction.atomic():
             payment.status = Payment.Status.COMPLETED
             payment.mpesa_receipt_number = receipt_number or ""
+
             payment.save(
                 update_fields=[
                     "status",
@@ -77,8 +82,12 @@ class MpesaCallbackView(APIView):
             )
 
             order = payment.order
+
             order.status = Order.Status.PAID
-            order.save(update_fields=["status", "updated_at"])
+
+            order.save(
+                update_fields=["status", "updated_at"]
+            )
 
             for order_item in order.items.select_related(
                 "product"
@@ -86,12 +95,21 @@ class MpesaCallbackView(APIView):
                 inventory = order_item.product.inventory
 
                 inventory.quantity -= order_item.quantity
+
                 inventory.save(
                     update_fields=[
                         "quantity",
                         "updated_at",
                     ]
                 )
+
+            Delivery.objects.get_or_create(
+                order=order,
+                defaults={
+                    "delivery_address": order.delivery_address,
+                    "status": Delivery.Status.PENDING,
+                },
+            )
 
         return Response(
             {

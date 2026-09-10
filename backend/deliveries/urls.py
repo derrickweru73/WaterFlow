@@ -5,6 +5,7 @@ from .views import (
     ManagementDeliveryAssignView,
     DriverDeliveryListView,
     DriverDeliveryStatusUpdateView,
+    ManagementDriverListView,
 )
 
 urlpatterns = [
@@ -28,4 +29,9 @@ urlpatterns = [
         DriverDeliveryStatusUpdateView.as_view(),
         name="driver-delivery-status",
     ),
+    path(
+    "management/drivers/",
+    ManagementDriverListView.as_view(),
+    name="management-driver-list",
+   ),
 ]

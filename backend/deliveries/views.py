@@ -12,7 +12,7 @@ from products.models import Order
 
 from .models import Delivery
 from .serializers import DeliverySerializer
-
+from .driver_serializers import DriverSerializer
 
 class ManagementDeliveryListView(generics.ListAPIView):
     queryset = (
@@ -192,4 +192,22 @@ class DriverDeliveryStatusUpdateView(APIView):
         return Response(
             DeliverySerializer(delivery).data,
             status=status.HTTP_200_OK,
+        )
+
+class ManagementDriverListView(generics.ListAPIView):
+    serializer_class = DriverSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return User.objects.none()
+
+        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return User.objects.none()
+
+        return (
+            User.objects
+            .filter(profile__role=UserProfile.Role.DRIVER)
+            .select_related("profile")
+            .order_by("username")
         )

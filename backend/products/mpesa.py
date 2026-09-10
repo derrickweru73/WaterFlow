@@ -14,7 +14,10 @@ def get_mpesa_access_token():
         credentials.encode()
     ).decode()
 
-    url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    url = (
+        "https://sandbox.safaricom.co.ke/"
+        "oauth/v1/generate?grant_type=client_credentials"
+    )
 
     response = requests.get(
         url,
@@ -29,6 +32,21 @@ def get_mpesa_access_token():
     return response.json()["access_token"]
 
 
+def normalize_phone_number(phone_number):
+    phone_number = phone_number.strip()
+
+    if phone_number.startswith("07"):
+        return "254" + phone_number[1:]
+
+    if phone_number.startswith("01"):
+        return "254" + phone_number[1:]
+
+    if phone_number.startswith("+254"):
+        return phone_number[1:]
+
+    return phone_number
+
+
 def initiate_stk_push(phone_number, amount, account_reference):
     access_token = get_mpesa_access_token()
 
@@ -36,13 +54,18 @@ def initiate_stk_push(phone_number, amount, account_reference):
     passkey = config("MPESA_PASSKEY")
     callback_url = config("MPESA_CALLBACK_URL")
 
+    phone_number = normalize_phone_number(phone_number)
+
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     password = base64.b64encode(
         f"{shortcode}{passkey}{timestamp}".encode()
     ).decode()
 
-    url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+    url = (
+        "https://sandbox.safaricom.co.ke/"
+        "mpesa/stkpush/v1/processrequest"
+    )
 
     payload = {
         "BusinessShortCode": shortcode,
@@ -55,7 +78,7 @@ def initiate_stk_push(phone_number, amount, account_reference):
         "PhoneNumber": phone_number,
         "CallBackURL": callback_url,
         "AccountReference": account_reference,
-        "TransactionDesc": "WaterFlow water order",
+        "TransactionDesc": "Water Order",
     }
 
     response = requests.post(
@@ -67,6 +90,9 @@ def initiate_stk_push(phone_number, amount, account_reference):
         },
         timeout=30,
     )
+
+    print("M-PESA RESPONSE STATUS:", response.status_code)
+    print("M-PESA RESPONSE BODY:", response.text)
 
     response.raise_for_status()
 

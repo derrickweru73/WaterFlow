@@ -21,10 +21,10 @@ def generate_subscription_order(subscription):
     if not items.exists():
         return None
 
-    total_amount = 0
-
-    for item in items:
-        total_amount += item.product.price * item.quantity
+    total_amount = sum(
+        item.product.price * item.quantity
+        for item in items
+    )
 
     order = Order.objects.create(
         customer=subscription.customer,
@@ -34,11 +34,15 @@ def generate_subscription_order(subscription):
     )
 
     for item in items:
+        unit_price = item.product.price
+        subtotal = unit_price * item.quantity
+
         OrderItem.objects.create(
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price,
+            unit_price=unit_price,
+            subtotal=subtotal,
         )
 
     if subscription.frequency == Subscription.Frequency.WEEKLY:
@@ -49,6 +53,12 @@ def generate_subscription_order(subscription):
         days = 30
 
     subscription.next_delivery_date += timedelta(days=days)
-    subscription.save(update_fields=["next_delivery_date", "updated_at"])
+
+    subscription.save(
+        update_fields=[
+            "next_delivery_date",
+            "updated_at",
+        ]
+    )
 
     return order

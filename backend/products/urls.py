@@ -1,5 +1,6 @@
 from django.urls import path
 from .payment_callbacks import MpesaCallbackView
+from .payment_views import PaymentCreateView
 from .views import (
     CategoryListView,
     ProductListView,
@@ -22,7 +23,6 @@ from .views import (
     ManagementOrderListView,
     ManagementOrderDetailView,
     ManagementOrderStatusUpdateView,
-    PaymentCreateView,
     
 )
 

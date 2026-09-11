@@ -3,6 +3,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from accounts.models import UserProfile
 
 from products.models import Product
 
@@ -53,6 +54,75 @@ class CustomerSubscriptionActionView(APIView):
             Subscription,
             id=pk,
             customer=request.user,
+        )
+
+        action = request.data.get("action")
+
+        if action == "pause":
+            subscription.status = Subscription.Status.PAUSED
+
+        elif action == "resume":
+            subscription.status = Subscription.Status.ACTIVE
+
+        elif action == "cancel":
+            subscription.status = Subscription.Status.CANCELLED
+
+        else:
+            return Response(
+                {
+                    "detail": (
+                        "Invalid action. Use pause, resume, or cancel."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subscription.save()
+
+        return Response(
+            SubscriptionSerializer(subscription).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ManagementSubscriptionListView(generics.ListAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return Subscription.objects.none()
+
+        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return Subscription.objects.none()
+
+        return (
+            Subscription.objects
+            .select_related("customer")
+            .prefetch_related("items__product")
+            .order_by("-created_at")
+        )
+
+
+class ManagementSubscriptionActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not hasattr(request.user, "profile"):
+            return Response(
+                {"detail": "Management access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return Response(
+                {"detail": "Management access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        subscription = get_object_or_404(
+            Subscription,
+            id=pk,
         )
 
         action = request.data.get("action")

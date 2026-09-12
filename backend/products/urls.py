@@ -13,6 +13,8 @@ from .views import (
     InventoryCreateView,
     InventoryUpdateView,
     InventoryDeleteView,
+    DeliveryZoneListView,
+    ManagementDeliveryZoneListCreateView,
     CartView,
     CartItemCreateView,
     CartItemUpdateView,
@@ -77,6 +79,17 @@ urlpatterns = [
         "management/inventory/<int:pk>/delete/",
         InventoryDeleteView.as_view(),
         name="inventory-delete",
+    ),
+
+        path(
+        "delivery-zones/",
+        DeliveryZoneListView.as_view(),
+        name="delivery-zone-list",
+    ),
+    path(
+        "management/delivery-zones/",
+        ManagementDeliveryZoneListCreateView.as_view(),
+        name="management-delivery-zone-list-create",
     ),
         path(
         "cart/",

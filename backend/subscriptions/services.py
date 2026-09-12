@@ -16,10 +16,26 @@ def generate_subscription_order(subscription):
     if subscription.next_delivery_date > timezone.localdate():
         return None
 
-    items = subscription.items.select_related("product").all()
+    items = subscription.items.select_related(
+        "product",
+        "product__inventory",
+    ).all()
 
     if not items.exists():
         return None
+
+    for item in items:
+        product = item.product
+        inventory = getattr(product, "inventory", None)
+
+        if not product.is_active:
+            return None
+
+        if inventory is None:
+            return None
+
+        if item.quantity > inventory.quantity:
+            return None
 
     total_amount = sum(
         item.product.price * item.quantity

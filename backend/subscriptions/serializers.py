@@ -45,3 +45,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def validate_delivery_address(self, value):
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "A valid delivery address is required."
+            )
+
+        return value

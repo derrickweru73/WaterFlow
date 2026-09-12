@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -26,25 +26,76 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         items = self.request.data.get("items", [])
 
+        if not isinstance(items, list) or not items:
+            raise serializers.ValidationError(
+                {"items": ["At least one product is required."]}
+            )
+
+        validated_items = []
+
+        for item in items:
+            product_id = item.get("product")
+            quantity = item.get("quantity", 1)
+
+            if not product_id:
+                raise serializers.ValidationError(
+                    {"items": ["Each item must include a product."]}
+                )
+
+            try:
+                quantity = int(quantity)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError(
+                    {"items": ["Quantity must be a valid number."]}
+                )
+
+            if quantity < 1:
+                raise serializers.ValidationError(
+                    {"items": ["Quantity must be at least 1."]}
+                )
+
+            product = get_object_or_404(
+                Product,
+                id=product_id,
+                is_active=True,
+            )
+
+            inventory = getattr(product, "inventory", None)
+
+            if inventory is None:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            f"{product.name} has no inventory record."
+                        ]
+                    }
+                )
+
+            if quantity > inventory.quantity:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            f"Only {inventory.quantity} units of "
+                            f"{product.name} are available."
+                        ]
+                    }
+                )
+
+            validated_items.append(
+                (product, quantity)
+            )
+
         subscription = serializer.save(
             customer=self.request.user,
             status=Subscription.Status.ACTIVE,
         )
 
-        for item in items:
-            product = get_object_or_404(
-                Product,
-                id=item["product"],
-            )
-
-            quantity = int(item.get("quantity", 1))
-
+        for product, quantity in validated_items:
             SubscriptionItem.objects.create(
                 subscription=subscription,
                 product=product,
                 quantity=quantity,
             )
-
 
 class CustomerSubscriptionActionView(APIView):
     permission_classes = [IsAuthenticated]

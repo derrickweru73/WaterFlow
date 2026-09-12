@@ -19,6 +19,20 @@ class DeliverySerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    latitude = serializers.DecimalField(
+        source="order.latitude",
+        max_digits=9,
+        decimal_places=6,
+        read_only=True,
+    )
+
+    longitude = serializers.DecimalField(
+        source="order.longitude",
+        max_digits=9,
+        decimal_places=6,
+        read_only=True,
+    )
+
     class Meta:
         model = Delivery
         fields = [
@@ -29,6 +43,8 @@ class DeliverySerializer(serializers.ModelSerializer):
             "driver_username",
             "status",
             "delivery_address",
+            "latitude",
+            "longitude",
             "assigned_at",
             "delivered_at",
             "created_at",
@@ -40,6 +56,8 @@ class DeliverySerializer(serializers.ModelSerializer):
             "order_id",
             "customer_username",
             "driver_username",
+            "latitude",
+            "longitude",
             "assigned_at",
             "delivered_at",
             "created_at",

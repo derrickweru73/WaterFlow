@@ -275,11 +275,13 @@ class OrderCreateView(APIView):
 
         delivery_address = request.data.get("delivery_address")
 
-        if not delivery_address:
+        if not delivery_address or not str(delivery_address).strip():
             return Response(
-                {"delivery_address": ["This field is required."]},
+                {"delivery_address": ["A valid delivery address is required."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        delivery_address = str(delivery_address).strip()
 
         total_amount = 0
         order_items = []

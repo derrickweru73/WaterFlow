@@ -63,8 +63,11 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_zone",
             "delivery_zone_name",
             "delivery_fee",
+            "latitude",
+            "longitude",
             "created_at",
             "updated_at",
+             
         ]
         read_only_fields = [
             "id",

@@ -293,6 +293,8 @@ class OrderCreateView(APIView):
                 {"delivery_address": ["A valid delivery address is required."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        latitude = request.data.get("latitude")
+        longitude = request.data.get("longitude")
 
         delivery_zone_id = request.data.get("delivery_zone")
 
@@ -347,6 +349,8 @@ class OrderCreateView(APIView):
             status=Order.Status.PENDING_PAYMENT,
             delivery_address=str(delivery_address).strip(),
             delivery_zone=delivery_zone,
+            latitude=latitude,
+            longitude=longitude,
         )
 
         for cart_item in cart_items:

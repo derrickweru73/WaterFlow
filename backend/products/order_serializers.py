@@ -38,6 +38,18 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    delivery_zone_name = serializers.CharField(
+        source="delivery_zone.name",
+        read_only=True
+    )
+
+    delivery_fee = serializers.DecimalField(
+        source="delivery_zone.delivery_fee",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
+
     class Meta:
         model = Order
         fields = [
@@ -48,6 +60,9 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_amount",
             "status",
             "delivery_address",
+            "delivery_zone",
+            "delivery_zone_name",
+            "delivery_fee",
             "created_at",
             "updated_at",
         ]
@@ -58,6 +73,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "total_amount",
             "status",
+            "delivery_zone_name",
+            "delivery_fee",
             "created_at",
             "updated_at",
         ]

@@ -12,6 +12,7 @@ from .models import (
     Category,
     Product,
     Inventory,
+    DeliveryZone,
     Cart,
     CartItem,
     Order,
@@ -20,6 +21,7 @@ from .models import (
 )
 from .order_serializers import OrderSerializer
 from .permissions import IsManagement
+from .delivery_zone_serializers import DeliveryZoneSerializer
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -90,6 +92,17 @@ class InventoryUpdateView(generics.UpdateAPIView):
 class InventoryDeleteView(generics.DestroyAPIView):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+class DeliveryZoneListView(generics.ListAPIView):
+    queryset = DeliveryZone.objects.filter(is_active=True)
+    serializer_class = DeliveryZoneSerializer
+    permission_classes = [AllowAny]
+
+
+class ManagementDeliveryZoneListCreateView(generics.ListCreateAPIView):
+    queryset = DeliveryZone.objects.all()
+    serializer_class = DeliveryZoneSerializer
     permission_classes = [IsAuthenticated, IsManagement]
 
 class CartView(APIView):
@@ -281,71 +294,79 @@ class OrderCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        delivery_address = str(delivery_address).strip()
+        delivery_zone_id = request.data.get("delivery_zone")
 
-        total_amount = 0
-        order_items = []
+        if not delivery_zone_id:
+            return Response(
+                {"delivery_zone": ["A delivery zone is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery_zone = get_object_or_404(
+            DeliveryZone,
+            id=delivery_zone_id,
+            is_active=True,
+        )
+
+        products_total = 0
 
         for cart_item in cart_items:
-            product = cart_item.product
-            inventory = getattr(product, "inventory", None)
-
-            if inventory is None:
+            try:
+                inventory = cart_item.product.inventory
+            except Inventory.DoesNotExist:
                 return Response(
                     {
                         "detail": (
-                            f"{product.name} has no inventory record."
+                            f"{cart_item.product.name} is currently "
+                            "unavailable."
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if cart_item.quantity > inventory.quantity:
+            if inventory.quantity < cart_item.quantity:
                 return Response(
                     {
                         "detail": (
-                            f"Only {inventory.quantity} units of "
-                            f"{product.name} are available."
+                            f"Not enough stock for "
+                            f"{cart_item.product.name}."
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            unit_price = product.price
-            subtotal = unit_price * cart_item.quantity
+            products_total += (
+                cart_item.product.price * cart_item.quantity
+            )
 
-            total_amount += subtotal
-
-            order_items.append({
-                "product": product,
-                "quantity": cart_item.quantity,
-                "unit_price": unit_price,
-                "subtotal": subtotal,
-            })
+        total_amount = products_total + delivery_zone.delivery_fee
 
         order = Order.objects.create(
             customer=request.user,
             total_amount=total_amount,
-            delivery_address=delivery_address,
             status=Order.Status.PENDING_PAYMENT,
+            delivery_address=str(delivery_address).strip(),
+            delivery_zone=delivery_zone,
         )
 
-        for item in order_items:
+        for cart_item in cart_items:
+            unit_price = cart_item.product.price
+            subtotal = unit_price * cart_item.quantity
+
             OrderItem.objects.create(
                 order=order,
-                product=item["product"],
-                quantity=item["quantity"],
-                unit_price=item["unit_price"],
-                subtotal=item["subtotal"],
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                unit_price=unit_price,
+                subtotal=subtotal,
             )
 
-        cart.items.all().delete()
+        cart_items.delete()
 
         return Response(
             OrderSerializer(order).data,
             status=status.HTTP_201_CREATED,
         )
-
 
 class CustomerOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer

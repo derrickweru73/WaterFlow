@@ -5,7 +5,9 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from deliveries.google_maps import search_place
+
+from deliveries.google_maps import get_place_details
+
 from .cart_serializers import CartSerializer, CartItemSerializer
 from .inventory_serializers import InventorySerializer
 from .models import (
@@ -94,6 +96,7 @@ class InventoryDeleteView(generics.DestroyAPIView):
     serializer_class = InventorySerializer
     permission_classes = [IsAuthenticated, IsManagement]
 
+
 class DeliveryZoneListView(generics.ListAPIView):
     queryset = DeliveryZone.objects.filter(is_active=True)
     serializer_class = DeliveryZoneSerializer
@@ -105,11 +108,14 @@ class ManagementDeliveryZoneListCreateView(generics.ListCreateAPIView):
     serializer_class = DeliveryZoneSerializer
     permission_classes = [IsAuthenticated, IsManagement]
 
+
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart, created = Cart.objects.get_or_create(
+            user=request.user
+        )
 
         serializer = CartSerializer(cart)
 
@@ -120,7 +126,9 @@ class CartItemCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart, created = Cart.objects.get_or_create(
+            user=request.user
+        )
 
         serializer = CartItemSerializer(data=request.data)
 
@@ -133,7 +141,11 @@ class CartItemCreateView(APIView):
 
         if inventory is None:
             return Response(
-                {"detail": "This product has no inventory record."},
+                {
+                    "detail": (
+                        "This product has no inventory record."
+                    )
+                },
                 status=400,
             )
 
@@ -141,7 +153,8 @@ class CartItemCreateView(APIView):
             return Response(
                 {
                     "detail": (
-                        f"Only {inventory.quantity} units are available."
+                        f"Only {inventory.quantity} "
+                        "units are available."
                     )
                 },
                 status=400,
@@ -153,13 +166,16 @@ class CartItemCreateView(APIView):
         ).first()
 
         if existing_item:
-            new_quantity = existing_item.quantity + quantity
+            new_quantity = (
+                existing_item.quantity + quantity
+            )
 
             if new_quantity > inventory.quantity:
                 return Response(
                     {
                         "detail": (
-                            f"Only {inventory.quantity} units are available."
+                            f"Only {inventory.quantity} "
+                            "units are available."
                         )
                     },
                     status=400,
@@ -200,7 +216,11 @@ class CartItemUpdateView(APIView):
 
         if quantity is None:
             return Response(
-                {"quantity": ["This field is required."]},
+                {
+                    "quantity": [
+                        "This field is required."
+                    ]
+                },
                 status=400,
             )
 
@@ -208,21 +228,37 @@ class CartItemUpdateView(APIView):
             quantity = int(quantity)
         except (TypeError, ValueError):
             return Response(
-                {"quantity": ["Quantity must be a valid number."]},
+                {
+                    "quantity": [
+                        "Quantity must be a valid number."
+                    ]
+                },
                 status=400,
             )
 
         if quantity < 1:
             return Response(
-                {"quantity": ["Quantity must be at least 1."]},
+                {
+                    "quantity": [
+                        "Quantity must be at least 1."
+                    ]
+                },
                 status=400,
             )
 
-        inventory = getattr(cart_item.product, "inventory", None)
+        inventory = getattr(
+            cart_item.product,
+            "inventory",
+            None,
+        )
 
         if inventory is None:
             return Response(
-                {"detail": "This product has no inventory record."},
+                {
+                    "detail": (
+                        "This product has no inventory record."
+                    )
+                },
                 status=400,
             )
 
@@ -230,7 +266,8 @@ class CartItemUpdateView(APIView):
             return Response(
                 {
                     "detail": (
-                        f"Only {inventory.quantity} units are available."
+                        f"Only {inventory.quantity} "
+                        "units are available."
                     )
                 },
                 status=400,
@@ -265,7 +302,6 @@ class CartItemDeleteView(APIView):
         return Response(status=204)
 
 
-
 class OrderCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -286,39 +322,59 @@ class OrderCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        delivery_place = request.data.get("delivery_place")
+        place_id = request.data.get("place_id")
 
-        if not delivery_place or not str(delivery_place).strip():
-                return Response(
-                    {
-                        "delivery_place": [
-                            "A valid delivery place is required."
-                        ]
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if not place_id or not str(place_id).strip():
+            return Response(
+                {
+                    "place_id": [
+                        "A valid Google place_id is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        google_result = search_place(str(delivery_place).strip())
+        google_result = get_place_details(
+            str(place_id).strip()
+        )
 
-        if not google_result or not google_result.get("formatted_address"):
-                return Response(
-                    {
-                        "delivery_place": [
-                            "The delivery place could not be found on Google Maps."
-                        ]
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if google_result.get("google_status") != "OK":
+            return Response(
+                {
+                    "detail": "Google could not resolve the selected place.",
+                    "google_status": google_result.get(
+                        "google_status"
+                    ),
+                    "google_error": google_result.get(
+                        "google_error"
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        delivery_address = google_result["formatted_address"]
+        delivery_address = google_result[
+            "formatted_address"
+        ]
+
         latitude = google_result["latitude"]
         longitude = google_result["longitude"]
 
-        delivery_zone_id = request.data.get("delivery_zone")
-        
+        delivery_instructions = request.data.get(
+            "delivery_instructions",
+            ""
+        )
+
+        delivery_zone_id = request.data.get(
+            "delivery_zone"
+        )
+
         if not delivery_zone_id:
             return Response(
-                {"delivery_zone": ["A delivery zone is required."]},
+                {
+                    "delivery_zone": [
+                        "A delivery zone is required."
+                    ]
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -337,8 +393,8 @@ class OrderCreateView(APIView):
                 return Response(
                     {
                         "detail": (
-                            f"{cart_item.product.name} is currently "
-                            "unavailable."
+                            f"{cart_item.product.name} "
+                            "is currently unavailable."
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -356,16 +412,25 @@ class OrderCreateView(APIView):
                 )
 
             products_total += (
-                cart_item.product.price * cart_item.quantity
+                cart_item.product.price
+                * cart_item.quantity
             )
 
-        total_amount = products_total + delivery_zone.delivery_fee
+        total_amount = (
+            products_total
+            + delivery_zone.delivery_fee
+        )
 
         order = Order.objects.create(
             customer=request.user,
             total_amount=total_amount,
             status=Order.Status.PENDING_PAYMENT,
-            delivery_address=str(delivery_address).strip(),
+            delivery_address=str(
+                delivery_address
+            ).strip(),
+            delivery_instructions=str(
+                delivery_instructions
+            ).strip(),
             delivery_zone=delivery_zone,
             latitude=latitude,
             longitude=longitude,
@@ -373,7 +438,9 @@ class OrderCreateView(APIView):
 
         for cart_item in cart_items:
             unit_price = cart_item.product.price
-            subtotal = unit_price * cart_item.quantity
+            subtotal = (
+                unit_price * cart_item.quantity
+            )
 
             OrderItem.objects.create(
                 order=order,
@@ -390,16 +457,16 @@ class OrderCreateView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
 class CustomerOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            Order.objects
-            .filter(customer=self.request.user)
-            .prefetch_related("items__product")
-            .order_by("-created_at")
+        return Order.objects.filter(
+            customer=self.request.user
+        ).prefetch_related("items__product").order_by(
+            "-created_at"
         )
 
 
@@ -408,29 +475,28 @@ class CustomerOrderDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            Order.objects
-            .filter(customer=self.request.user)
-            .prefetch_related("items__product")
-        )
+        return Order.objects.filter(
+            customer=self.request.user
+        ).prefetch_related("items__product")
 
 
 class ManagementOrderListView(generics.ListAPIView):
-    queryset = (
-        Order.objects
-        .select_related("customer")
-        .prefetch_related("items__product")
-        .order_by("-created_at")
-    )
+    queryset = Order.objects.all().prefetch_related(
+        "items__product"
+    ).select_related(
+        "customer",
+        "delivery_zone",
+    ).order_by("-created_at")
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsManagement]
 
 
 class ManagementOrderDetailView(generics.RetrieveAPIView):
-    queryset = (
-        Order.objects
-        .select_related("customer")
-        .prefetch_related("items__product")
+    queryset = Order.objects.all().prefetch_related(
+        "items__product"
+    ).select_related(
+        "customer",
+        "delivery_zone",
     )
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsManagement]
@@ -442,15 +508,15 @@ class ManagementOrderStatusUpdateView(APIView):
     def patch(self, request, pk):
         order = get_object_or_404(
             Order,
-            pk=pk,
+            id=pk,
         )
 
         new_status = request.data.get("status")
 
-        valid_statuses = [
+        valid_statuses = {
             choice[0]
             for choice in Order.Status.choices
-        ]
+        }
 
         if new_status not in valid_statuses:
             return Response(
@@ -470,23 +536,20 @@ class ManagementOrderStatusUpdateView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class PaymentCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @transaction.atomic
     def post(self, request):
-        order_id = request.data.get("order_id")
-        phone_number = request.data.get("phone_number")
+        order_id = request.data.get("order")
 
         if not order_id:
             return Response(
-                {"order_id": ["This field is required."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not phone_number:
-            return Response(
-                {"phone_number": ["This field is required."]},
+                {
+                    "order": [
+                        "Order is required."
+                    ]
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -496,34 +559,30 @@ class PaymentCreateView(APIView):
             customer=request.user,
         )
 
-        if order.status != Order.Status.PENDING_PAYMENT:
-            return Response(
-                {
-                    "detail": (
-                        "This order is not awaiting payment."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         if Payment.objects.filter(order=order).exists():
             return Response(
                 {
                     "detail": (
-                        "A payment already exists for this order."
+                        "A payment already exists "
+                        "for this order."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        payment = Payment.objects.create(
+        serializer = PaymentSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        payment = serializer.save(
+            customer=request.user,
             order=order,
-            amount=order.total_amount,
-            phone_number=phone_number,
-            status=Payment.Status.PENDING,
         )
 
         return Response(
             PaymentSerializer(payment).data,
             status=status.HTTP_201_CREATED,
         )
+

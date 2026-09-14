@@ -6,7 +6,9 @@ from .views import (
     DriverDeliveryListView,
     DriverDeliveryStatusUpdateView,
     ManagementDriverListView,
-)
+    GooglePlaceSearchView,
+    ManagementDriverCreateView,
+ )
 
 urlpatterns = [
     path(
@@ -34,4 +36,11 @@ urlpatterns = [
     ManagementDriverListView.as_view(),
     name="management-driver-list",
    ),
+   path("google/place-search/", GooglePlaceSearchView.as_view(), name="google-place-search"),
+
+   path(
+    "management/drivers/create/",
+    ManagementDriverCreateView.as_view(),
+    name="management-driver-create",
+),
 ]

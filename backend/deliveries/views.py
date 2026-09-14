@@ -211,3 +211,90 @@ class ManagementDriverListView(generics.ListAPIView):
             .select_related("profile")
             .order_by("username")
         )
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from .google_maps import search_place
+
+
+class GooglePlaceSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        place = request.query_params.get("place")
+
+        if not place:
+            return Response(
+                {"detail": "Please provide a place."},
+                status=400,
+            )
+
+        result = search_place(place)
+
+        if not result:
+            return Response(
+                {"detail": "Place not found."},
+                status=404,
+            )
+
+        return Response(result)
+
+    from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
+
+from accounts.models import UserProfile
+from products.permissions import IsManagement
+
+class ManagementDriverCreateView(APIView):
+    permission_classes = [IsManagement]
+
+    def post(self, request):
+        username = request.data.get("username")
+        email = request.data.get("email")
+        password = request.data.get("password")
+        phone_number = request.data.get("phone_number")
+
+        if not username or not email or not password:
+            return Response(
+                {
+                    "detail": "Username, email and password are required."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"detail": "Username already exists."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+
+        UserProfile.objects.create(
+            user=user,
+            role=UserProfile.Role.DRIVER,
+            phone_number=phone_number or "",
+        )
+
+        return Response(
+            {
+                "message": "Driver created successfully.",
+                "driver": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "phone_number": phone_number or "",
+                    "role": UserProfile.Role.DRIVER,
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )

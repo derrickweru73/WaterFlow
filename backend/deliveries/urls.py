@@ -8,6 +8,8 @@ from .views import (
     ManagementDriverListView,
     GooglePlaceSearchView,
     ManagementDriverCreateView,
+    GooglePlaceAutocompleteView,
+    GooglePlaceDetailsView,
  )
 
 urlpatterns = [
@@ -42,5 +44,16 @@ urlpatterns = [
     "management/drivers/create/",
     ManagementDriverCreateView.as_view(),
     name="management-driver-create",
-),
+   ),
+   path(
+    "google/place-autocomplete/",
+    GooglePlaceAutocompleteView.as_view(),
+    name="google-place-autocomplete",
+   ),
+   path(
+    "google/place-details/",
+    GooglePlaceDetailsView.as_view(),
+    name="google-place-details",
+   ),
+
 ]

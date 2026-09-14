@@ -67,6 +67,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "delivery_place",
             "delivery_address",
+            "delivery_instructions",
             "delivery_zone",
             "delivery_zone_name",
             "delivery_fee",

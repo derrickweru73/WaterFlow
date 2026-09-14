@@ -217,9 +217,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .google_maps import search_place
-
-
+from .google_maps import (
+    search_place,
+    autocomplete_places,
+    get_place_details,
+)
 class GooglePlaceSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -298,3 +300,43 @@ class ManagementDriverCreateView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+class GooglePlaceAutocompleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        search_text = request.query_params.get("input")
+
+        if not search_text or not search_text.strip():
+            return Response(
+                {
+                    "detail": "Please provide a search input."
+                },
+                status=400,
+            )
+
+        result = autocomplete_places(search_text.strip())
+
+        return Response(result)
+
+class GooglePlaceDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        place_id = request.query_params.get("place_id")
+
+        if not place_id or not place_id.strip():
+            return Response(
+                {"detail": "Please provide a place_id."},
+                status=400,
+            )
+
+        result = get_place_details(place_id.strip())
+
+        if result.get("google_status") != "OK":
+            return Response(
+                result,
+                status=404,
+            )
+
+        return Response(result)

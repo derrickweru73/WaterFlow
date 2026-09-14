@@ -116,6 +116,11 @@ class Order(models.Model):
     )
     delivery_address = models.TextField()
 
+    delivery_instructions = models.TextField(
+    blank=True,
+    default="",
+    )
+
     latitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,

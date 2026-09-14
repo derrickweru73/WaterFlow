@@ -323,39 +323,63 @@ class OrderCreateView(APIView):
             )
 
         place_id = request.data.get("place_id")
+        delivery_place = request.data.get("delivery_place")
 
-        if not place_id or not str(place_id).strip():
+        google_result = None
+
+        if place_id and str(place_id).strip():
+            google_result = get_place_details(
+                str(place_id).strip()
+            )
+
+            if google_result.get("google_status") != "OK":
+                return Response(
+                    {
+                        "detail": "The selected Google place could not be found.",
+                        "google_status": google_result.get(
+                            "google_status"
+                        ),
+                        "google_error": google_result.get(
+                            "google_error"
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        elif delivery_place and str(delivery_place).strip():
+            from deliveries.google_maps import search_place
+
+            google_result = search_place(
+                str(delivery_place).strip()
+            )
+
+            if not google_result.get("formatted_address"):
+                return Response(
+                    {
+                        "delivery_place": [
+                            "The delivery place could not be found."
+                        ],
+                        "google_status": google_result.get(
+                            "google_status"
+                        ),
+                        "google_error": google_result.get(
+                            "google_error"
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        else:
             return Response(
                 {
-                    "place_id": [
-                        "A valid Google place_id is required."
+                    "delivery_place": [
+                        "A delivery place or Google place_id is required."
                     ]
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        google_result = get_place_details(
-            str(place_id).strip()
-        )
-
-        if google_result.get("google_status") != "OK":
-            return Response(
-                {
-                    "detail": "Google could not resolve the selected place.",
-                    "google_status": google_result.get(
-                        "google_status"
-                    ),
-                    "google_error": google_result.get(
-                        "google_error"
-                    ),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        delivery_address = google_result[
-            "formatted_address"
-        ]
-
+        delivery_address = google_result["formatted_address"]
         latitude = google_result["latitude"]
         longitude = google_result["longitude"]
 
@@ -465,7 +489,9 @@ class CustomerOrderListView(generics.ListAPIView):
     def get_queryset(self):
         return Order.objects.filter(
             customer=self.request.user
-        ).prefetch_related("items__product").order_by(
+        ).prefetch_related(
+            "items__product"
+        ).order_by(
             "-created_at"
         )
 
@@ -477,7 +503,9 @@ class CustomerOrderDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         return Order.objects.filter(
             customer=self.request.user
-        ).prefetch_related("items__product")
+        ).prefetch_related(
+            "items__product"
+        )
 
 
 class ManagementOrderListView(generics.ListAPIView):
@@ -486,9 +514,14 @@ class ManagementOrderListView(generics.ListAPIView):
     ).select_related(
         "customer",
         "delivery_zone",
-    ).order_by("-created_at")
+    ).order_by(
+        "-created_at"
+    )
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsManagement]
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
 
 
 class ManagementOrderDetailView(generics.RetrieveAPIView):
@@ -499,11 +532,17 @@ class ManagementOrderDetailView(generics.RetrieveAPIView):
         "delivery_zone",
     )
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsManagement]
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
 
 
 class ManagementOrderStatusUpdateView(APIView):
-    permission_classes = [IsAuthenticated, IsManagement]
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
 
     def patch(self, request, pk):
         order = get_object_or_404(
@@ -529,7 +568,12 @@ class ManagementOrderStatusUpdateView(APIView):
             )
 
         order.status = new_status
-        order.save(update_fields=["status", "updated_at"])
+        order.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
 
         return Response(
             OrderSerializer(order).data,
@@ -559,7 +603,9 @@ class PaymentCreateView(APIView):
             customer=request.user,
         )
 
-        if Payment.objects.filter(order=order).exists():
+        if Payment.objects.filter(
+            order=order
+        ).exists():
             return Response(
                 {
                     "detail": (
@@ -574,7 +620,9 @@ class PaymentCreateView(APIView):
             data=request.data
         )
 
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(
+            raise_exception=True
+        )
 
         payment = serializer.save(
             customer=request.user,
@@ -585,4 +633,5 @@ class PaymentCreateView(APIView):
             PaymentSerializer(payment).data,
             status=status.HTTP_201_CREATED,
         )
+
 

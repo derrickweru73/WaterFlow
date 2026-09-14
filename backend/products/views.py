@@ -5,7 +5,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from deliveries.google_maps import search_place
 from .cart_serializers import CartSerializer, CartItemSerializer
 from .inventory_serializers import InventorySerializer
 from .models import (
@@ -286,18 +286,36 @@ class OrderCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        delivery_address = request.data.get("delivery_address")
+        delivery_place = request.data.get("delivery_place")
 
-        if not delivery_address or not str(delivery_address).strip():
-            return Response(
-                {"delivery_address": ["A valid delivery address is required."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        latitude = request.data.get("latitude")
-        longitude = request.data.get("longitude")
+        if not delivery_place or not str(delivery_place).strip():
+                return Response(
+                    {
+                        "delivery_place": [
+                            "A valid delivery place is required."
+                        ]
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        google_result = search_place(str(delivery_place).strip())
+
+        if not google_result or not google_result.get("formatted_address"):
+                return Response(
+                    {
+                        "delivery_place": [
+                            "The delivery place could not be found on Google Maps."
+                        ]
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        delivery_address = google_result["formatted_address"]
+        latitude = google_result["latitude"]
+        longitude = google_result["longitude"]
 
         delivery_zone_id = request.data.get("delivery_zone")
-
+        
         if not delivery_zone_id:
             return Response(
                 {"delivery_zone": ["A delivery zone is required."]},

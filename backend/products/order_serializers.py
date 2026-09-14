@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import Order, OrderItem
+from deliveries.google_maps import search_place
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -50,6 +51,11 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    delivery_place = serializers.CharField(
+        write_only=True,
+        required=True
+    )
+
     class Meta:
         model = Order
         fields = [
@@ -59,6 +65,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "total_amount",
             "status",
+            "delivery_place",
             "delivery_address",
             "delivery_zone",
             "delivery_zone_name",
@@ -67,7 +74,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "longitude",
             "created_at",
             "updated_at",
-             
         ]
         read_only_fields = [
             "id",
@@ -76,8 +82,27 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "total_amount",
             "status",
+            "delivery_address",
             "delivery_zone_name",
             "delivery_fee",
+            "latitude",
+            "longitude",
             "created_at",
             "updated_at",
         ]
+
+    def create(self, validated_data):
+        delivery_place = validated_data.pop("delivery_place")
+
+        google_result = search_place(delivery_place)
+
+        if not google_result or not google_result.get("formatted_address"):
+            raise serializers.ValidationError({
+                "delivery_place": "The delivery place could not be found on Google Maps."
+            })
+
+        validated_data["delivery_address"] = google_result["formatted_address"]
+        validated_data["latitude"] = google_result["latitude"]
+        validated_data["longitude"] = google_result["longitude"]
+
+        return super().create(validated_data)

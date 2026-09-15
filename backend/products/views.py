@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, status
@@ -36,12 +37,42 @@ class CategoryListView(generics.ListAPIView):
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
 
-
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        queryset = Product.objects.filter(
+            is_active=True
+        ).order_by("name")
+
+        search = self.request.query_params.get("search")
+        category = self.request.query_params.get("category")
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
+
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(description__icontains=search)
+            )
+
+        if category:
+            queryset = queryset.filter(
+                category_id=category
+            )
+
+        if min_price:
+            queryset = queryset.filter(
+                price__gte=min_price
+            )
+
+        if max_price:
+            queryset = queryset.filter(
+                price__lte=max_price
+            )
+
+        return queryset
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.filter(is_active=True)

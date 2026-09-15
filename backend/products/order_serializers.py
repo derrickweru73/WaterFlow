@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Payment
 from deliveries.google_maps import search_place
 
 
@@ -51,6 +51,11 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    payment_status = serializers.CharField(
+    source="payment.status",
+    read_only=True
+   )
+
     delivery_place = serializers.CharField(
         write_only=True,
         required=True
@@ -65,6 +70,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "total_amount",
             "status",
+            "payment_status",
             "delivery_place",
             "delivery_address",
             "delivery_instructions",

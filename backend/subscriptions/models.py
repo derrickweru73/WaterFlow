@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from products.models import Product
-
+from products.models import DeliveryZone, Product
 
 class Subscription(models.Model):
     class Frequency(models.TextChoices):
@@ -21,6 +20,11 @@ class Subscription(models.Model):
         related_name="subscriptions",
     )
     delivery_address = models.TextField()
+    delivery_zone = models.ForeignKey(
+    DeliveryZone,
+    on_delete=models.PROTECT,
+    related_name="subscriptions",
+    )
     frequency = models.CharField(
         max_length=20,
         choices=Frequency.choices,

@@ -189,11 +189,32 @@ class DriverDeliveryStatusUpdateView(APIView):
         if new_status == Delivery.Status.OUT_FOR_DELIVERY:
             order.status = Order.Status.OUT_FOR_DELIVERY
 
+            create_notification(
+                user=order.customer,
+                title="Order Out for Delivery",
+                message=f"Your Order #{order.id} is now out for delivery.",
+                notification_type="DELIVERY",
+            )
+
         elif new_status == Delivery.Status.DELIVERED:
             order.status = Order.Status.DELIVERED
 
+            create_notification(
+                user=order.customer,
+                title="Order Delivered",
+                message=f"Your Order #{order.id} has been delivered successfully.",
+                notification_type="DELIVERY",
+            )
+
         elif new_status == Delivery.Status.FAILED:
             order.status = Order.Status.PROCESSING
+
+            create_notification(
+                user=order.customer,
+                title="Delivery Failed",
+                message=f"Delivery for Order #{order.id} could not be completed.",
+                notification_type="DELIVERY",
+            )
 
         order.save(update_fields=["status", "updated_at"])
 

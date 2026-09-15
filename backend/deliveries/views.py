@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from accounts.models import UserProfile
 from products.models import Order
+from notifications.services import create_notification
 
 from .models import Delivery
 from .serializers import DeliverySerializer
@@ -98,6 +99,13 @@ class ManagementDeliveryAssignView(APIView):
         order = delivery.order
         order.status = Order.Status.ASSIGNED
         order.save(update_fields=["status", "updated_at"])
+
+        create_notification(
+            user=order.customer,
+            title="Driver Assigned",
+            message=f"A driver has been assigned to your Order #{order.id}.",
+            notification_type="DELIVERY",
+)
 
         return Response(
             DeliverySerializer(delivery).data,

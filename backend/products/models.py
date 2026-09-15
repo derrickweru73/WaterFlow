@@ -177,6 +177,7 @@ class Payment(models.Model):
         PENDING = "PENDING", "Pending"
         COMPLETED = "COMPLETED", "Completed"
         FAILED = "FAILED", "Failed"
+        REFUNDED = "REFUNDED", "Refunded"
 
     order = models.OneToOneField(
         Order,

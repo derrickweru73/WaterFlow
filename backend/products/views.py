@@ -590,15 +590,55 @@ class ManagementOrderStatusUpdateView(APIView):
 
         if new_status not in valid_statuses:
             return Response(
-                {
-                    "status": [
-                        "Invalid order status."
-                    ]
-                },
+                {"status": ["Invalid order status."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if new_status == Order.Status.CANCELLED:
+            if order.status == Order.Status.DELIVERED:
+                return Response(
+                    {"detail": "Delivered orders cannot be cancelled."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if order.status == Order.Status.CANCELLED:
+                return Response(
+                    {"detail": "Order is already cancelled."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment = getattr(order, "payment", None)
+
+            if payment and payment.status == Payment.Status.COMPLETED:
+                for order_item in order.items.select_related(
+                    "product",
+                    "product__inventory",
+                ):
+                    inventory = getattr(
+                        order_item.product,
+                        "inventory",
+                        None,
+                    )
+
+                    if inventory:
+                        inventory.quantity += order_item.quantity
+                        inventory.save(
+                            update_fields=[
+                                "quantity",
+                                "updated_at",
+                            ]
+                        )
+
+                payment.status = Payment.Status.REFUNDED
+                payment.save(
+                    update_fields=[
+                        "status",
+                        "updated_at",
+                    ]
+                )
+
         order.status = new_status
+
         order.save(
             update_fields=[
                 "status",

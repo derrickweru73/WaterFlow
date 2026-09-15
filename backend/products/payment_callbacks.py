@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from deliveries.models import Delivery
+from notifications.services import create_notification
 
 from .models import Payment, Order
 
@@ -45,10 +46,19 @@ class MpesaCallbackView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        order = payment.order
+
         if result_code != 0:
             payment.status = Payment.Status.FAILED
             payment.save(
                 update_fields=["status", "updated_at"]
+            )
+
+            create_notification(
+                user=order.customer,
+                title="Payment Failed",
+                message=f"Payment for Order #{order.id} was not completed.",
+                notification_type="PAYMENT",
             )
 
             return Response(
@@ -81,8 +91,6 @@ class MpesaCallbackView(APIView):
                 ]
             )
 
-            order = payment.order
-
             order.status = Order.Status.PAID
 
             order.save(
@@ -109,6 +117,13 @@ class MpesaCallbackView(APIView):
                     "delivery_address": order.delivery_address,
                     "status": Delivery.Status.PENDING,
                 },
+            )
+
+            create_notification(
+                user=order.customer,
+                title="Payment Successful",
+                message=f"Payment for Order #{order.id} was successful. M-Pesa receipt: {receipt_number or 'N/A'}.",
+                notification_type="PAYMENT",
             )
 
         return Response(

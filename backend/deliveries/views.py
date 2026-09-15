@@ -185,7 +185,7 @@ class DriverDeliveryStatusUpdateView(APIView):
             order.status = Order.Status.DELIVERED
 
         elif new_status == Delivery.Status.FAILED:
-            order.status = Order.Status.CANCELLED
+            order.status = Order.Status.PROCESSING
 
         order.save(update_fields=["status", "updated_at"])
 

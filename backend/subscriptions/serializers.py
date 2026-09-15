@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from products.models import DeliveryZone
+
 from .models import Subscription, SubscriptionItem
 
 
@@ -31,6 +33,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "id",
             "customer",
             "delivery_address",
+            "delivery_zone",
             "frequency",
             "status",
             "next_delivery_date",
@@ -52,6 +55,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError(
                 "A valid delivery address is required."
+            )
+
+        return value
+
+    def validate_delivery_zone(self, value):
+        if not value.is_active:
+            raise serializers.ValidationError(
+                "This delivery zone is not active."
             )
 
         return value

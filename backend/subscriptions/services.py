@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
+from notifications.services import create_notification
 from products.models import Order, OrderItem
 
 from .models import Subscription
@@ -37,15 +38,20 @@ def generate_subscription_order(subscription):
         if item.quantity > inventory.quantity:
             return None
 
-    total_amount = sum(
+    product_total = sum(
         item.product.price * item.quantity
         for item in items
     )
+
+    delivery_fee = subscription.delivery_zone.delivery_fee
+
+    total_amount = product_total + delivery_fee
 
     order = Order.objects.create(
         customer=subscription.customer,
         total_amount=total_amount,
         delivery_address=subscription.delivery_address,
+        delivery_zone=subscription.delivery_zone,
         status=Order.Status.PENDING_PAYMENT,
     )
 
@@ -75,6 +81,13 @@ def generate_subscription_order(subscription):
             "next_delivery_date",
             "updated_at",
         ]
+    )
+
+    create_notification(
+        user=subscription.customer,
+        title="Subscription Payment Due",
+        message=f"Your recurring Order #{order.id} has been created and is ready for payment.",
+        notification_type="SUBSCRIPTION",
     )
 
     return order

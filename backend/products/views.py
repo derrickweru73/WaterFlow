@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from deliveries.google_maps import get_place_details
+from notifications.services import create_notification
 
 from .cart_serializers import CartSerializer, CartItemSerializer
 from .inventory_serializers import InventorySerializer
@@ -636,6 +637,16 @@ class ManagementOrderStatusUpdateView(APIView):
                         "updated_at",
                     ]
                 )
+
+                if new_status == Order.Status.CANCELLED:
+                    create_notification(
+                        user=order.customer,
+                        title="Order Cancelled",
+                        message=f"Your Order #{order.id} has been cancelled.",
+                        notification_type="ORDER",
+                    )
+
+        
 
         order.status = new_status
 

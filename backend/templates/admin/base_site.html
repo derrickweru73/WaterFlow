@@ -377,5 +377,58 @@
         color: var(--muted);
         text-align: center;
     }
+
+.submit-row {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    min-height: 60px;
+    padding: 14px 16px !important;
+    margin: 20px 0 !important;
+    background: var(--background) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px;
+}
+
+.submit-row input,
+.submit-row input[type="submit"],
+.submit-row input[name="_save"],
+.submit-row input[name="_addanother"],
+.submit-row input[name="_continue"] {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 100px;
+    min-height: 40px;
+    padding: 10px 16px !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 6px !important;
+    color: white !important;
+    background: var(--primary) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+}
+
+.submit-row input[name="_save"] {
+    background: var(--success) !important;
+}
+
+.submit-row input[name="_save"]:hover {
+    background: var(--success-dark) !important;
+}
+
+.submit-row input[name="_addanother"],
+.submit-row input[name="_continue"] {
+    background: var(--primary) !important;
+}
+
+.submit-row input[name="_addanother"]:hover,
+.submit-row input[name="_continue"]:hover {
+    background: var(--primary-dark) !important;
+}
 </style>
 {% endblock %}

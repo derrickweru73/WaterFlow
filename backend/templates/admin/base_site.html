@@ -483,5 +483,64 @@ select option {
 .delete-confirmation p {
     color: var(--text);
 }
+
+#content-main .module th a,
+#content-main .module td a,
+#content-main .module caption a,
+#content-main .module a:link,
+#content-main .module a:visited {
+    color: var(--primary) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-decoration: underline !important;
+    font-weight: 700 !important;
+}
+
+#content-main .module caption a,
+#content-main .module caption a:link,
+#content-main .module caption a:visited {
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+}
+
+#content-main .module th a:hover,
+#content-main .module td a:hover {
+    color: var(--primary-dark) !important;
+}
+
+#content-main .module th {
+    color: var(--text) !important;
+    font-weight: 700 !important;
+}
+
+#content-main .module td {
+    color: var(--text) !important;
+    font-weight: 600 !important;
+}
+
+#content-main .module .addlink {
+    background: var(--success) !important;
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+}
+
+#content-main .module .changelink {
+    background: var(--primary) !important;
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+}
+
+#content-main .module .addlink:hover {
+    background: #15803D !important;
+    color: white !important;
+}
+
+#content-main .module .changelink:hover {
+    background: var(--primary-dark) !important;
+    color: white !important;
+}
 </style>
 {% endblock %}

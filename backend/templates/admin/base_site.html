@@ -20,8 +20,10 @@
         --background: #F8FAFC;
         --white: #FFFFFF;
         --success: #16A34A;
+        --success-dark: #15803D;
         --warning: #F59E0B;
         --danger: #EF4444;
+        --danger-dark: #DC2626;
         --text: #0F172A;
         --muted: #64748B;
         --border: #E2E8F0;
@@ -32,31 +34,27 @@
         color: var(--text);
     }
 
-    #content {
-        padding: 24px;
-    }
-
     #header {
         background: var(--navy);
-        color: white;
-        padding: 12px 24px;
+        color: var(--white);
+        padding: 14px 24px;
         border-bottom: 4px solid var(--primary);
     }
 
     #site-name {
-        padding: 0;
         margin: 0;
+        padding: 0;
     }
 
     #site-name a {
-        color: white;
+        color: var(--white) !important;
         font-size: 24px;
         font-weight: 700;
-        text-decoration: none;
+        text-decoration: none !important;
     }
 
     #site-name a:hover {
-        color: #BAE6FD;
+        color: #BAE6FD !important;
     }
 
     #user-tools {
@@ -65,11 +63,11 @@
     }
 
     #user-tools a {
-        color: white;
+        color: var(--white) !important;
     }
 
     #user-tools a:hover {
-        color: #7DD3FC;
+        color: #7DD3FC !important;
     }
 
     div.breadcrumbs {
@@ -79,7 +77,11 @@
     }
 
     div.breadcrumbs a {
-        color: #7DD3FC;
+        color: #7DD3FC !important;
+    }
+
+    #content {
+        padding: 24px;
     }
 
     h1 {
@@ -88,21 +90,20 @@
         margin-bottom: 20px;
     }
 
-    h2 {
+    h2,
+    h3 {
         color: var(--navy);
     }
 
-    h3 {
-        color: var(--slate);
-    }
-
+    a,
     a:link,
     a:visited {
-        color: var(--primary);
+        color: var(--primary) !important;
     }
 
-    a:hover {
-        color: var(--primary-dark);
+    a:hover,
+    a:focus {
+        color: var(--primary-dark) !important;
     }
 
     .module {
@@ -111,34 +112,132 @@
         border-radius: 10px;
         overflow: hidden;
         margin-bottom: 20px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
     }
 
     .module caption,
     .module h2 {
         background: var(--primary);
-        color: white;
-        font-weight: 600;
-        padding: 12px 16px;
+        color: var(--white) !important;
+        padding: 14px 16px;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .module caption a,
+    .module caption a:link,
+    .module caption a:visited {
+        display: block;
+        color: var(--white) !important;
+        background: transparent !important;
+        font-size: 16px;
+        font-weight: 700;
+        text-decoration: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .module caption a:hover,
+    .module caption a:focus {
+        color: var(--white) !important;
+        background: transparent !important;
+    }
+
+    .module table {
+        width: 100%;
     }
 
     .module th {
-        color: var(--text);
+        color: var(--text) !important;
+        font-weight: 700;
+        padding: 12px 16px;
     }
 
     .module td {
-        color: var(--muted);
+        color: var(--text) !important;
+        padding: 12px 16px;
     }
 
-    .addlink,
-    .changelink {
+    .module th a,
+    .module th a:link,
+    .module th a:visited,
+    .module td a,
+    .module td a:link,
+    .module td a:visited {
         color: var(--primary) !important;
-        font-weight: 600;
+        font-weight: 700 !important;
+        text-decoration: underline !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 
-    .addlink:hover,
-    .changelink:hover {
+    .module th a:hover,
+    .module th a:focus,
+    .module td a:hover,
+    .module td a:focus {
         color: var(--primary-dark) !important;
+    }
+
+    .module tr {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .module tr:last-child {
+        border-bottom: none;
+    }
+
+    .addlink {
+        background: var(--success) !important;
+        color: var(--white) !important;
+        border-radius: 5px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+    }
+
+    .addlink:hover {
+        background: var(--success-dark) !important;
+        color: var(--white) !important;
+    }
+
+    .changelink {
+        background: var(--primary) !important;
+        color: var(--white) !important;
+        border-radius: 5px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+    }
+
+    .changelink:hover {
+        background: var(--primary-dark) !important;
+        color: var(--white) !important;
+    }
+
+    input,
+    textarea,
+    select {
+        color: var(--text) !important;
+        background: var(--white) !important;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px;
+    }
+
+    select option {
+        color: var(--text) !important;
+        background: var(--white) !important;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
     }
 
     input[type="submit"],
@@ -147,8 +246,8 @@
         background: var(--primary);
         border: none;
         border-radius: 6px;
-        color: white;
-        font-weight: 600;
+        color: var(--white) !important;
+        font-weight: 700;
         padding: 10px 16px;
     }
 
@@ -163,34 +262,34 @@
     }
 
     input[name="_save"]:hover {
-        background: #15803D;
+        background: var(--success-dark);
     }
 
     .deletelink {
         background: var(--danger) !important;
-        color: white !important;
+        color: var(--white) !important;
         border-radius: 6px;
         padding: 10px 16px;
     }
 
     .deletelink:hover {
-        background: #DC2626 !important;
+        background: var(--danger-dark) !important;
     }
 
-    input,
-    textarea,
-    select {
+    .submit-row {
+        background: var(--background);
         border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 8px;
     }
 
-    input:focus,
-    textarea:focus,
-    select:focus {
-        border-color: var(--primary);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+    .object-tools a {
+        background: var(--primary) !important;
+        color: var(--white) !important;
+        border-radius: 6px;
+    }
+
+    .object-tools a:hover {
+        background: var(--primary-dark) !important;
+        color: var(--white) !important;
     }
 
     #result_list {
@@ -200,54 +299,27 @@
 
     #result_list thead th {
         background: var(--slate);
-        color: white;
+        color: var(--white) !important;
     }
 
     #result_list tbody tr:hover {
         background: #F0F9FF;
     }
 
-    .object-tools a {
-        background: var(--primary);
-        border-radius: 6px;
-    }
-
-    .object-tools a:hover {
-        background: var(--primary-dark);
-    }
-
-    ul.messagelist li.success {
-        background: var(--success);
-        color: white;
-        border-radius: 6px;
-    }
-
-    ul.messagelist li.warning {
-        background: var(--warning);
-        color: var(--navy);
-        border-radius: 6px;
-    }
-
-    ul.messagelist li.error {
-        background: var(--danger);
-        color: white;
-        border-radius: 6px;
-    }
-
     #changelist-filter {
-        background: white;
+        background: var(--white);
         border-left: 1px solid var(--border);
     }
 
     #changelist-filter h2 {
         background: var(--navy);
-        color: white;
+        color: var(--white) !important;
         padding: 12px;
     }
 
     .paginator a {
         background: var(--primary);
-        color: white !important;
+        color: var(--white) !important;
         border-radius: 4px;
         padding: 6px 10px;
     }
@@ -265,7 +337,39 @@
 
     .inline-group h2 {
         background: var(--slate);
-        color: white;
+        color: var(--white) !important;
+    }
+
+    .form-row,
+    .aligned label,
+    fieldset,
+    fieldset h2,
+    fieldset h3 {
+        color: var(--text) !important;
+    }
+
+    .help,
+    .helptext,
+    p.help {
+        color: var(--muted) !important;
+    }
+
+    ul.messagelist li.success {
+        background: var(--success);
+        color: var(--white);
+        border-radius: 6px;
+    }
+
+    ul.messagelist li.warning {
+        background: var(--warning);
+        color: var(--navy);
+        border-radius: 6px;
+    }
+
+    ul.messagelist li.error {
+        background: var(--danger);
+        color: var(--white);
+        border-radius: 6px;
     }
 
     #footer {
@@ -273,274 +377,5 @@
         color: var(--muted);
         text-align: center;
     }
-
-    #content-main {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-}
-
-#content-main .module {
-    margin-bottom: 0;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--white);
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-}
-
-#content-main .module caption {
-    background: var(--navy);
-    color: white;
-    text-align: left;
-    font-size: 16px;
-    font-weight: 700;
-    padding: 15px 18px;
-}
-
-#content-main .module caption a {
-    color: white;
-    text-decoration: none;
-}
-
-#content-main .module tr {
-    border-bottom: 1px solid var(--border);
-}
-
-#content-main .module tr:last-child {
-    border-bottom: none;
-}
-
-#content-main .module th {
-    padding: 13px 16px;
-    font-weight: 600;
-}
-
-#content-main .module td {
-    padding: 13px 10px;
-}
-
-#content-main .module td a {
-    font-weight: 600;
-}
-
-#content-main .addlink {
-    background: var(--success);
-    color: white !important;
-    padding: 6px 10px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-#content-main .addlink:hover {
-    background: #15803D;
-}
-
-#content-main .changelink {
-    background: var(--primary);
-    color: white !important;
-    padding: 6px 10px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-#content-main .changelink:hover {
-    background: var(--primary-dark);
-}
-
-#content-related {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-    margin-top: 20px;
-}
-
-#content-related h2 {
-    color: var(--navy);
-    font-size: 16px;
-}
-
-@media (max-width: 900px) {
-    #content-main {
-        grid-template-columns: 1fr;
-    }
-}
-
-#content-main .module caption {
-    display: block !important;
-    background: var(--primary) !important;
-    color: white !important;
-    padding: 15px 18px !important;
-    text-align: left !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    line-height: 1.4 !important;
-    height: auto !important;
-    min-height: 20px !important;
-}
-
-#content-main .module caption a {
-    display: block !important;
-    color: white !important;
-    background: transparent !important;
-    text-decoration: none !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    line-height: 1.4 !important;
-    text-indent: 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-#content-main .module caption a:hover {
-    color: white !important;
-    background: transparent !important;
-}
-
-#content-main .module caption a:visited {
-    color: white !important;
-}
-
-body,
-body input,
-body textarea,
-body select,
-body button,
-body table,
-body th,
-body td,
-body label,
-body p,
-body li {
-    color: var(--text);
-}
-
-a,
-a:link,
-a:visited {
-    color: var(--primary) !important;
-}
-
-a:hover,
-a:focus {
-    color: var(--primary-dark) !important;
-}
-
-fieldset h2,
-fieldset h3,
-.form-row label,
-.aligned label,
-.selector-chosen h2,
-.selector-available h2 {
-    color: var(--navy) !important;
-}
-
-fieldset,
-.inline-group,
-.form-row {
-    color: var(--text);
-}
-
-.help,
-.helptext,
-p.help,
-.form-row .help {
-    color: var(--muted) !important;
-}
-
-select,
-input,
-textarea {
-    color: var(--text) !important;
-    background: var(--white) !important;
-}
-
-select option {
-    color: var(--text);
-    background: var(--white);
-}
-
-.related-widget-wrapper a {
-    color: var(--primary) !important;
-}
-
-.related-widget-wrapper a:hover {
-    color: var(--primary-dark) !important;
-}
-
-.submit-row {
-    background: var(--background);
-    border: 1px solid var(--border);
-}
-
-.submit-row input {
-    color: white !important;
-}
-
-.delete-confirmation,
-.delete-confirmation p {
-    color: var(--text);
-}
-
-#content-main .module th a,
-#content-main .module td a,
-#content-main .module caption a,
-#content-main .module a:link,
-#content-main .module a:visited {
-    color: var(--primary) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    text-decoration: underline !important;
-    font-weight: 700 !important;
-}
-
-#content-main .module caption a,
-#content-main .module caption a:link,
-#content-main .module caption a:visited {
-    color: white !important;
-    text-decoration: none !important;
-    font-weight: 700 !important;
-}
-
-#content-main .module th a:hover,
-#content-main .module td a:hover {
-    color: var(--primary-dark) !important;
-}
-
-#content-main .module th {
-    color: var(--text) !important;
-    font-weight: 700 !important;
-}
-
-#content-main .module td {
-    color: var(--text) !important;
-    font-weight: 600 !important;
-}
-
-#content-main .module .addlink {
-    background: var(--success) !important;
-    color: white !important;
-    text-decoration: none !important;
-    font-weight: 700 !important;
-}
-
-#content-main .module .changelink {
-    background: var(--primary) !important;
-    color: white !important;
-    text-decoration: none !important;
-    font-weight: 700 !important;
-}
-
-#content-main .module .addlink:hover {
-    background: #15803D !important;
-    color: white !important;
-}
-
-#content-main .module .changelink:hover {
-    background: var(--primary-dark) !important;
-    color: white !important;
-}
 </style>
 {% endblock %}

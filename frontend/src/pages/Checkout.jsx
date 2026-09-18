@@ -7,6 +7,7 @@ function Checkout() {
   const navigate = useNavigate();
 
   const [cart, setCart] = useState(null);
+  const [deliveryZones, setDeliveryZones] = useState([]);
   const [deliveryPlace, setDeliveryPlace] = useState("");
   const [deliveryZone, setDeliveryZone] = useState("");
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
@@ -16,7 +17,7 @@ function Checkout() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const fetchCart = async () => {
+    const fetchCheckoutData = async () => {
       try {
         const token = localStorage.getItem("access_token");
 
@@ -25,14 +26,20 @@ function Checkout() {
           return;
         }
 
-        const response = await api.get("/cart/");
-        setCart(response.data);
+        const [cartResponse, zonesResponse] = await Promise.all([
+          api.get("/cart/"),
+          api.get("/delivery-zones/"),
+        ]);
 
-        if (!response.data?.items?.length) {
+        setCart(cartResponse.data);
+        setDeliveryZones(zonesResponse.data);
+
+        if (!cartResponse.data?.items?.length) {
           navigate("/cart");
+          return;
         }
       } catch (error) {
-        console.error(error);
+        console.error("Checkout loading error:", error);
 
         if (error.response?.status === 401) {
           localStorage.removeItem("access_token");
@@ -41,13 +48,13 @@ function Checkout() {
           return;
         }
 
-        setMessage("Unable to load your cart.");
+        setMessage("Unable to load checkout details.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCart();
+    fetchCheckoutData();
   }, [navigate]);
 
   const handlePlaceOrder = async (e) => {
@@ -59,7 +66,7 @@ function Checkout() {
     }
 
     if (!deliveryZone) {
-      setMessage("Please enter your delivery zone.");
+      setMessage("Please select your delivery zone.");
       return;
     }
 
@@ -81,7 +88,7 @@ function Checkout() {
         },
       });
     } catch (error) {
-      console.error(error);
+      console.error("Place order error:", error);
 
       if (error.response?.status === 401) {
         localStorage.removeItem("access_token");
@@ -96,7 +103,7 @@ function Checkout() {
         data?.detail ||
           data?.delivery_place?.[0] ||
           data?.delivery_zone?.[0] ||
-          "Unable to place order. Please check your details.",
+          "Unable to place order. Please check your details."
       );
     } finally {
       setPlacingOrder(false);
@@ -107,7 +114,14 @@ function Checkout() {
     return (
       <div className="products-page">
         <div className="products-container">
-          <p className="products-message">Loading checkout...</p>
+          <CustomerHeader
+            returnTo="/cart"
+            returnLabel="Return to Cart"
+          />
+
+          <p className="products-message">
+            Loading checkout...
+          </p>
         </div>
       </div>
     );
@@ -116,14 +130,21 @@ function Checkout() {
   return (
     <div className="products-page">
       <div className="products-container">
-        <CustomerHeader returnTo="/cart" returnLabel="Return to Cart" />
+        <CustomerHeader
+          returnTo="/cart"
+          returnLabel="Return to Cart"
+        />
 
         <section className="products-intro">
           <h2>Checkout</h2>
           <p>Enter your delivery details to place your order.</p>
         </section>
 
-        {message && <p className="products-message">{message}</p>}
+        {message && (
+          <p className="products-message">
+            {message}
+          </p>
+        )}
 
         <div className="checkout-layout">
           <div className="product-card">
@@ -131,30 +152,52 @@ function Checkout() {
 
             <form onSubmit={handlePlaceOrder}>
               <div className="form-group">
-                <label htmlFor="deliveryPlace">Delivery Address</label>
+                <label htmlFor="deliveryPlace">
+                  Delivery Address
+                </label>
 
                 <input
                   id="deliveryPlace"
                   type="text"
                   value={deliveryPlace}
-                  onChange={(e) => setDeliveryPlace(e.target.value)}
+                  onChange={(e) =>
+                    setDeliveryPlace(e.target.value)
+                  }
                   placeholder="e.g. Westlands, Nairobi"
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="deliveryZone">Delivery Zone</label>
+                <label htmlFor="deliveryZone">
+                  Delivery Zone
+                </label>
 
-                <input
+                <select
                   id="deliveryZone"
-                  type="number"
                   value={deliveryZone}
-                  onChange={(e) => setDeliveryZone(e.target.value)}
-                  placeholder="Enter delivery zone ID"
-                  min="1"
+                  onChange={(e) =>
+                    setDeliveryZone(e.target.value)
+                  }
                   required
-                />
+                >
+                  <option value="">
+                    Select your delivery zone
+                  </option>
+
+                  {deliveryZones.map((zone) => (
+                    <option
+                      key={zone.id}
+                      value={zone.id}
+                    >
+                      {zone.name} — KSh{" "}
+                      {Number(
+                        zone.delivery_fee
+                      ).toLocaleString()}{" "}
+                      delivery
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -165,7 +208,9 @@ function Checkout() {
                 <textarea
                   id="deliveryInstructions"
                   value={deliveryInstructions}
-                  onChange={(e) => setDeliveryInstructions(e.target.value)}
+                  onChange={(e) =>
+                    setDeliveryInstructions(e.target.value)
+                  }
                   placeholder="Optional instructions for the driver"
                   rows="4"
                 />
@@ -174,11 +219,22 @@ function Checkout() {
               <button
                 className="product-button"
                 type="submit"
-                disabled={placingOrder}
+                disabled={
+                  placingOrder ||
+                  deliveryZones.length === 0
+                }
               >
-                {placingOrder ? "Placing Order..." : "Continue to Payment"}
+                {placingOrder
+                  ? "Placing Order..."
+                  : "Continue to Payment"}
               </button>
             </form>
+
+            {deliveryZones.length === 0 && (
+              <p className="products-message">
+                No delivery zones are currently available.
+              </p>
+            )}
           </div>
 
           <div className="product-card">
@@ -191,24 +247,33 @@ function Checkout() {
                   display: "flex",
                   justifyContent: "space-between",
                   marginBottom: "12px",
+                  gap: "15px",
                 }}
               >
                 <span>
                   {item.product_name} × {item.quantity}
                 </span>
 
-                <strong>KSh {Number(item.subtotal).toLocaleString()}</strong>
+                <strong>
+                  KSh{" "}
+                  {Number(
+                    item.subtotal
+                  ).toLocaleString()}
+                </strong>
               </div>
             ))}
 
             <hr />
 
             <h3>
-              Products Total: KSh {Number(cart?.total || 0).toLocaleString()}
+              Products Total: KSh{" "}
+              {Number(
+                cart?.total || 0
+              ).toLocaleString()}
             </h3>
 
             <p className="product-description">
-              Delivery fee will be calculated by the server based on your
+              Delivery fee will be added based on your
               selected delivery zone.
             </p>
           </div>

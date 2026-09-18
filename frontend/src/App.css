@@ -381,3 +381,36 @@ body {
     gap: 8px;
   }
 }
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+}
+
+.checkout-layout .form-group {
+  margin-bottom: 18px;
+}
+
+/* checkout */
+.checkout-layout input,
+.checkout-layout textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  margin-top: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.checkout-layout textarea {
+  resize: vertical;
+}
+
+@media (max-width: 800px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}

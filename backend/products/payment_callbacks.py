@@ -25,6 +25,13 @@ class MpesaCallbackView(APIView):
 
         result_code = callback.get("ResultCode")
 
+        # Temporary M-Pesa debugging logs
+        print("========== MPESA CALLBACK ==========")
+        print("MPESA CALLBACK RECEIVED:", request.data)
+        print("MPESA RESULT CODE:", result_code)
+        print("MPESA CHECKOUT REQUEST ID:", checkout_request_id)
+        print("====================================")
+
         if not checkout_request_id:
             return Response(
                 {"ResultCode": 1, "ResultDesc": "Invalid callback"},
@@ -38,6 +45,11 @@ class MpesaCallbackView(APIView):
                 checkout_request_id=checkout_request_id
             )
         except Payment.DoesNotExist:
+            print(
+                "MPESA ERROR: Payment not found for checkout request:",
+                checkout_request_id,
+            )
+
             return Response(
                 {
                     "ResultCode": 1,
@@ -46,9 +58,18 @@ class MpesaCallbackView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        print("MPESA PAYMENT FOUND:", payment.id)
+        print("MPESA ORDER:", payment.order.id)
+        print("MPESA CURRENT PAYMENT STATUS:", payment.status)
+
         order = payment.order
 
         if result_code != 0:
+            print(
+                "MPESA PAYMENT FAILED. RESULT CODE:",
+                result_code,
+            )
+
             payment.status = Payment.Status.FAILED
             payment.save(
                 update_fields=["status", "updated_at"]
@@ -78,6 +99,11 @@ class MpesaCallbackView(APIView):
             if item.get("Name") == "MpesaReceiptNumber":
                 receipt_number = item.get("Value")
                 break
+
+        print(
+            "MPESA SUCCESSFUL. RECEIPT:",
+            receipt_number,
+        )
 
         with transaction.atomic():
             payment.status = Payment.Status.COMPLETED
@@ -122,9 +148,17 @@ class MpesaCallbackView(APIView):
             create_notification(
                 user=order.customer,
                 title="Payment Successful",
-                message=f"Payment for Order #{order.id} was successful. M-Pesa receipt: {receipt_number or 'N/A'}.",
+                message=(
+                    f"Payment for Order #{order.id} was successful. "
+                    f"M-Pesa receipt: {receipt_number or 'N/A'}."
+                ),
                 notification_type="PAYMENT",
             )
+
+        print(
+            "MPESA PAYMENT COMPLETED SUCCESSFULLY:",
+            payment.id,
+        )
 
         return Response(
             {

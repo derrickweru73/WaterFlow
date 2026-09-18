@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { ShoppingCart } from "lucide-react";
+import CustomerHeader from "../components/CustomerHeader";
 
 function Products() {
   const navigate = useNavigate();
@@ -44,6 +44,8 @@ function Products() {
         quantity: 1,
       });
 
+      window.dispatchEvent(new Event("cartUpdated"));
+
       setMessage(`${product.name} added to cart.`);
     } catch (error) {
       console.error(error);
@@ -64,31 +66,10 @@ function Products() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/");
-  };
-
   return (
     <div className="products-page">
       <div className="products-container">
-        <header className="products-header">
-          <div>
-            <h1>WaterFlow</h1>
-            <p>Water Delivery & Refill Management System</p>
-          </div>
-
-          <div>
-            <button onClick={() => navigate("/cart")} title="View Cart">
-              <ShoppingCart size={22} />
-            </button>
-
-            <button className="logout-button" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </header>
+        <CustomerHeader showLogout={true} />
 
         <section className="products-intro">
           <h2>Available Products</h2>

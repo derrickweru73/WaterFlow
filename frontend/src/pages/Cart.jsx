@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-
+import CustomerHeader from "../components/CustomerHeader";
 function Cart() {
   const navigate = useNavigate();
 
@@ -54,6 +54,8 @@ function Cart() {
         quantity: item.quantity + 1,
       });
 
+      window.dispatchEvent(new Event("cartUpdated"));
+
       await fetchCart();
     } catch (error) {
       console.error(error);
@@ -102,6 +104,8 @@ function Cart() {
     try {
       await api.delete(`/cart/items/${item.id}/delete/`);
 
+      window.dispatchEvent(new Event("cartUpdated"));
+
       await fetchCart();
     } catch (error) {
       console.error(error);
@@ -141,26 +145,7 @@ function Cart() {
   return (
     <div className="products-page">
       <div className="products-container">
-        <header className="products-header">
-          <div>
-            <h1>WaterFlow</h1>
-            <p>Water Delivery & Refill Management System</p>
-          </div>
-
-          <div>
-            <button
-              className="logout-button"
-              onClick={handleBackToProducts}
-              style={{ marginRight: "10px" }}
-            >
-              Continue Shopping
-            </button>
-
-            <button className="logout-button" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </header>
+        <CustomerHeader returnTo="/products" returnLabel="Return to Products" />
 
         <section className="products-intro">
           <h2>Your Cart</h2>

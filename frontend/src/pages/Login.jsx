@@ -1,97 +1,99 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function Login() {
-const [username, setUsername] = useState("");
-const [password, setPassword] = useState("");
-const [message, setMessage] = useState("");
-const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-const handleLogin = async (e) => {
-e.preventDefault();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-setMessage("");
-setLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-try {
-  const response = await api.post("/auth/login/", {
-    username,
-    password,
-  });
+    setMessage("");
+    setLoading(true);
 
-  localStorage.setItem("access_token", response.data.access);
-  localStorage.setItem("refresh_token", response.data.refresh);
+    try {
+      const response = await api.post("/auth/login/", {
+        username,
+        password,
+      });
 
-  setMessage("Login successful!");
-} catch (error) {
-  console.error(error);
-  setMessage("Login failed. Check your username and password.");
-} finally {
-  setLoading(false);
-}
- 
-};
+      localStorage.setItem("access_token", response.data.access);
+      localStorage.setItem("refresh_token", response.data.refresh);
 
-return (
-  <div className="login-page">
-    {" "}
-    <div className="login-card">
-      {" "}
-      <div className="login-header">
-        {" "}
-        <h1>WaterFlow</h1> <p>Water Delivery & Refill Management System</p>{" "}
-      </div>
-      <div className="login-content">
-        <h2>Sign in</h2>
+      navigate("/products");
+    } catch (error) {
+      console.error(error);
 
-        <p className="login-subtitle">
-          Welcome back. Enter your details to continue.
-        </p>
+      setMessage("Login failed. Check your username and password.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        <form className="login-form" onSubmit={handleLogin}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-header">
+          <h1>WaterFlow</h1>
+          <p>Water Delivery & Refill Management System</p>
+        </div>
 
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              required
-            />
-          </div>
+        <div className="login-content">
+          <h2>Sign in</h2>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <p className="login-subtitle">
+            Welcome back. Enter your details to continue.
+          </p>
 
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+          <form className="login-form" onSubmit={handleLogin}>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
 
-          <button className="login-button" type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+              />
+            </div>
 
-        {message && <p className="login-message">{message}</p>}
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
 
-        <p className="register-text">
-          Don't have an account?{" "}
-          <a href="/register" className="register-link">
-            Register
-          </a>
-        </p>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button className="login-button" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          {message && <p className="login-message">{message}</p>}
+
+          <p className="register-text">
+            Don't have an account?{" "}
+            <Link to="/register" className="register-link">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Login;

@@ -78,6 +78,7 @@ function Cart() {
         {!message && (!cart?.items || cart.items.length === 0) && (
           <div className="product-card">
             <h3>Your cart is empty</h3>
+
             <p className="product-description">
               Add some water products to your cart to continue.
             </p>
@@ -97,10 +98,6 @@ function Cart() {
 
                   <p className="product-description">
                     Quantity: {item.quantity}
-                  </p>
-
-                  <p className="product-description">
-                    Unit price: KSh {Number(item.unit_price).toLocaleString()}
                   </p>
 
                   <p className="product-price">

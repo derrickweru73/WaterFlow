@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { ShoppingCart } from "lucide-react";
 
 function Products() {
   const navigate = useNavigate();
@@ -79,12 +80,8 @@ function Products() {
           </div>
 
           <div>
-            <button
-              className="logout-button"
-              onClick={() => navigate("/cart")}
-              style={{ marginRight: "10px" }}
-            >
-              Cart
+            <button onClick={() => navigate("/cart")} title="View Cart">
+              <ShoppingCart size={22} />
             </button>
 
             <button className="logout-button" onClick={handleLogout}>

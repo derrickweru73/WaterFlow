@@ -15,6 +15,9 @@ class MpesaCallbackView(APIView):
     permission_classes = []
 
     def post(self, request):
+        print("========== M-PESA CALLBACK RECEIVED ==========")
+        print("FULL CALLBACK:", request.data)
+
         callback = request.data.get("Body", {}).get(
             "stkCallback", {}
         )
@@ -24,17 +27,20 @@ class MpesaCallbackView(APIView):
         )
 
         result_code = callback.get("ResultCode")
+        result_desc = callback.get("ResultDesc")
 
-        # Temporary M-Pesa debugging logs
-        print("========== MPESA CALLBACK ==========")
-        print("MPESA CALLBACK RECEIVED:", request.data)
-        print("MPESA RESULT CODE:", result_code)
-        print("MPESA CHECKOUT REQUEST ID:", checkout_request_id)
-        print("====================================")
+        print("CheckoutRequestID:", checkout_request_id)
+        print("ResultCode:", result_code)
+        print("ResultDesc:", result_desc)
 
         if not checkout_request_id:
+            print("ERROR: CheckoutRequestID missing")
+
             return Response(
-                {"ResultCode": 1, "ResultDesc": "Invalid callback"},
+                {
+                    "ResultCode": 1,
+                    "ResultDesc": "Invalid callback",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -46,7 +52,7 @@ class MpesaCallbackView(APIView):
             )
         except Payment.DoesNotExist:
             print(
-                "MPESA ERROR: Payment not found for checkout request:",
+                "ERROR: Payment not found:",
                 checkout_request_id,
             )
 
@@ -58,28 +64,38 @@ class MpesaCallbackView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        print("MPESA PAYMENT FOUND:", payment.id)
-        print("MPESA ORDER:", payment.order.id)
-        print("MPESA CURRENT PAYMENT STATUS:", payment.status)
-
         order = payment.order
 
-        if result_code != 0:
-            print(
-                "MPESA PAYMENT FAILED. RESULT CODE:",
-                result_code,
-            )
+        print("Payment ID:", payment.id)
+        print("Order ID:", order.id)
+        print("Current Payment Status:", payment.status)
+        print("Current Order Status:", order.status)
 
+        # PAYMENT FAILED / CANCELLED
+        if result_code != 0:
             payment.status = Payment.Status.FAILED
+
             payment.save(
-                update_fields=["status", "updated_at"]
+                update_fields=[
+                    "status",
+                    "updated_at",
+                ]
             )
 
             create_notification(
                 user=order.customer,
                 title="Payment Failed",
-                message=f"Payment for Order #{order.id} was not completed.",
+                message=(
+                    f"Payment for Order #{order.id} "
+                    "was not completed."
+                ),
                 notification_type="PAYMENT",
+            )
+
+            print(
+                "PAYMENT FAILED:",
+                result_code,
+                result_desc,
             )
 
             return Response(
@@ -89,6 +105,7 @@ class MpesaCallbackView(APIView):
                 }
             )
 
+        # PAYMENT SUCCESSFUL
         callback_items = callback.get(
             "CallbackMetadata", {}
         ).get("Item", [])
@@ -100,14 +117,15 @@ class MpesaCallbackView(APIView):
                 receipt_number = item.get("Value")
                 break
 
-        print(
-            "MPESA SUCCESSFUL. RECEIPT:",
-            receipt_number,
-        )
+        print("M-PESA RECEIPT:", receipt_number)
 
         with transaction.atomic():
+
             payment.status = Payment.Status.COMPLETED
-            payment.mpesa_receipt_number = receipt_number or ""
+
+            payment.mpesa_receipt_number = (
+                receipt_number or ""
+            )
 
             payment.save(
                 update_fields=[
@@ -120,7 +138,10 @@ class MpesaCallbackView(APIView):
             order.status = Order.Status.PAID
 
             order.save(
-                update_fields=["status", "updated_at"]
+                update_fields=[
+                    "status",
+                    "updated_at",
+                ]
             )
 
             for order_item in order.items.select_related(
@@ -149,20 +170,24 @@ class MpesaCallbackView(APIView):
                 user=order.customer,
                 title="Payment Successful",
                 message=(
-                    f"Payment for Order #{order.id} was successful. "
-                    f"M-Pesa receipt: {receipt_number or 'N/A'}."
+                    f"Payment for Order #{order.id} "
+                    "was successful. "
+                    f"M-Pesa receipt: "
+                    f"{receipt_number or 'N/A'}."
                 ),
                 notification_type="PAYMENT",
             )
 
-        print(
-            "MPESA PAYMENT COMPLETED SUCCESSFULLY:",
-            payment.id,
-        )
+        print("========== PAYMENT SUCCESSFULLY COMPLETED ==========")
+        print("Payment ID:", payment.id)
+        print("Order ID:", order.id)
+        print("Receipt:", receipt_number)
 
         return Response(
             {
                 "ResultCode": 0,
-                "ResultDesc": "Payment processed successfully",
+                "ResultDesc": (
+                    "Payment processed successfully"
+                ),
             }
         )

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ShoppingCart, ArrowLeft, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ShoppingCart, ArrowLeft, LogOut, ClipboardList } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function CustomerHeader({
@@ -55,6 +55,8 @@ function CustomerHeader({
     navigate("/cart");
   };
 
+
+
   const handleReturn = () => {
     navigate(returnTo);
   };
@@ -85,6 +87,12 @@ function CustomerHeader({
           </button>
         )}
 
+        {/* My Orders */}
+        <Link to="/orders" className="header-orders-link">
+          My Orders
+        </Link>
+
+        {/* Cart */}
         <button
           type="button"
           className="cart-icon-button"

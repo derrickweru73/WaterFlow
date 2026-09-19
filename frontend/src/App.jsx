@@ -6,7 +6,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import DriverDashboard from "./pages/DriverDashboard";
-
+import Orders from "./pages/Orders";
 function App() {
   return (
     <BrowserRouter>
@@ -17,6 +17,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/orders" element={<Orders />} />
 
         <Route path="/driver/dashboard" element={<DriverDashboard />} />
       </Routes>

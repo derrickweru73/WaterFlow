@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 from products.models import Order
 
@@ -51,6 +52,12 @@ class Delivery(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
+
+    def save(self, *args, **kwargs):
+        if self.driver and self.assigned_at is None:
+            self.assigned_at = timezone.now()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Delivery for Order #{self.order.id}"

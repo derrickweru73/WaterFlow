@@ -25,9 +25,20 @@ function Login() {
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("refresh_token", response.data.refresh);
 
-      navigate("/products");
+      const profileResponse = await api.get("/auth/protected/");
+
+      const role = profileResponse.data.role;
+
+      if (role === "DRIVER") {
+        navigate("/driver/dashboard");
+      } else {
+        navigate("/products");
+      }
     } catch (error) {
       console.error(error);
+
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
 
       setMessage("Login failed. Check your username and password.");
     } finally {

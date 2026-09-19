@@ -16,11 +16,16 @@ class ProtectedTestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        role = None
+
+        if hasattr(request.user, "profile"):
+            role = request.user.profile.role
+
         return Response({
             "message": "JWT authentication is working",
             "username": request.user.username,
+            "role": role,
         })
-
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

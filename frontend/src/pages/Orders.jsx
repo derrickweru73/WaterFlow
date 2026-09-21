@@ -11,6 +11,7 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
+  const [guest, setGuest] = useState(false);
 
   const viewOrder = async (orderId) => {
     try {
@@ -28,6 +29,14 @@ function Orders() {
   };
 
   const fetchOrders = async () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      setGuest(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -37,10 +46,6 @@ function Orders() {
 
       setOrders(fetchedOrders);
 
-      /*
-       * If Payment redirected here after a successful payment,
-       * automatically open that order.
-       */
       const paidOrderId = location.state?.orderId;
 
       if (paidOrderId) {
@@ -48,6 +53,15 @@ function Orders() {
       }
     } catch (err) {
       console.error(err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        setGuest(true);
+        setOrders([]);
+        return;
+      }
+
       setError("Unable to load your orders.");
     } finally {
       setLoading(false);
@@ -139,13 +153,38 @@ function Orders() {
           </p>
         </section>
 
-        {error && (
+        {guest ? (
+          <div className="orders-empty">
+            <h3>Your orders will appear here</h3>
+
+            <p>
+              Sign in to view your previous orders and track your deliveries.
+              If you have not placed an order yet, browse our available water
+              products.
+            </p>
+
+            <div className="orders-empty-actions">
+              <Link
+                to="/login"
+                state={{ returnTo: "/orders" }}
+                className="orders-browse-button"
+              >
+                Sign In
+              </Link>
+
+              <Link
+                to="/products"
+                className="orders-browse-button"
+              >
+                Continue Shopping
+              </Link>
+            </div>
+          </div>
+        ) : error ? (
           <div className="orders-error">
             {error}
           </div>
-        )}
-
-        {orders.length === 0 ? (
+        ) : orders.length === 0 ? (
           <div className="orders-empty">
             <h3>No orders yet</h3>
 

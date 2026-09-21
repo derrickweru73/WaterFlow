@@ -1,33 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
 
 function Orders() {
+  const location = useLocation();
+
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await api.get("/my-orders/");
-      setOrders(response.data);
-    } catch (err) {
-      console.error(err);
-      setError("Unable to load your orders.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const viewOrder = async (orderId) => {
     try {
@@ -43,6 +26,37 @@ function Orders() {
       setDetailLoading(false);
     }
   };
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/my-orders/");
+      const fetchedOrders = response.data;
+
+      setOrders(fetchedOrders);
+
+      /*
+       * If Payment redirected here after a successful payment,
+       * automatically open that order.
+       */
+      const paidOrderId = location.state?.orderId;
+
+      if (paidOrderId) {
+        await viewOrder(paidOrderId);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load your orders.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -100,7 +114,9 @@ function Orders() {
             minimal={true}
           />
 
-          <div className="orders-message">Loading your orders...</div>
+          <div className="orders-message">
+            Loading your orders...
+          </div>
         </div>
       </div>
     );
@@ -109,48 +125,67 @@ function Orders() {
   return (
     <div className="orders-page">
       <div className="orders-container">
-        {/* Header */}
         <CustomerHeader
           returnTo="/products"
           returnLabel="Return to Products"
           minimal={true}
         />
 
-        {/* Page introduction */}
         <section className="orders-intro">
           <h2>My Orders</h2>
 
-          <p>Track your water deliveries and view your order history.</p>
+          <p>
+            Track your water deliveries and view your order history.
+          </p>
         </section>
 
-        {error && <div className="orders-error">{error}</div>}
+        {error && (
+          <div className="orders-error">
+            {error}
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="orders-empty">
             <h3>No orders yet</h3>
 
-            <p>Your orders will appear here after you place one.</p>
+            <p>
+              Your orders will appear here after you place one.
+            </p>
 
-            <Link to="/products" className="orders-browse-button">
+            <Link
+              to="/products"
+              className="orders-browse-button"
+            >
               Browse Products
             </Link>
           </div>
         ) : (
           <div className="orders-layout">
-            {/* Orders list */}
             <section className="orders-list">
               {orders.map((order) => (
-                <article key={order.id} className="order-card">
+                <article
+                  key={order.id}
+                  className="order-card"
+                >
                   <div className="order-card-header">
                     <div>
-                      <h3>Order #{order.id}</h3>
+                      <h3>
+                        Order #{order.id}
+                      </h3>
 
                       <p className="order-date">
-                        {new Date(order.created_at).toLocaleString()}
+                        {new Date(
+                          order.created_at,
+                        ).toLocaleString()}
                       </p>
                     </div>
 
-                    <span className={getStatusClass(order.status)}>
+                    <span
+                      className={getStatusClass(
+                        order.status,
+                      )}
+                    >
                       {formatStatus(order.status)}
                     </span>
                   </div>
@@ -159,27 +194,39 @@ function Orders() {
                     <div className="order-summary-row">
                       <span>Payment</span>
 
-                      <strong>{formatStatus(order.payment_status)}</strong>
+                      <strong>
+                        {formatStatus(
+                          order.payment_status,
+                        )}
+                      </strong>
                     </div>
 
                     <div className="order-summary-row">
                       <span>Total</span>
 
                       <strong className="order-total">
-                        KES {Number(order.total_amount).toFixed(2)}
+                        KES{" "}
+                        {Number(
+                          order.total_amount,
+                        ).toFixed(2)}
                       </strong>
                     </div>
 
                     <div className="order-delivery">
                       <span>Delivery</span>
 
-                      <p>{order.delivery_address || "Not available"}</p>
+                      <p>
+                        {order.delivery_address ||
+                          "Not available"}
+                      </p>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => viewOrder(order.id)}
+                    onClick={() =>
+                      viewOrder(order.id)
+                    }
                     className="order-track-button"
                   >
                     Track Order
@@ -188,130 +235,180 @@ function Orders() {
               ))}
             </section>
 
-            {/* Order details */}
             <section className="order-details">
               {!selectedOrder ? (
                 <div className="order-details-placeholder">
                   <h3>Select an Order</h3>
 
-                  <p>Select an order to view its tracking details.</p>
+                  <p>
+                    Select an order to view its tracking details.
+                  </p>
                 </div>
               ) : detailLoading ? (
                 <div className="order-details-placeholder">
-                  <p>Loading order details...</p>
+                  <p>
+                    Loading order details...
+                  </p>
                 </div>
               ) : (
                 <article className="order-details-card">
                   <div className="order-details-header">
-                    <h2>Order #{selectedOrder.id}</h2>
+                    <h2>
+                      Order #{selectedOrder.id}
+                    </h2>
 
-                    <span className={getStatusClass(selectedOrder.status)}>
-                      {formatStatus(selectedOrder.status)}
+                    <span
+                      className={getStatusClass(
+                        selectedOrder.status,
+                      )}
+                    >
+                      {formatStatus(
+                        selectedOrder.status,
+                      )}
                     </span>
                   </div>
 
-                  {/* Delivery Progress */}
                   <div className="order-section">
-                    <h3>Delivery Progress</h3>
+                    <h3>
+                      Delivery Progress
+                    </h3>
 
                     <div className="order-progress">
-                      {statusOrder.map((status, index) => {
-                        const currentIndex = statusOrder.indexOf(
-                          selectedOrder.status,
-                        );
+                      {statusOrder.map(
+                        (status, index) => {
+                          const currentIndex =
+                            statusOrder.indexOf(
+                              selectedOrder.status,
+                            );
 
-                        const completed = currentIndex >= index;
+                          const completed =
+                            currentIndex >= index;
 
-                        return (
-                          <div key={status} className="order-progress-item">
+                          return (
                             <div
-                              className={
-                                completed
-                                  ? "order-progress-dot order-progress-complete"
-                                  : "order-progress-dot"
-                              }
-                            />
-
-                            <span
-                              className={
-                                completed
-                                  ? "order-progress-label order-progress-label-complete"
-                                  : "order-progress-label"
-                              }
+                              key={status}
+                              className="order-progress-item"
                             >
-                              {formatStatus(status)}
-                            </span>
-                          </div>
-                        );
-                      })}
+                              <div
+                                className={
+                                  completed
+                                    ? "order-progress-dot order-progress-complete"
+                                    : "order-progress-dot"
+                                }
+                              />
+
+                              <span
+                                className={
+                                  completed
+                                    ? "order-progress-label order-progress-label-complete"
+                                    : "order-progress-label"
+                                }
+                              >
+                                {formatStatus(
+                                  status,
+                                )}
+                              </span>
+                            </div>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
 
-                  {/* Items */}
                   <div className="order-section">
                     <h3>Items</h3>
 
                     <div className="order-items">
-                      {selectedOrder.items?.map((item) => (
-                        <div key={item.id} className="order-item">
-                          <div>
-                            <p className="order-item-name">
-                              {item.product_name}
-                            </p>
+                      {selectedOrder.items?.map(
+                        (item) => (
+                          <div
+                            key={item.id}
+                            className="order-item"
+                          >
+                            <div>
+                              <p className="order-item-name">
+                                {item.product_name}
+                              </p>
 
-                            <p className="order-item-quantity">
-                              Quantity: {item.quantity}
-                            </p>
+                              <p className="order-item-quantity">
+                                Quantity:{" "}
+                                {item.quantity}
+                              </p>
+                            </div>
+
+                            <strong>
+                              KES{" "}
+                              {Number(
+                                item.subtotal,
+                              ).toFixed(2)}
+                            </strong>
                           </div>
-
-                          <strong>
-                            KES {Number(item.subtotal).toFixed(2)}
-                          </strong>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
 
-                  {/* Delivery Information */}
                   <div className="order-section">
-                    <h3>Delivery Information</h3>
+                    <h3>
+                      Delivery Information
+                    </h3>
 
                     <div className="order-information">
                       <p>
-                        <strong>Address:</strong>{" "}
-                        {selectedOrder.delivery_address || "Not available"}
+                        <strong>
+                          Address:
+                        </strong>{" "}
+                        {selectedOrder.delivery_address ||
+                          "Not available"}
                       </p>
 
                       {selectedOrder.delivery_instructions && (
                         <p>
-                          <strong>Instructions:</strong>{" "}
-                          {selectedOrder.delivery_instructions}
+                          <strong>
+                            Instructions:
+                          </strong>{" "}
+                          {
+                            selectedOrder.delivery_instructions
+                          }
                         </p>
                       )}
 
                       {selectedOrder.delivery_zone_name && (
                         <p>
-                          <strong>Delivery Zone:</strong>{" "}
-                          {selectedOrder.delivery_zone_name}
+                          <strong>
+                            Delivery Zone:
+                          </strong>{" "}
+                          {
+                            selectedOrder.delivery_zone_name
+                          }
                         </p>
                       )}
 
                       <p>
-                        <strong>Delivery Fee:</strong> KES{" "}
-                        {Number(selectedOrder.delivery_fee || 0).toFixed(2)}
+                        <strong>
+                          Delivery Fee:
+                        </strong>{" "}
+                        KES{" "}
+                        {Number(
+                          selectedOrder.delivery_fee ||
+                            0,
+                        ).toFixed(2)}
                       </p>
                     </div>
                   </div>
 
-                  {/* Payment */}
                   <div className="order-section order-payment-section">
                     <h3>Payment</h3>
 
                     <div className="order-summary-row">
-                      <span>Payment Status</span>
+                      <span>
+                        Payment Status
+                      </span>
 
                       <strong>
-                        {formatStatus(selectedOrder.payment_status)}
+                        {formatStatus(
+                          selectedOrder.payment_status,
+                        )}
                       </strong>
                     </div>
 
@@ -319,7 +416,10 @@ function Orders() {
                       <span>Order Total</span>
 
                       <strong className="order-total">
-                        KES {Number(selectedOrder.total_amount).toFixed(2)}
+                        KES{" "}
+                        {Number(
+                          selectedOrder.total_amount,
+                        ).toFixed(2)}
                       </strong>
                     </div>
                   </div>
@@ -334,3 +434,4 @@ function Orders() {
 }
 
 export default Orders;
+ 

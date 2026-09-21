@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
+
+const GUEST_CART_KEY = "waterflow_guest_cart";
+
 function Cart() {
   const navigate = useNavigate();
 
@@ -9,6 +12,44 @@ function Cart() {
   const [loading, setLoading] = useState(true);
   const [updatingItem, setUpdatingItem] = useState(null);
   const [message, setMessage] = useState("");
+
+  const isGuest = !localStorage.getItem("access_token");
+
+  const fetchGuestCart = () => {
+    try {
+      const guestItems = JSON.parse(
+        localStorage.getItem(GUEST_CART_KEY) || "[]",
+      );
+
+      const items = guestItems.map((item, index) => ({
+        id: `guest-${item.product}`,
+        product: item.product,
+        product_name: item.product_name,
+        price: item.price,
+        quantity: item.quantity,
+        subtotal: Number(item.price || 0) * Number(item.quantity || 0),
+        guestIndex: index,
+      }));
+
+      const total = items.reduce(
+        (sum, item) => sum + Number(item.subtotal || 0),
+        0,
+      );
+
+      setCart({
+        items,
+        total,
+        isGuest: true,
+      });
+    } catch (error) {
+      console.error("Guest cart error:", error);
+      setCart({
+        items: [],
+        total: 0,
+        isGuest: true,
+      });
+    }
+  };
 
   const fetchCart = async () => {
     try {
@@ -20,7 +61,7 @@ function Cart() {
       if (error.response?.status === 401) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        navigate("/");
+        fetchGuestCart();
         return;
       }
 
@@ -29,27 +70,59 @@ function Cart() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/");
-      return;
-    }
-
     const loadCart = async () => {
       setLoading(true);
-      await fetchCart();
+
+      if (isGuest) {
+        fetchGuestCart();
+      } else {
+        await fetchCart();
+      }
+
       setLoading(false);
     };
 
     loadCart();
-  }, [navigate]);
+  }, [isGuest]);
+
+  const updateGuestCart = (productId, newQuantity) => {
+    const guestCart = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
+
+    const item = guestCart.find((cartItem) => cartItem.product === productId);
+
+    if (!item) {
+      return;
+    }
+
+    item.quantity = newQuantity;
+
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(guestCart));
+
+    fetchGuestCart();
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
+
+  const removeGuestItem = (productId) => {
+    const guestCart = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
+
+    const updatedCart = guestCart.filter((item) => item.product !== productId);
+
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
+
+    fetchGuestCart();
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
 
   const handleIncrease = async (item) => {
     setUpdatingItem(item.id);
     setMessage("");
 
     try {
+      if (isGuest) {
+        updateGuestCart(item.product, item.quantity + 1);
+        return;
+      }
+
       await api.patch(`/cart/items/${item.id}/`, {
         quantity: item.quantity + 1,
       });
@@ -79,6 +152,11 @@ function Cart() {
     setMessage("");
 
     try {
+      if (isGuest) {
+        updateGuestCart(item.product, item.quantity - 1);
+        return;
+      }
+
       await api.patch(`/cart/items/${item.id}/`, {
         quantity: item.quantity - 1,
       });
@@ -102,6 +180,11 @@ function Cart() {
     setMessage("");
 
     try {
+      if (isGuest) {
+        removeGuestItem(item.product);
+        return;
+      }
+
       await api.delete(`/cart/items/${item.id}/delete/`);
 
       window.dispatchEvent(new Event("cartUpdated"));
@@ -124,12 +207,6 @@ function Cart() {
 
   const handleCheckout = () => {
     navigate("/checkout");
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/");
   };
 
   if (loading) {
@@ -263,6 +340,13 @@ function Cart() {
 
             <div className="product-card" style={{ marginTop: "25px" }}>
               <h3>Total: KSh {Number(cart.total || 0).toLocaleString()}</h3>
+
+              {isGuest && (
+                <p className="product-description">
+                  You can continue browsing without an account. Sign in or
+                  create an account when you proceed to checkout.
+                </p>
+              )}
 
               <button className="product-button" onClick={handleCheckout}>
                 Proceed to Checkout

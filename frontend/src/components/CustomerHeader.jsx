@@ -18,7 +18,23 @@ function CustomerHeader({
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      setCartCount(0);
+      try {
+        const guestCart = JSON.parse(
+          localStorage.getItem("waterflow_guest_cart") || "[]",
+        );
+
+        const totalQuantity = guestCart.reduce(
+          (total, item) =>
+            total + Number(item.quantity || 0),
+          0,
+        );
+
+        setCartCount(totalQuantity);
+      } catch (error) {
+        console.error("Unable to load guest cart count:", error);
+        setCartCount(0);
+      }
+
       return;
     }
 
@@ -28,14 +44,14 @@ function CustomerHeader({
       const items = response.data?.items || [];
 
       const totalQuantity = items.reduce(
-        (total, item) => total + Number(item.quantity || 0),
+        (total, item) =>
+          total + Number(item.quantity || 0),
         0,
       );
 
       setCartCount(totalQuantity);
     } catch (error) {
       console.error("Unable to load cart count:", error);
-
       setCartCount(0);
     }
   };
@@ -51,7 +67,9 @@ function CustomerHeader({
     try {
       const response = await api.get("/notifications/");
 
-      const notifications = Array.isArray(response.data) ? response.data : [];
+      const notifications = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       const unreadCount = notifications.filter(
         (notification) => !notification.is_read,
@@ -79,7 +97,10 @@ function CustomerHeader({
 
     window.addEventListener("cartUpdated", handleCartUpdated);
 
-    window.addEventListener("notificationsUpdated", handleNotificationsUpdated);
+    window.addEventListener(
+      "notificationsUpdated",
+      handleNotificationsUpdated,
+    );
 
     return () => {
       window.removeEventListener("cartUpdated", handleCartUpdated);
@@ -114,7 +135,6 @@ function CustomerHeader({
       </div>
 
       <div className="customer-header-actions">
-        {/* Minimal header - used on Notifications page */}
         {minimal ? (
           <button
             type="button"
@@ -126,7 +146,6 @@ function CustomerHeader({
           </button>
         ) : (
           <>
-            {/* Return button */}
             {!showLogout && (
               <button
                 type="button"
@@ -138,12 +157,10 @@ function CustomerHeader({
               </button>
             )}
 
-            {/* My Orders */}
             <Link to="/orders" className="header-orders-link">
               My Orders
             </Link>
 
-            {/* Notifications */}
             <Link
               to="/notifications"
               className="header-notifications-icon"
@@ -159,7 +176,6 @@ function CustomerHeader({
               )}
             </Link>
 
-            {/* Cart */}
             <button
               type="button"
               className="cart-icon-button"
@@ -169,10 +185,13 @@ function CustomerHeader({
             >
               <ShoppingCart size={24} />
 
-              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              {cartCount > 0 && (
+                <span className="cart-count">
+                  {cartCount}
+                </span>
+              )}
             </button>
 
-            {/* Logout */}
             {showLogout && (
               <button
                 type="button"
@@ -191,3 +210,4 @@ function CustomerHeader({
 }
 
 export default CustomerHeader;
+ 

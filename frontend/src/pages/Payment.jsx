@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
@@ -10,131 +10,39 @@ function Payment() {
   const order = location.state?.order;
 
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [paying, setPaying] = useState(false);
   const [message, setMessage] = useState("");
-  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [paying, setPaying] = useState(false);
 
-  const paymentCheckRef = useRef(null);
-
+  // Check authentication when the payment page opens
   useEffect(() => {
-    return () => {
-      if (paymentCheckRef.current) {
-        clearInterval(paymentCheckRef.current);
-      }
-    };
-  }, []);
+    const token = localStorage.getItem("access_token");
 
-  if (!order) {
-    return (
-      <div className="products-page">
-        <div className="products-container">
-          <CustomerHeader
-            returnTo="/checkout"
-            returnLabel="Return to Checkout"
-          />
+    if (!token) {
+      navigate("/login", {
+        replace: true,
+        state: {
+          returnTo: "/checkout",
+        },
+      });
+    }
+  }, [navigate]);
 
-          <section className="products-intro">
-            <h2>Payment</h2>
-            <p>No order information was found.</p>
-          </section>
-
-          <button
-            className="product-button"
-            onClick={() => navigate("/checkout")}
-          >
-            Return to Checkout
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const checkPaymentStatus = () => {
-    setCheckingPayment(true);
-    setMessage(
-      "Payment request sent. Waiting for M-Pesa confirmation..."
-    );
-
-    let attempts = 0;
-    const maxAttempts = 20;
-
-    paymentCheckRef.current = setInterval(async () => {
-      attempts += 1;
-
-      try {
-        const response = await api.get(
-          `/my-orders/${order.id}/`
-        );
-
-        const updatedOrder = response.data;
-        const paymentStatus = updatedOrder.payment_status;
-        const orderStatus = updatedOrder.status;
-
-        console.log("Payment status:", paymentStatus);
-        console.log("Order status:", orderStatus);
-
-        if (paymentStatus === "COMPLETED") {
-          clearInterval(paymentCheckRef.current);
-          paymentCheckRef.current = null;
-
-          setCheckingPayment(false);
-          setMessage(
-            "Payment successful! Opening your order tracking..."
-          );
-
-          setTimeout(() => {
-            navigate("/orders", {
-              state: {
-                orderId: order.id,
-              },
-            });
-          }, 1000);
-
-          return;
-        }
-
-        if (paymentStatus === "FAILED") {
-          clearInterval(paymentCheckRef.current);
-          paymentCheckRef.current = null;
-
-          setCheckingPayment(false);
-          setMessage(
-            "Payment was not successful. Please try again."
-          );
-
-          return;
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(paymentCheckRef.current);
-          paymentCheckRef.current = null;
-
-          setCheckingPayment(false);
-          setMessage(
-            "We are still waiting for M-Pesa confirmation. Please check your payment status in My Orders."
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Error checking payment status:",
-          error
-        );
-
-        if (error.response?.status === 401) {
-          clearInterval(paymentCheckRef.current);
-          paymentCheckRef.current = null;
-
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-
-          navigate("/");
-        }
-      }
-    }, 3000);
-  };
-
+  // Handle M-Pesa payment
   const handlePayment = async (e) => {
     e.preventDefault();
+
+    const token = localStorage.getItem("access_token");
+
+    // User must be logged in before payment
+    if (!token) {
+      navigate("/login", {
+        replace: true,
+        state: {
+          returnTo: "/checkout",
+        },
+      });
+      return;
+    }
 
     if (!phoneNumber.trim()) {
       setMessage("Please enter your M-Pesa phone number.");
@@ -152,9 +60,84 @@ function Payment() {
 
       console.log("Payment response:", response.data);
 
-      setPaying(false);
+      setMessage(
+        "M-Pesa prompt sent. Please check your phone and enter your PIN.",
+      );
 
-      checkPaymentStatus();
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      const checkPaymentStatus = async () => {
+        try {
+          attempts += 1;
+
+          const orderResponse = await api.get(
+            `/my-orders/${order.id}/`,
+          );
+
+          const updatedOrder = orderResponse.data;
+
+          if (
+            updatedOrder.payment_status === "COMPLETED" ||
+            updatedOrder.payment_status === "Completed"
+          ) {
+            setMessage(
+              "Payment successful! Redirecting to your order...",
+            );
+
+            setTimeout(() => {
+              navigate("/orders", {
+                state: {
+                  orderId: order.id,
+                },
+              });
+            }, 1000);
+
+            return;
+          }
+
+          if (
+            updatedOrder.payment_status === "FAILED" ||
+            updatedOrder.payment_status === "Failed"
+          ) {
+            setMessage("Payment failed. Please try again.");
+            setPaying(false);
+            return;
+          }
+
+          if (attempts < maxAttempts) {
+            setTimeout(checkPaymentStatus, 3000);
+          } else {
+            setMessage(
+              "We could not confirm your payment yet. Please check your order status.",
+            );
+            setPaying(false);
+          }
+        } catch (error) {
+          console.error("Payment status error:", error);
+
+          if (error.response?.status === 401) {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+
+            navigate("/login", {
+              replace: true,
+              state: {
+                returnTo: "/checkout",
+              },
+            });
+
+            return;
+          }
+
+          setMessage(
+            "Unable to check payment status. Please check your order.",
+          );
+          setPaying(false);
+        }
+      };
+
+      setTimeout(checkPaymentStatus, 3000);
     } catch (error) {
       console.error("Payment error:", error);
 
@@ -162,22 +145,51 @@ function Payment() {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
 
-        navigate("/");
+        navigate("/login", {
+          replace: true,
+          state: {
+            returnTo: "/checkout",
+          },
+        });
+
         return;
       }
 
-      const data = error.response?.data;
-
       setMessage(
-        data?.detail ||
-          data?.phone_number?.[0] ||
-          data?.order?.[0] ||
-          "Unable to start M-Pesa payment. Please try again."
+        error.response?.data?.detail ||
+          "Unable to start M-Pesa payment. Please try again.",
       );
 
       setPaying(false);
     }
   };
+
+  // No order was supplied
+  if (!order) {
+    return (
+      <div className="products-page">
+        <div className="products-container">
+          <CustomerHeader
+            returnTo="/checkout"
+            returnLabel="Return to Checkout"
+          />
+
+          <section className="products-intro">
+            <h2>Payment</h2>
+            <p>No order information was found.</p>
+
+            <button
+              type="button"
+              className="product-button"
+              onClick={() => navigate("/checkout")}
+            >
+              Return to Checkout
+            </button>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="products-page">
@@ -198,89 +210,81 @@ function Payment() {
           </p>
         )}
 
-        <div className="checkout-layout">
-          <div className="product-card">
-            <h3>M-Pesa Payment</h3>
+        <div className="product-card">
+          <h3>M-Pesa Payment</h3>
 
-            <form onSubmit={handlePayment}>
-              <div className="form-group">
-                <label htmlFor="phoneNumber">
-                  M-Pesa Phone Number
-                </label>
+          <form onSubmit={handlePayment}>
+            <div className="form-group">
+              <label htmlFor="phoneNumber">
+                M-Pesa Phone Number
+              </label>
 
-                <input
-                  id="phoneNumber"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) =>
-                    setPhoneNumber(e.target.value)
-                  }
-                  placeholder="e.g. 0712345678"
-                  required
-                  disabled={paying || checkingPayment}
-                />
-              </div>
+              <input
+                id="phoneNumber"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) =>
+                  setPhoneNumber(e.target.value)
+                }
+                placeholder="e.g. 0712345678"
+                required
+                disabled={paying}
+              />
+            </div>
 
-              <button
-                className="product-button"
-                type="submit"
-                disabled={paying || checkingPayment}
-              >
-                {paying
-                  ? "Sending M-Pesa Request..."
-                  : checkingPayment
-                    ? "Waiting for Payment..."
-                    : "Pay with M-Pesa"}
-              </button>
-            </form>
-          </div>
+            <button
+              type="submit"
+              className="product-button"
+              disabled={paying}
+            >
+              {paying
+                ? "Waiting for payment..."
+                : "Pay with M-Pesa"}
+            </button>
+          </form>
+        </div>
 
-          <div className="product-card">
-            <h3>Order Summary</h3>
+        <div
+          className="product-card"
+          style={{ marginTop: "25px" }}
+        >
+          <h3>Order Summary</h3>
 
-            <p>
-              <strong>Order:</strong> #{order.id}
-            </p>
+          <p className="product-description">
+            <strong>Order:</strong> #{order.id}
+          </p>
 
-            {order.items?.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "12px",
-                  gap: "15px",
-                }}
-              >
-                <span>
-                  {item.product_name} × {item.quantity}
-                </span>
+          {order.items?.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "10px",
+              }}
+            >
+              <span>
+                {item.product_name} × {item.quantity}
+              </span>
 
-                <strong>
-                  KSh{" "}
-                  {Number(
-                    item.subtotal || 0
-                  ).toLocaleString()}
-                </strong>
-              </div>
-            ))}
+              <strong>
+                KSh{" "}
+                {Number(item.subtotal || 0).toLocaleString()}
+              </strong>
+            </div>
+          ))}
 
-            <hr />
+          <hr />
 
-            <h3>
-              Total: KSh{" "}
-              {Number(
-                order.total_amount ||
-                  order.total ||
-                  0
-              ).toLocaleString()}
-            </h3>
+          <h3>
+            Total: KSh{" "}
+            {Number(order.total || 0).toLocaleString()}
+          </h3>
 
-            <p className="product-description">
-              You will receive an M-Pesa payment prompt on
-              your phone after clicking the payment button.
-            </p>
-          </div>
+          <p className="product-description">
+            You will receive an M-Pesa payment prompt on your
+            phone after clicking the payment button.
+          </p>
         </div>
       </div>
     </div>

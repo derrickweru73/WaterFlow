@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Products from "./pages/Products";
@@ -8,12 +9,13 @@ import Payment from "./pages/Payment";
 import DriverDashboard from "./pages/DriverDashboard";
 import Orders from "./pages/Orders";
 import Notifications from "./pages/Notifications";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Customer */}
+        <Route path="/" element={<Products />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -21,10 +23,19 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/notifications" element={<Notifications />} />
 
-        <Route path="/driver/dashboard" element={<DriverDashboard />} />
+        {/* Authentication */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Driver */}
+        <Route
+          path="/driver/dashboard"
+          element={<DriverDashboard />}
+        />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
+ 

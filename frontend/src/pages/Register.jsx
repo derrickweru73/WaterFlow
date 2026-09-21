@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const returnTo = location.state?.returnTo || "/products";
 
   const [formData, setFormData] = useState({
     username: "",
@@ -34,8 +37,12 @@ function Register() {
       setMessage("Registration successful! Redirecting to login...");
 
       setTimeout(() => {
-        navigate("/");
-      }, 1500);
+        navigate("/login", {
+          state: {
+            returnTo,
+          },
+        });
+      }, 1200);
     } catch (error) {
       console.error(error);
 
@@ -75,6 +82,12 @@ function Register() {
           <p className="login-subtitle">
             Register to order water and manage your deliveries.
           </p>
+
+          {returnTo === "/checkout" && (
+            <p className="login-subtitle">
+              Create an account to continue with your order.
+            </p>
+          )}
 
           <form className="login-form" onSubmit={handleRegister}>
             <div className="form-group">
@@ -133,16 +146,28 @@ function Register() {
               />
             </div>
 
-            <button className="login-button" type="submit" disabled={loading}>
+            <button
+              className="login-button"
+              type="submit"
+              disabled={loading}
+            >
               {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
-          {message && <p className="login-message">{message}</p>}
+          {message && (
+            <p className="login-message">
+              {message}
+            </p>
+          )}
 
           <p className="register-text">
             Already have an account?{" "}
-            <Link to="/" className="register-link">
+            <Link
+              to="/login"
+              state={{ returnTo }}
+              className="register-link"
+            >
               Sign in
             </Link>
           </p>
@@ -153,3 +178,4 @@ function Register() {
 }
 
 export default Register;
+ 

@@ -68,120 +68,137 @@ function DriverDashboard() {
     navigate("/");
   };
 
+  const formatStatus = (status) => {
+    if (!status) return "Unknown";
+
+    return status
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "ASSIGNED":
+        return "driver-status driver-status-assigned";
+      case "OUT_FOR_DELIVERY":
+        return "driver-status driver-status-out";
+      case "DELIVERED":
+        return "driver-status driver-status-delivered";
+      case "FAILED":
+        return "driver-status driver-status-failed";
+      default:
+        return "driver-status driver-status-default";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-700 text-white shadow">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">WaterFlow</h1>
-            <p className="text-sm text-blue-100">Driver Dashboard</p>
+    <div className="driver-page">
+      <div className="driver-container">
+        <header className="driver-header">
+          <div className="driver-header-brand">
+            <h1>WaterFlow</h1>
+            <p>Driver Dashboard</p>
           </div>
 
           <button
+            type="button"
             onClick={logout}
-            className="bg-white text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50"
+            className="driver-logout-button"
           >
             Logout
           </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">My Deliveries</h2>
-          <p className="text-gray-600 mt-1">
+        <section className="driver-intro">
+          <h2>My Deliveries</h2>
+          <p>
             View and manage deliveries assigned to you.
           </p>
-        </div>
+        </section>
 
         {error && (
-          <div className="mb-6 bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+          <div className="driver-error">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="bg-white rounded-xl shadow p-8 text-center">
-            <p className="text-gray-600">Loading deliveries...</p>
+          <div className="driver-message">
+            Loading deliveries...
           </div>
         ) : deliveries.length === 0 ? (
-          <div className="bg-white rounded-xl shadow p-8 text-center">
-            <h3 className="text-xl font-semibold text-gray-800">
-              No deliveries assigned
-            </h3>
-            <p className="text-gray-500 mt-2">
+          <div className="driver-empty">
+            <h3>No deliveries assigned</h3>
+            <p>
               You currently have no deliveries assigned to you.
             </p>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="driver-deliveries">
             {deliveries.map((delivery) => (
-              <div
+              <article
                 key={delivery.id}
-                className="bg-white rounded-xl shadow-md p-6"
+                className="driver-card"
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div className="driver-card-header">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">
+                    <h3>
                       Delivery #{delivery.id}
                     </h3>
 
-                    <p className="text-gray-600">Order #{delivery.order_id}</p>
+                    <p>
+                      Order #{delivery.order_id}
+                    </p>
                   </div>
 
-                  <span
-                    className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
-                      delivery.status === "ASSIGNED"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : delivery.status === "OUT_FOR_DELIVERY"
-                          ? "bg-blue-100 text-blue-800"
-                          : delivery.status === "DELIVERED"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {delivery.status.replaceAll("_", " ")}
+                  <span className={getStatusClass(delivery.status)}>
+                    {formatStatus(delivery.status)}
                   </span>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Customer</p>
-                    <p className="font-semibold text-gray-800">
+                <div className="driver-information">
+                  <div className="driver-info-item">
+                    <span>Customer</span>
+                    <strong>
                       {delivery.customer_username}
-                    </p>
+                    </strong>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Delivery Address</p>
-                    <p className="font-semibold text-gray-800">
+                  <div className="driver-info-item driver-address">
+                    <span>Delivery Address</span>
+                    <strong>
                       {delivery.delivery_address}
-                    </p>
+                    </strong>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Latitude</p>
-                    <p className="font-semibold text-gray-800">
+                  <div className="driver-info-item">
+                    <span>Latitude</span>
+                    <strong>
                       {delivery.latitude || "Not available"}
-                    </p>
+                    </strong>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Longitude</p>
-                    <p className="font-semibold text-gray-800">
+                  <div className="driver-info-item">
+                    <span>Longitude</span>
+                    <strong>
                       {delivery.longitude || "Not available"}
-                    </p>
+                    </strong>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="driver-actions">
                   {delivery.status === "ASSIGNED" && (
                     <button
+                      type="button"
                       onClick={() =>
-                        updateStatus(delivery.id, "OUT_FOR_DELIVERY")
+                        updateStatus(
+                          delivery.id,
+                          "OUT_FOR_DELIVERY",
+                        )
                       }
                       disabled={updatingId === delivery.id}
-                      className="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                      className="driver-action-button driver-start-button"
                     >
                       {updatingId === delivery.id
                         ? "Updating..."
@@ -191,9 +208,15 @@ function DriverDashboard() {
 
                   {delivery.status === "OUT_FOR_DELIVERY" && (
                     <button
-                      onClick={() => updateStatus(delivery.id, "DELIVERED")}
+                      type="button"
+                      onClick={() =>
+                        updateStatus(
+                          delivery.id,
+                          "DELIVERED",
+                        )
+                      }
                       disabled={updatingId === delivery.id}
-                      className="bg-green-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                      className="driver-action-button driver-complete-button"
                     >
                       {updatingId === delivery.id
                         ? "Updating..."
@@ -204,9 +227,15 @@ function DriverDashboard() {
                   {(delivery.status === "ASSIGNED" ||
                     delivery.status === "OUT_FOR_DELIVERY") && (
                     <button
-                      onClick={() => updateStatus(delivery.id, "FAILED")}
+                      type="button"
+                      onClick={() =>
+                        updateStatus(
+                          delivery.id,
+                          "FAILED",
+                        )
+                      }
                       disabled={updatingId === delivery.id}
-                      className="bg-red-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50"
+                      className="driver-action-button driver-failed-button"
                     >
                       {updatingId === delivery.id
                         ? "Updating..."
@@ -214,24 +243,26 @@ function DriverDashboard() {
                     </button>
                   )}
 
-                  {delivery.latitude && delivery.longitude && (
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${delivery.latitude},${delivery.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gray-800 text-white px-5 py-3 rounded-lg font-semibold hover:bg-gray-900"
-                    >
-                      Open in Maps
-                    </a>
-                  )}
+                  {delivery.latitude &&
+                    delivery.longitude && (
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${delivery.latitude},${delivery.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="driver-action-button driver-maps-button"
+                      >
+                        Open in Maps
+                      </a>
+                    )}
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
 
 export default DriverDashboard;
+ 

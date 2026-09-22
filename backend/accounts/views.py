@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import UserProfile
 from .serializers import RegisterSerializer
 
 
@@ -26,6 +27,7 @@ class ProtectedTestView(APIView):
             "username": request.user.username,
             "role": role,
         })
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -52,3 +54,28 @@ class LogoutView(APIView):
             {"detail": "Successfully logged out."},
             status=status.HTTP_205_RESET_CONTENT,
         )
+
+
+class FixManagementProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.username != "admin":
+            return Response(
+                {"detail": "Not authorized."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        profile, created = UserProfile.objects.get_or_create(
+            user=request.user
+        )
+
+        profile.role = UserProfile.Role.MANAGEMENT
+        profile.save()
+
+        return Response({
+            "message": "Management profile configured successfully.",
+            "username": request.user.username,
+            "role": profile.role,
+            "profile_created": created,
+        })

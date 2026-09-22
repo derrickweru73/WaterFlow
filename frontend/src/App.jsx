@@ -9,12 +9,32 @@ import Payment from "./pages/Payment";
 import DriverDashboard from "./pages/DriverDashboard";
 import Orders from "./pages/Orders";
 import Notifications from "./pages/Notifications";
+import ManagementDashboard from "./pages/ManagementDashboard";
+
+function ManagementPage({ title }) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px",
+        background: "#f8fafc",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <h1 style={{ marginBottom: "10px" }}>{title}</h1>
+
+      <p style={{ color: "#64748b" }}>
+        This management section is being connected to the WaterFlow backend.
+      </p>
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Customer */}
+        {/* Customer pages */}
         <Route path="/" element={<Products />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<Cart />} />
@@ -28,9 +48,59 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* Driver */}
+        <Route path="/driver/dashboard" element={<DriverDashboard />} />
+
+        {/* Management */}
+        <Route path="/management/dashboard" element={<ManagementDashboard />} />
+
         <Route
-          path="/driver/dashboard"
-          element={<DriverDashboard />}
+          path="/management/products"
+          element={<ManagementPage title="Products Management" />}
+        />
+
+        <Route
+          path="/management/orders"
+          element={<ManagementPage title="Orders Management" />}
+        />
+
+        <Route
+          path="/management/payments"
+          element={<ManagementPage title="Payments Management" />}
+        />
+
+        <Route
+          path="/management/inventory"
+          element={<ManagementPage title="Inventory Management" />}
+        />
+
+        <Route
+          path="/management/deliveries"
+          element={<ManagementPage title="Deliveries Management" />}
+        />
+
+        <Route
+          path="/management/customers"
+          element={<ManagementPage title="Customers Management" />}
+        />
+
+        <Route
+          path="/management/drivers"
+          element={<ManagementPage title="Drivers Management" />}
+        />
+
+        <Route
+          path="/management/notifications"
+          element={<ManagementPage title="Notifications Management" />}
+        />
+
+        <Route
+          path="/management/reports"
+          element={<ManagementPage title="Reports" />}
+        />
+
+        <Route
+          path="/management/subscriptions"
+          element={<ManagementPage title="Subscriptions Management" />}
         />
       </Routes>
     </BrowserRouter>
@@ -38,4 +108,3 @@ function App() {
 }
 
 export default App;
- 

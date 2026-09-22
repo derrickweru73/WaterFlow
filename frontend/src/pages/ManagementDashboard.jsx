@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -21,6 +21,7 @@ import "./ManagementDashboard.css";
 
 function ManagementDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
@@ -105,10 +106,11 @@ function ManagementDashboard() {
     });
   };
 
-  /*
-   * Use the user's local Kenya date rather than UTC when deciding
-   * whether an order/delivery belongs to today.
-   */
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
   const isToday = (dateString) => {
     if (!dateString) {
       return false;
@@ -139,8 +141,13 @@ function ManagementDashboard() {
 
   const totalOrders = orders.length;
 
+  /*
+   * Orders that still need management attention.
+   * PAID orders are included because they have been paid
+   * but may still need processing/assignment.
+   */
   const pendingOrders = orders.filter((order) =>
-    ["PENDING_PAYMENT", "PROCESSING"].includes(order.status),
+    ["PENDING_PAYMENT", "PAID", "PROCESSING"].includes(order.status),
   ).length;
 
   const todaysDeliveries = deliveries.filter((delivery) =>
@@ -163,8 +170,18 @@ function ManagementDashboard() {
     (delivery) => delivery.status === "DELIVERED",
   ).length;
 
+  /*
+   * Order status distribution.
+   *
+   * We group:
+   * PENDING_PAYMENT + PAID + ASSIGNED
+   * into the broader "Pending" category.
+   *
+   * This ensures every active order is represented
+   * in the four dashboard categories.
+   */
   const pendingStatusOrders = orders.filter((order) =>
-    ["PENDING_PAYMENT", "PENDING"].includes(order.status),
+    ["PENDING_PAYMENT", "PENDING", "PAID", "ASSIGNED"].includes(order.status),
   ).length;
 
   const processingStatusOrders = orders.filter(
@@ -183,14 +200,11 @@ function ManagementDashboard() {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 5);
 
-  /*
-   * Build sales data for the last seven days.
-   * Only completed payments are included.
-   */
   const salesByDay = [];
 
   for (let i = 6; i >= 0; i -= 1) {
     const date = new Date();
+
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() - i);
 
@@ -255,47 +269,57 @@ function ManagementDashboard() {
     {
       label: "Dashboard",
       icon: LayoutDashboard,
-      active: true,
+      path: "/management/dashboard",
     },
     {
       label: "Products",
       icon: Package,
+      path: "/management/products",
     },
     {
       label: "Orders",
       icon: ShoppingCart,
+      path: "/management/orders",
     },
     {
       label: "Payments",
       icon: CreditCard,
+      path: "/management/payments",
     },
     {
       label: "Inventory",
       icon: Boxes,
+      path: "/management/inventory",
     },
     {
       label: "Deliveries",
       icon: Truck,
+      path: "/management/deliveries",
     },
     {
       label: "Customers",
       icon: Users,
+      path: "/management/customers",
     },
     {
       label: "Drivers",
       icon: UserRoundCog,
+      path: "/management/drivers",
     },
     {
       label: "Notifications",
       icon: Bell,
+      path: "/management/notifications",
     },
     {
       label: "Reports",
       icon: BarChart3,
+      path: "/management/reports",
     },
     {
       label: "Subscriptions",
       icon: Repeat,
+      path: "/management/subscriptions",
     },
   ];
 
@@ -338,20 +362,19 @@ function ManagementDashboard() {
           {menuItems.map((item) => {
             const Icon = item.icon;
 
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/management/dashboard" &&
+                location.pathname === "/management/dashboard/");
+
             return (
               <button
                 key={item.label}
                 type="button"
                 className={`management-nav-item ${
-                  item.active ? "management-nav-active" : ""
+                  isActive ? "management-nav-active" : ""
                 }`}
-                onClick={() => {
-                  setSidebarOpen(false);
-
-                  if (item.label === "Dashboard") {
-                    navigate("/management/dashboard");
-                  }
-                }}
+                onClick={() => handleNavigation(item.path)}
               >
                 <Icon size={19} />
                 <span>{item.label}</span>
@@ -402,6 +425,7 @@ function ManagementDashboard() {
               type="button"
               className="management-topbar-icon"
               title="Notifications"
+              onClick={() => handleNavigation("/management/notifications")}
             >
               <Bell size={20} />
             </button>
@@ -621,7 +645,7 @@ function ManagementDashboard() {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/management/dashboard")}
+                  onClick={() => navigate("/management/orders")}
                 >
                   View All
                 </button>

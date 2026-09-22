@@ -15,20 +15,17 @@ import {
   LogOut,
   Menu,
   X,
-  Plus,
-  Pencil,
-  Trash2,
   RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDashboard.css";
 
-function ManagementProducts() {
+function ManagementInventory() {
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
-  const [products, setProducts] = useState([]);
+  const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -46,17 +43,17 @@ function ManagementProducts() {
     ["Subscriptions", Repeat, "/management/subscriptions"],
   ];
 
-  const loadProducts = async () => {
+  const loadInventory = async () => {
     try {
       setLoading(true);
       setMessage("");
 
-      const response = await api.get("/products/");
+      const response = await api.get("/inventory/");
 
-      setProducts(Array.isArray(response.data) ? response.data : []);
+      setInventory(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error("Products error:", error);
-      setMessage("Unable to load products.");
+      console.error("Inventory error:", error);
+      setMessage("Unable to load inventory.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +81,7 @@ function ManagementProducts() {
         }
 
         setUsername(profile.data.username || "");
-        await loadProducts();
+        await loadInventory();
       } catch (error) {
         console.error(error);
         navigate("/login");
@@ -137,7 +134,7 @@ function ManagementProducts() {
               key={label}
               type="button"
               className={`management-nav-item ${
-                label === "Products" ? "management-nav-active" : ""
+                label === "Inventory" ? "management-nav-active" : ""
               }`}
               onClick={() => handleNavigation(path)}
             >
@@ -179,7 +176,7 @@ function ManagementProducts() {
 
             <div>
               <p className="management-page-label">Management Panel</p>
-              <h2>Products</h2>
+              <h2>Inventory</h2>
             </div>
           </div>
 
@@ -200,164 +197,79 @@ function ManagementProducts() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Products Management</h1>
-              <p>Manage WaterFlow products and their prices.</p>
+              <h1>Inventory Management</h1>
+              <p>Monitor available WaterFlow stock.</p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-              }}
-            >
-              <button
-                type="button"
-                onClick={loadProducts}
-                style={{
-                  border: "1px solid #e5e1ea",
-                  background: "#fff",
-                  borderRadius: "9px",
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "7px",
-                }}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-
-              <button
-                type="button"
-                style={{
-                  border: 0,
-                  background: "#7c3aed",
-                  color: "#fff",
-                  borderRadius: "9px",
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "7px",
-                }}
-                onClick={() =>
-                  setMessage("Product creation form will be connected next.")
-                }
-              >
-                <Plus size={15} />
-                Add Product
-              </button>
-            </div>
+            <button type="button" onClick={loadInventory} style={refreshButton}>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
           </div>
 
-          {message && (
-            <div
-              style={{
-                marginBottom: "18px",
-                padding: "12px 15px",
-                background: "#f0e7ff",
-                color: "#6d28d9",
-                borderRadius: "9px",
-                fontSize: "13px",
-              }}
-            >
-              {message}
-            </div>
-          )}
+          {message && <div style={messageStyle}>{message}</div>}
 
           <section className="management-panel-card">
             {loading ? (
               <div className="management-empty-table">
-                <p>Loading products...</p>
+                <p>Loading inventory...</p>
               </div>
-            ) : products.length === 0 ? (
+            ) : inventory.length === 0 ? (
               <div className="management-empty-table">
-                <Package size={32} />
-                <h4>No products found</h4>
-                <p>Add products from the management system.</p>
+                <Boxes size={32} />
+                <h4>No inventory found</h4>
+                <p>Inventory records will appear here.</p>
               </div>
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: "13px",
-                  }}
-                >
+                <table style={tableStyle}>
                   <thead>
                     <tr>
+                      <th style={thStyle}>ID</th>
                       <th style={thStyle}>Product</th>
-                      <th style={thStyle}>Category</th>
-                      <th style={thStyle}>Price</th>
-                      <th style={thStyle}>Availability</th>
-                      <th style={thStyle}>Actions</th>
+                      <th style={thStyle}>Quantity</th>
+                      <th style={thStyle}>Status</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {products.map((product) => (
-                      <tr key={product.id}>
-                        <td style={tdStyle}>
-                          <strong>{product.name || "Unnamed Product"}</strong>
-                        </td>
+                    {inventory.map((item) => {
+                      const quantity =
+                        item.quantity ??
+                        item.stock_quantity ??
+                        item.available_quantity ??
+                        0;
 
-                        <td style={tdStyle}>
-                          {product.category?.name ||
-                            product.category_name ||
-                            "—"}
-                        </td>
+                      const productName =
+                        item.product_name ||
+                        item.product?.name ||
+                        (typeof item.product === "string" ? item.product : "—");
 
-                        <td style={tdStyle}>
-                          KES{" "}
-                          {Number(product.price || 0).toLocaleString("en-KE", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
+                      return (
+                        <tr key={item.id}>
+                          <td style={tdStyle}>#{item.id}</td>
 
-                        <td style={tdStyle}>
-                          {product.is_available === false
-                            ? "Unavailable"
-                            : "Available"}
-                        </td>
+                          <td style={tdStyle}>
+                            <strong>{productName}</strong>
+                          </td>
 
-                        <td style={tdStyle}>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "8px",
-                            }}
-                          >
-                            <button
-                              type="button"
-                              title="Edit"
-                              onClick={() =>
-                                setMessage(
-                                  `Edit Product #${product.id} will be connected next.`,
-                                )
-                              }
-                              style={actionButton}
+                          <td style={tdStyle}>{quantity}</td>
+
+                          <td style={tdStyle}>
+                            <span
+                              style={{
+                                ...statusStyle,
+                                ...(Number(quantity) <= 5
+                                  ? lowStockStyle
+                                  : stockStyle),
+                              }}
                             >
-                              <Pencil size={15} />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Delete"
-                              onClick={() =>
-                                setMessage(
-                                  `Delete Product #${product.id} will be connected next.`,
-                                )
-                              }
-                              style={deleteButton}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              {Number(quantity) <= 5 ? "Low Stock" : "In Stock"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -368,6 +280,12 @@ function ManagementProducts() {
     </div>
   );
 }
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
 
 const thStyle = {
   textAlign: "left",
@@ -384,22 +302,42 @@ const tdStyle = {
   color: "#514b5a",
 };
 
-const actionButton = {
+const statusStyle = {
+  display: "inline-block",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const stockStyle = {
+  background: "#dcfce7",
+  color: "#15803d",
+};
+
+const lowStockStyle = {
+  background: "#fee2e2",
+  color: "#b91c1c",
+};
+
+const refreshButton = {
   border: "1px solid #e5e1ea",
   background: "#fff",
-  color: "#7c3aed",
-  borderRadius: "7px",
-  width: "32px",
-  height: "32px",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
+  gap: "7px",
 };
 
-const deleteButton = {
-  ...actionButton,
-  color: "#dc2626",
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
 };
 
-export default ManagementProducts;
+export default ManagementInventory;

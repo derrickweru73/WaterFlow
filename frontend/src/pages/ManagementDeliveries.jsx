@@ -15,20 +15,17 @@ import {
   LogOut,
   Menu,
   X,
-  Plus,
-  Pencil,
-  Trash2,
   RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDashboard.css";
 
-function ManagementProducts() {
+function ManagementDeliveries() {
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
-  const [products, setProducts] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -46,17 +43,17 @@ function ManagementProducts() {
     ["Subscriptions", Repeat, "/management/subscriptions"],
   ];
 
-  const loadProducts = async () => {
+  const loadDeliveries = async () => {
     try {
       setLoading(true);
       setMessage("");
 
-      const response = await api.get("/products/");
+      const response = await api.get("/management/deliveries/");
 
-      setProducts(Array.isArray(response.data) ? response.data : []);
+      setDeliveries(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error("Products error:", error);
-      setMessage("Unable to load products.");
+      console.error("Deliveries error:", error);
+      setMessage("Unable to load deliveries.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +81,7 @@ function ManagementProducts() {
         }
 
         setUsername(profile.data.username || "");
-        await loadProducts();
+        await loadDeliveries();
       } catch (error) {
         console.error(error);
         navigate("/login");
@@ -104,6 +101,42 @@ function ManagementProducts() {
     setSidebarOpen(false);
     navigate(path);
   };
+
+  const getStatusStyle = (status) => {
+    const value = String(status || "").toUpperCase();
+
+    if (value === "DELIVERED") {
+      return {
+        background: "#dcfce7",
+        color: "#15803d",
+      };
+    }
+
+    if (value === "OUT_FOR_DELIVERY") {
+      return {
+        background: "#ede9fe",
+        color: "#6d28d9",
+      };
+    }
+
+    if (value === "ASSIGNED") {
+      return {
+        background: "#dbeafe",
+        color: "#1d4ed8",
+      };
+    }
+
+    return {
+      background: "#fef3c7",
+      color: "#92400e",
+    };
+  };
+
+  const formatStatus = (status) =>
+    String(status || "PENDING")
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   return (
     <div className="management-layout">
@@ -137,7 +170,7 @@ function ManagementProducts() {
               key={label}
               type="button"
               className={`management-nav-item ${
-                label === "Products" ? "management-nav-active" : ""
+                label === "Deliveries" ? "management-nav-active" : ""
               }`}
               onClick={() => handleNavigation(path)}
             >
@@ -179,7 +212,7 @@ function ManagementProducts() {
 
             <div>
               <p className="management-page-label">Management Panel</p>
-              <h2>Products</h2>
+              <h2>Deliveries</h2>
             </div>
           </div>
 
@@ -200,161 +233,84 @@ function ManagementProducts() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Products Management</h1>
-              <p>Manage WaterFlow products and their prices.</p>
+              <h1>Delivery Management</h1>
+              <p>Monitor and manage customer deliveries.</p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-              }}
+            <button
+              type="button"
+              onClick={loadDeliveries}
+              style={refreshButton}
             >
-              <button
-                type="button"
-                onClick={loadProducts}
-                style={{
-                  border: "1px solid #e5e1ea",
-                  background: "#fff",
-                  borderRadius: "9px",
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "7px",
-                }}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-
-              <button
-                type="button"
-                style={{
-                  border: 0,
-                  background: "#7c3aed",
-                  color: "#fff",
-                  borderRadius: "9px",
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "7px",
-                }}
-                onClick={() =>
-                  setMessage("Product creation form will be connected next.")
-                }
-              >
-                <Plus size={15} />
-                Add Product
-              </button>
-            </div>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
           </div>
 
-          {message && (
-            <div
-              style={{
-                marginBottom: "18px",
-                padding: "12px 15px",
-                background: "#f0e7ff",
-                color: "#6d28d9",
-                borderRadius: "9px",
-                fontSize: "13px",
-              }}
-            >
-              {message}
-            </div>
-          )}
+          {message && <div style={messageStyle}>{message}</div>}
 
           <section className="management-panel-card">
             {loading ? (
               <div className="management-empty-table">
-                <p>Loading products...</p>
+                <p>Loading deliveries...</p>
               </div>
-            ) : products.length === 0 ? (
+            ) : deliveries.length === 0 ? (
               <div className="management-empty-table">
-                <Package size={32} />
-                <h4>No products found</h4>
-                <p>Add products from the management system.</p>
+                <Truck size={32} />
+                <h4>No deliveries found</h4>
+                <p>Delivery records will appear here.</p>
               </div>
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: "13px",
-                  }}
-                >
+                <table style={tableStyle}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>Product</th>
-                      <th style={thStyle}>Category</th>
-                      <th style={thStyle}>Price</th>
-                      <th style={thStyle}>Availability</th>
-                      <th style={thStyle}>Actions</th>
+                      <th style={thStyle}>Delivery</th>
+                      <th style={thStyle}>Order</th>
+                      <th style={thStyle}>Driver</th>
+                      <th style={thStyle}>Address</th>
+                      <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Created</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {products.map((product) => (
-                      <tr key={product.id}>
+                    {deliveries.map((delivery) => (
+                      <tr key={delivery.id}>
                         <td style={tdStyle}>
-                          <strong>{product.name || "Unnamed Product"}</strong>
+                          <strong>#{delivery.id}</strong>
+                        </td>
+
+                        <td style={tdStyle}>#{delivery.order || "—"}</td>
+
+                        <td style={tdStyle}>
+                          {delivery.driver_username ||
+                            delivery.driver_name ||
+                            delivery.driver?.username ||
+                            "Unassigned"}
                         </td>
 
                         <td style={tdStyle}>
-                          {product.category?.name ||
-                            product.category_name ||
-                            "—"}
+                          {delivery.delivery_address || delivery.address || "—"}
                         </td>
 
                         <td style={tdStyle}>
-                          KES{" "}
-                          {Number(product.price || 0).toLocaleString("en-KE", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-
-                        <td style={tdStyle}>
-                          {product.is_available === false
-                            ? "Unavailable"
-                            : "Available"}
-                        </td>
-
-                        <td style={tdStyle}>
-                          <div
+                          <span
                             style={{
-                              display: "flex",
-                              gap: "8px",
+                              ...statusStyle,
+                              ...getStatusStyle(delivery.status),
                             }}
                           >
-                            <button
-                              type="button"
-                              title="Edit"
-                              onClick={() =>
-                                setMessage(
-                                  `Edit Product #${product.id} will be connected next.`,
-                                )
-                              }
-                              style={actionButton}
-                            >
-                              <Pencil size={15} />
-                            </button>
+                            {formatStatus(delivery.status)}
+                          </span>
+                        </td>
 
-                            <button
-                              type="button"
-                              title="Delete"
-                              onClick={() =>
-                                setMessage(
-                                  `Delete Product #${product.id} will be connected next.`,
-                                )
-                              }
-                              style={deleteButton}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
+                        <td style={tdStyle}>
+                          {delivery.created_at
+                            ? new Date(delivery.created_at).toLocaleDateString(
+                                "en-KE",
+                              )
+                            : "—"}
                         </td>
                       </tr>
                     ))}
@@ -368,6 +324,12 @@ function ManagementProducts() {
     </div>
   );
 }
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
 
 const thStyle = {
   textAlign: "left",
@@ -384,22 +346,32 @@ const tdStyle = {
   color: "#514b5a",
 };
 
-const actionButton = {
+const statusStyle = {
+  display: "inline-block",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const refreshButton = {
   border: "1px solid #e5e1ea",
   background: "#fff",
-  color: "#7c3aed",
-  borderRadius: "7px",
-  width: "32px",
-  height: "32px",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
+  gap: "7px",
 };
 
-const deleteButton = {
-  ...actionButton,
-  color: "#dc2626",
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
 };
 
-export default ManagementProducts;
+export default ManagementDeliveries;

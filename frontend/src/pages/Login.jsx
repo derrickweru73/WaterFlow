@@ -67,7 +67,12 @@ function Login() {
       localStorage.setItem("refresh_token", response.data.refresh);
 
       const profileResponse = await api.get("/auth/protected/");
-      const role = profileResponse.data.role;
+
+      const role = String(
+        profileResponse.data.role || "",
+      )
+        .trim()
+        .toUpperCase();
 
       if (role === "DRIVER") {
         navigate("/driver/dashboard");
@@ -75,11 +80,7 @@ function Login() {
       }
 
       if (role === "MANAGEMENT") {
-        navigate("/products", {
-          state: {
-            message: `Welcome back, ${username}! You are now signed in.`,
-          },
-        });
+        navigate("/management/dashboard");
         return;
       }
 
@@ -132,7 +133,11 @@ function Login() {
             </p>
           )}
 
-          {message && <p className="login-message">{message}</p>}
+          {message && (
+            <p className="login-message">
+              {message}
+            </p>
+          )}
 
           <form className="login-form" onSubmit={handleLogin}>
             <div className="form-group">
@@ -161,7 +166,11 @@ function Login() {
               />
             </div>
 
-            <button className="login-button" type="submit" disabled={loading}>
+            <button
+              className="login-button"
+              type="submit"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>

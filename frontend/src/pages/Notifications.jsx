@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  AlertCircle,
+  Bell,
+  CheckCircle2,
+  CreditCard,
+  Droplets,
+  Package,
+  RefreshCw,
+  Truck,
+} from "lucide-react";
 import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
 
@@ -76,76 +86,122 @@ function Notifications() {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "PAYMENT":
+        return <CreditCard size={19} />;
+
+      case "DELIVERY":
+        return <Truck size={19} />;
+
+      case "ORDER":
+        return <Package size={19} />;
+
+      default:
+        return <Bell size={19} />;
+    }
+  };
+
+  const getNotificationIconClass = (type) => {
+    switch (type) {
+      case "PAYMENT":
+        return "notification-icon-payment";
+
+      case "DELIVERY":
+        return "notification-icon-delivery";
+
+      case "ORDER":
+        return "notification-icon-order";
+
+      default:
+        return "notification-icon-default";
+    }
+  };
+
   const unreadCount = notifications.filter(
     (notification) => !notification.is_read,
   ).length;
 
+  const readCount = notifications.filter(
+    (notification) => notification.is_read,
+  ).length;
+
   return (
-    <div className="products-page notifications-page">
-      <div className="products-container">
-        <CustomerHeader
-          returnTo="/products"
-          returnLabel="Return to Products"
-          minimal={true}
-        />
+    <div className="notifications-page">
+      <CustomerHeader
+        returnTo="/products"
+        returnLabel="Return to Products"
+        minimal={true}
+      />
 
-        <section className="products-intro">
-          <h2>Notifications</h2>
+      <main className="notifications-main">
+        {/* HERO */}
+        <section className="notifications-hero">
+          <div className="notifications-hero-content">
+            <div className="notifications-eyebrow">
+              <Bell size={14} />
+              WaterFlow Updates
+            </div>
 
-          <p>
-            Stay updated about your orders, payments, and deliveries.
-          </p>
+            <h1>Notifications</h1>
 
-          {!guest && unreadCount > 0 && (
-            <p
-              style={{
-                marginTop: "10px",
-                fontWeight: "600",
-              }}
-            >
-              You have {unreadCount} unread notification
-              {unreadCount !== 1 ? "s" : ""}.
+            <p>
+              Stay updated about your orders, payments, and deliveries from one
+              place.
             </p>
-          )}
+          </div>
         </section>
 
+        {/* GUEST */}
         {guest ? (
           <div className="notification-empty-state">
+            <div className="notification-empty-icon">
+              <Bell size={26} />
+            </div>
+
             <h3>Stay updated with WaterFlow</h3>
 
             <p>
               Sign in to receive updates about your orders, payments, and
               deliveries. Your notifications will appear here once you have
-              an account and activity on WaterFlow.
+              activity on WaterFlow.
             </p>
 
             <div className="notification-empty-actions">
               <Link
                 to="/login"
                 state={{ returnTo: "/notifications" }}
-                className="product-button"
+                className="notification-primary-button"
               >
                 Sign In
               </Link>
 
-              <Link
-                to="/products"
-                className="product-button"
-              >
+              <Link to="/products" className="notification-secondary-button">
                 Continue Shopping
               </Link>
             </div>
           </div>
         ) : error ? (
-          <p className="products-message">
-            {error}
-          </p>
+          <div className="notifications-error">
+            <AlertCircle size={19} />
+            <span>{error}</span>
+          </div>
         ) : loading ? (
-          <p className="products-message">
-            Loading notifications...
-          </p>
+          <div className="notifications-loading">
+            <div className="notifications-loading-icon">
+              <RefreshCw size={23} />
+            </div>
+
+            <h3>Loading notifications...</h3>
+
+            <p>We're checking for your latest WaterFlow updates.</p>
+          </div>
         ) : notifications.length === 0 ? (
           <div className="notification-empty-state">
+            <div className="notification-empty-icon">
+              <CheckCircle2 size={26} />
+            </div>
+
             <h3>No notifications yet</h3>
 
             <p>
@@ -153,75 +209,134 @@ function Notifications() {
               here.
             </p>
 
-            <Link
-              to="/products"
-              className="product-button"
-            >
+            <Link to="/products" className="notification-primary-button">
               Browse Products
             </Link>
           </div>
         ) : (
-          <div className="notifications-list">
-            {notifications.map((notification) => (
-              <article
-                key={notification.id}
-                className={`notification-card ${
-                  notification.is_read
-                    ? "notification-read"
-                    : "notification-unread"
-                }`}
-              >
-                <div className="notification-card-content">
-                  <div className="notification-card-top">
-                    <div>
-                      <h3 className="notification-title">
-                        {notification.title}
-                      </h3>
+          <>
+            {/* SUMMARY */}
+            <section className="notifications-summary">
+              <div className="notification-summary-card">
+                <div className="notification-summary-icon">
+                  <Bell size={19} />
+                </div>
 
-                      <span className="notification-type">
-                        {formatType(
-                          notification.notification_type,
-                        )}
-                      </span>
+                <div>
+                  <span>Total Notifications</span>
+                  <strong>{notifications.length}</strong>
+                </div>
+              </div>
+
+              <div className="notification-summary-card">
+                <div className="notification-summary-icon unread-summary">
+                  <AlertCircle size={19} />
+                </div>
+
+                <div>
+                  <span>Unread</span>
+                  <strong>{unreadCount}</strong>
+                </div>
+              </div>
+
+              <div className="notification-summary-card">
+                <div className="notification-summary-icon read-summary">
+                  <CheckCircle2 size={19} />
+                </div>
+
+                <div>
+                  <span>Read</span>
+                  <strong>{readCount}</strong>
+                </div>
+              </div>
+            </section>
+
+            {/* HEADING */}
+            <div className="notifications-heading">
+              <div>
+                <h2>Recent Updates</h2>
+
+                <p>Important updates about your WaterFlow activity.</p>
+              </div>
+
+              <button
+                type="button"
+                className="notifications-refresh"
+                onClick={fetchNotifications}
+              >
+                <RefreshCw size={15} />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            {/* LIST */}
+            <section className="notifications-list">
+              {notifications.map((notification) => (
+                <article
+                  key={notification.id}
+                  className={`notification-card ${
+                    notification.is_read
+                      ? "notification-read"
+                      : "notification-unread"
+                  }`}
+                >
+                  <div
+                    className={`notification-icon ${getNotificationIconClass(
+                      notification.notification_type,
+                    )}`}
+                  >
+                    {getNotificationIcon(notification.notification_type)}
+                  </div>
+
+                  <div className="notification-card-content">
+                    <div className="notification-card-top">
+                      <div className="notification-title-area">
+                        <h3>{notification.title}</h3>
+
+                        <span className="notification-type">
+                          {formatType(notification.notification_type)}
+                        </span>
+                      </div>
+
+                      {!notification.is_read && (
+                        <span className="notification-new">New</span>
+                      )}
                     </div>
 
-                    {!notification.is_read && (
-                      <span className="notification-new">
-                        New
+                    <p className="notification-message">
+                      {notification.message}
+                    </p>
+
+                    <div className="notification-footer">
+                      <span className="notification-date">
+                        {formatDate(notification.created_at)}
                       </span>
-                    )}
+
+                      {!notification.is_read ? (
+                        <button
+                          type="button"
+                          onClick={() => markAsRead(notification.id)}
+                          className="notification-read-button"
+                        >
+                          <CheckCircle2 size={15} />
+                          Mark as Read
+                        </button>
+                      ) : (
+                        <span className="notification-read-label">
+                          <CheckCircle2 size={14} />
+                          Read
+                        </span>
+                      )}
+                    </div>
                   </div>
-
-                  <p className="notification-message">
-                    {notification.message}
-                  </p>
-
-                  <div className="notification-footer">
-                    <span className="notification-date">
-                      {formatDate(notification.created_at)}
-                    </span>
-
-                    {!notification.is_read && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          markAsRead(notification.id)
-                        }
-                        className="notification-read-button"
-                      >
-                        Mark as Read
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </section>
+          </>
         )}
-      </div>
+      </main>
     </div>
   );
 }
 
 export default Notifications;
- 

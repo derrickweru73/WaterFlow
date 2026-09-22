@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+  Droplets,
+  CreditCard,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
 
@@ -8,353 +17,386 @@ const GUEST_CART_KEY = "waterflow_guest_cart";
 function Cart() {
   const navigate = useNavigate();
 
-  const [cart, setCart] = useState(null);
+  const [cart, setCart] = useState({ items: [] });
   const [loading, setLoading] = useState(true);
-  const [updatingItem, setUpdatingItem] = useState(null);
   const [message, setMessage] = useState("");
+  const [guest, setGuest] = useState(false);
 
-  const isGuest = !localStorage.getItem("access_token");
-
-  const fetchGuestCart = () => {
+  const getGuestCart = () => {
     try {
-      const guestItems = JSON.parse(
-        localStorage.getItem(GUEST_CART_KEY) || "[]",
-      );
-
-      const items = guestItems.map((item, index) => ({
-        id: `guest-${item.product}`,
-        product: item.product,
-        product_name: item.product_name,
-        price: item.price,
-        quantity: item.quantity,
-        subtotal: Number(item.price || 0) * Number(item.quantity || 0),
-        guestIndex: index,
-      }));
-
-      const total = items.reduce(
-        (sum, item) => sum + Number(item.subtotal || 0),
-        0,
-      );
-
-      setCart({
-        items,
-        total,
-        isGuest: true,
-      });
+      return JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
     } catch (error) {
-      console.error("Guest cart error:", error);
-      setCart({
-        items: [],
-        total: 0,
-        isGuest: true,
-      });
+      console.error("Unable to read guest cart:", error);
+      return [];
     }
   };
 
+  const saveGuestCart = (items) => {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
+
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
+
   const fetchCart = async () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      const guestItems = getGuestCart();
+
+      setGuest(true);
+      setCart({ items: guestItems });
+      setLoading(false);
+      return;
+    }
+
     try {
+      setLoading(true);
+      setMessage("");
+
       const response = await api.get("/cart/");
+
       setCart(response.data);
+      setGuest(false);
     } catch (error) {
-      console.error(error);
+      console.error("Unable to load cart:", error);
 
       if (error.response?.status === 401) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        fetchGuestCart();
+
+        setGuest(true);
+        setCart({ items: getGuestCart() });
         return;
       }
 
       setMessage("Unable to load your cart.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const loadCart = async () => {
-      setLoading(true);
+    fetchCart();
+  }, []);
 
-      if (isGuest) {
-        fetchGuestCart();
-      } else {
-        await fetchCart();
-      }
+  const updateGuestQuantity = (productId, quantity) => {
+    const items = getGuestCart();
 
-      setLoading(false);
-    };
+    const updatedItems = items.map((item) =>
+      Number(item.product) === Number(productId)
+        ? {
+            ...item,
+            quantity,
+          }
+        : item,
+    );
 
-    loadCart();
-  }, [isGuest]);
-
-  const updateGuestCart = (productId, newQuantity) => {
-    const guestCart = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
-
-    const item = guestCart.find((cartItem) => cartItem.product === productId);
-
-    if (!item) {
-      return;
-    }
-
-    item.quantity = newQuantity;
-
-    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(guestCart));
-
-    fetchGuestCart();
-    window.dispatchEvent(new Event("cartUpdated"));
+    saveGuestCart(updatedItems);
+    setCart({ items: updatedItems });
   };
 
   const removeGuestItem = (productId) => {
-    const guestCart = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
+    const items = getGuestCart();
 
-    const updatedCart = guestCart.filter((item) => item.product !== productId);
+    const updatedItems = items.filter(
+      (item) => Number(item.product) !== Number(productId),
+    );
 
-    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
-
-    fetchGuestCart();
-    window.dispatchEvent(new Event("cartUpdated"));
+    saveGuestCart(updatedItems);
+    setCart({ items: updatedItems });
   };
 
-  const handleIncrease = async (item) => {
-    setUpdatingItem(item.id);
-    setMessage("");
-
-    try {
-      if (isGuest) {
-        updateGuestCart(item.product, item.quantity + 1);
-        return;
-      }
-
-      await api.patch(`/cart/items/${item.id}/`, {
-        quantity: item.quantity + 1,
-      });
-
-      window.dispatchEvent(new Event("cartUpdated"));
-
-      await fetchCart();
-    } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.detail ||
-          error.response?.data?.quantity?.[0] ||
-          "Unable to increase quantity.",
-      );
-    } finally {
-      setUpdatingItem(null);
-    }
-  };
-
-  const handleDecrease = async (item) => {
-    if (item.quantity <= 1) {
+  const updateQuantity = async (item, newQuantity) => {
+    if (newQuantity < 1) {
       return;
     }
 
-    setUpdatingItem(item.id);
-    setMessage("");
+    if (guest) {
+      updateGuestQuantity(item.product, newQuantity);
+      return;
+    }
 
     try {
-      if (isGuest) {
-        updateGuestCart(item.product, item.quantity - 1);
-        return;
-      }
+      setMessage("");
 
-      await api.patch(`/cart/items/${item.id}/`, {
-        quantity: item.quantity - 1,
+      await api.patch(`/cart/${item.id}/`, {
+        quantity: newQuantity,
       });
 
       await fetchCart();
-    } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.detail ||
-          error.response?.data?.quantity?.[0] ||
-          "Unable to decrease quantity.",
-      );
-    } finally {
-      setUpdatingItem(null);
-    }
-  };
-
-  const handleDelete = async (item) => {
-    setUpdatingItem(item.id);
-    setMessage("");
-
-    try {
-      if (isGuest) {
-        removeGuestItem(item.product);
-        return;
-      }
-
-      await api.delete(`/cart/items/${item.id}/delete/`);
 
       window.dispatchEvent(new Event("cartUpdated"));
-
-      await fetchCart();
     } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.detail || "Unable to remove item from cart.",
-      );
-    } finally {
-      setUpdatingItem(null);
+      console.error("Unable to update cart:", error);
+      setMessage("Unable to update item quantity.");
     }
   };
 
-  const handleBackToProducts = () => {
-    navigate("/products");
+  const removeItem = async (item) => {
+    if (guest) {
+      removeGuestItem(item.product);
+      return;
+    }
+
+    try {
+      setMessage("");
+
+      await api.delete(`/cart/${item.id}/`);
+
+      await fetchCart();
+
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (error) {
+      console.error("Unable to remove item:", error);
+      setMessage("Unable to remove item.");
+    }
   };
 
+  const getItemPrice = (item) => {
+    return Number(item.unit_price ?? item.price ?? item.product_price ?? 0);
+  };
+
+  const getItemSubtotal = (item) => {
+    if (item.subtotal !== undefined) {
+      return Number(item.subtotal);
+    }
+
+    return getItemPrice(item) * Number(item.quantity || 0);
+  };
+
+  const total = cart.items.reduce(
+    (sum, item) => sum + getItemSubtotal(item),
+    0,
+  );
+
+  const totalItems = cart.items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
+
   const handleCheckout = () => {
+    if (cart.items.length === 0) {
+      return;
+    }
+
     navigate("/checkout");
   };
 
   if (loading) {
     return (
-      <div className="products-page">
-        <div className="products-container">
-          <p className="products-message">Loading cart...</p>
-        </div>
+      <div className="cart-page">
+        <CustomerHeader
+          returnTo="/products"
+          returnLabel="Return to Products"
+          minimal={true}
+        />
+
+        <main className="cart-main">
+          <div className="cart-loading">
+            <div className="cart-loading-icon">
+              <ShoppingCart size={24} />
+            </div>
+
+            <h3>Loading your cart...</h3>
+
+            <p>We're checking the items you've selected.</p>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="products-page">
-      <div className="products-container">
-        <CustomerHeader returnTo="/products" returnLabel="Return to Products" />
+    <div className="cart-page">
+      <CustomerHeader
+        returnTo="/products"
+        returnLabel="Continue Shopping"
+        minimal={true}
+      />
 
-        <section className="products-intro">
-          <h2>Your Cart</h2>
-          <p>Review and update the products you have selected.</p>
+      <main className="cart-main">
+        <section className="cart-hero">
+          <div className="cart-hero-icon">
+            <ShoppingCart size={25} />
+          </div>
+
+          <div>
+            <div className="cart-eyebrow">
+              <Droplets size={14} />
+              WATERFLOW STORE
+            </div>
+
+            <h1>Your Cart</h1>
+
+            <p>Review and update the products you have selected.</p>
+          </div>
         </section>
 
-        {message && <p className="products-message">{message}</p>}
+        {message && <div className="cart-message">{message}</div>}
 
-        {!message && (!cart?.items || cart.items.length === 0) && (
-          <div className="product-card">
-            <h3>Your cart is empty</h3>
-
-            <p className="product-description">
-              Add some water products to your cart to continue.
-            </p>
-
-            <button className="product-button" onClick={handleBackToProducts}>
-              Browse Products
-            </button>
-          </div>
-        )}
-
-        {!message && cart?.items?.length > 0 && (
-          <div>
-            <div className="products-grid">
-              {cart.items.map((item) => {
-                const isUpdating = updatingItem === item.id;
-
-                return (
-                  <div className="product-card" key={item.id}>
-                    <h3>{item.product_name}</h3>
-
-                    <p className="product-description">
-                      Quantity selected: {item.quantity}
-                    </p>
-
-                    <p className="product-price">
-                      KSh {Number(item.subtotal).toLocaleString()}
-                    </p>
-
-                    <p className="product-stock">Subtotal</p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "12px",
-                        marginBottom: "18px",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleDecrease(item)}
-                        disabled={isUpdating || item.quantity <= 1}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          background: "#ffffff",
-                          fontSize: "20px",
-                          cursor:
-                            isUpdating || item.quantity <= 1
-                              ? "not-allowed"
-                              : "pointer",
-                        }}
-                      >
-                        −
-                      </button>
-
-                      <strong
-                        style={{
-                          minWidth: "30px",
-                          textAlign: "center",
-                          fontSize: "18px",
-                        }}
-                      >
-                        {item.quantity}
-                      </strong>
-
-                      <button
-                        type="button"
-                        onClick={() => handleIncrease(item)}
-                        disabled={isUpdating}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          background: "#ffffff",
-                          fontSize: "20px",
-                          cursor: isUpdating ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="product-button"
-                      onClick={() => handleDelete(item)}
-                      disabled={isUpdating}
-                      style={{
-                        background: "#dc2626",
-                      }}
-                    >
-                      {isUpdating ? "Updating..." : "Remove Item"}
-                    </button>
-                  </div>
-                );
-              })}
+        {cart.items.length === 0 ? (
+          <section className="cart-empty">
+            <div className="cart-empty-icon">
+              <ShoppingCart size={28} />
             </div>
 
-            <div className="product-card" style={{ marginTop: "25px" }}>
-              <h3>Total: KSh {Number(cart.total || 0).toLocaleString()}</h3>
+            <h2>Your cart is empty</h2>
 
-              {isGuest && (
-                <p className="product-description">
-                  You can continue browsing without an account. Sign in or
-                  create an account when you proceed to checkout.
-                </p>
-              )}
+            <p>You have not added any water products to your cart yet.</p>
 
-              <button className="product-button" onClick={handleCheckout}>
+            <Link to="/products" className="cart-primary-button">
+              Browse Products
+            </Link>
+          </section>
+        ) : (
+          <div className="cart-layout">
+            <section className="cart-items-section">
+              <div className="cart-section-heading">
+                <div>
+                  <h2>Selected Products</h2>
+                  <p>
+                    {totalItems} item
+                    {totalItems !== 1 ? "s" : ""} in your cart
+                  </p>
+                </div>
+              </div>
+
+              <div className="cart-items">
+                {cart.items.map((item) => {
+                  const price = getItemPrice(item);
+                  const subtotal = getItemSubtotal(item);
+
+                  return (
+                    <article
+                      key={item.id ?? item.product}
+                      className="cart-item-card"
+                    >
+                      <div className="cart-item-icon">
+                        <Droplets size={22} />
+                      </div>
+
+                      <div className="cart-item-content">
+                        <div className="cart-item-top">
+                          <div>
+                            <h3>
+                              {item.product_name ||
+                                item.name ||
+                                "Water Product"}
+                            </h3>
+
+                            <p className="cart-item-price">
+                              KSh {price.toFixed(2)} per item
+                            </p>
+                          </div>
+
+                          <strong className="cart-item-subtotal">
+                            KSh {subtotal.toFixed(2)}
+                          </strong>
+                        </div>
+
+                        <div className="cart-item-bottom">
+                          <div className="cart-quantity">
+                            <span>Quantity</span>
+
+                            <div className="cart-quantity-control">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateQuantity(
+                                    item,
+                                    Number(item.quantity) - 1,
+                                  )
+                                }
+                                disabled={Number(item.quantity) <= 1}
+                                aria-label="Decrease quantity"
+                              >
+                                <Minus size={15} />
+                              </button>
+
+                              <strong>{item.quantity}</strong>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateQuantity(
+                                    item,
+                                    Number(item.quantity) + 1,
+                                  )
+                                }
+                                aria-label="Increase quantity"
+                              >
+                                <Plus size={15} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="cart-remove-button"
+                            onClick={() => removeItem(item)}
+                          >
+                            <Trash2 size={15} />
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+
+            <aside className="cart-summary">
+              <div className="cart-summary-header">
+                <div className="cart-summary-icon">
+                  <CreditCard size={19} />
+                </div>
+
+                <div>
+                  <h2>Order Summary</h2>
+                  <p>Review your purchase</p>
+                </div>
+              </div>
+
+              <div className="cart-summary-details">
+                <div>
+                  <span>Items</span>
+                  <strong>{totalItems}</strong>
+                </div>
+
+                <div>
+                  <span>Subtotal</span>
+                  <strong>KSh {total.toFixed(2)}</strong>
+                </div>
+
+                <div>
+                  <span>Delivery</span>
+                  <strong>Calculated at checkout</strong>
+                </div>
+              </div>
+
+              <div className="cart-total">
+                <span>Total</span>
+
+                <strong>KSh {total.toFixed(2)}</strong>
+              </div>
+
+              <button
+                type="button"
+                className="cart-checkout-button"
+                onClick={handleCheckout}
+              >
                 Proceed to Checkout
               </button>
-            </div>
+
+              <Link to="/products" className="cart-continue-button">
+                <ArrowLeft size={16} />
+                Continue Shopping
+              </Link>
+            </aside>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

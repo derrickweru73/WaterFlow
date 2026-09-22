@@ -84,12 +84,13 @@ function CustomerHeader({
       setNotificationCount(unreadCount);
     } catch (error) {
       console.error("Unable to load notification count:", error);
-
       setNotificationCount(0);
     }
   };
 
-  const fetchCustomerName = async () => {
+  // Get the username from localStorage.
+  // The login page saves it after successful authentication.
+  const fetchCustomerName = () => {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
@@ -97,20 +98,9 @@ function CustomerHeader({
       return;
     }
 
-    try {
-      const response = await api.get("/auth/me/");
+    const savedUsername = localStorage.getItem("username") || "";
 
-      const username =
-        response.data?.username || response.data?.user?.username || "";
-
-      setCustomerName(username);
-    } catch (error) {
-      // Keep the navbar working even if the profile endpoint
-      // is not available.
-      const savedUsername = localStorage.getItem("username") || "";
-
-      setCustomerName(savedUsername);
-    }
+    setCustomerName(savedUsername);
   };
 
   useEffect(() => {

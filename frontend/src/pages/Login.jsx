@@ -18,9 +18,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const mergeGuestCart = async () => {
-    const guestCart = JSON.parse(
-      localStorage.getItem(GUEST_CART_KEY) || "[]",
-    );
+    const guestCart = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "[]");
 
     if (!guestCart.length) {
       return;
@@ -36,8 +34,7 @@ function Login() {
 
       if (existingItem) {
         await api.patch(`/cart/items/${existingItem.id}/`, {
-          quantity:
-            Number(existingItem.quantity) + Number(guestItem.quantity),
+          quantity: Number(existingItem.quantity) + Number(guestItem.quantity),
         });
       } else {
         await api.post("/cart/items/", {
@@ -63,14 +60,17 @@ function Login() {
         password,
       });
 
+      // Save authentication tokens
       localStorage.setItem("access_token", response.data.access);
+
       localStorage.setItem("refresh_token", response.data.refresh);
+
+      // Save username for the customer navbar
+      localStorage.setItem("username", username);
 
       const profileResponse = await api.get("/auth/protected/");
 
-      const role = String(
-        profileResponse.data.role || "",
-      )
+      const role = String(profileResponse.data.role || "")
         .trim()
         .toUpperCase();
 
@@ -96,6 +96,7 @@ function Login() {
 
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("username");
 
       setMessage("Login failed. Check your username and password.");
     } finally {
@@ -133,11 +134,7 @@ function Login() {
             </p>
           )}
 
-          {message && (
-            <p className="login-message">
-              {message}
-            </p>
-          )}
+          {message && <p className="login-message">{message}</p>}
 
           <form className="login-form" onSubmit={handleLogin}>
             <div className="form-group">
@@ -166,22 +163,14 @@ function Login() {
               />
             </div>
 
-            <button
-              className="login-button"
-              type="submit"
-              disabled={loading}
-            >
+            <button className="login-button" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
           <p className="register-text">
             Don't have an account?{" "}
-            <Link
-              to="/register"
-              state={{ returnTo }}
-              className="register-link"
-            >
+            <Link to="/register" state={{ returnTo }} className="register-link">
               Register
             </Link>
           </p>
@@ -192,4 +181,3 @@ function Login() {
 }
 
 export default Login;
- 

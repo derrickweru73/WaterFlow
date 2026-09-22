@@ -6,7 +6,7 @@ from .views import (
     RegisterView,
     ProtectedTestView,
     LogoutView,
-    FixManagementProfileView,
+    
 )
 
 urlpatterns = [
@@ -19,10 +19,4 @@ urlpatterns = [
     path("protected/", ProtectedTestView.as_view(), name="protected"),
 
     path("logout/", LogoutView.as_view(), name="logout"),
-
-    path(
-        "fix-management-profile/",
-        FixManagementProfileView.as_view(),
-        name="fix-management-profile",
-    ),
 ]

@@ -10,7 +10,7 @@ import DriverDashboard from "./pages/DriverDashboard";
 import Orders from "./pages/Orders";
 import Notifications from "./pages/Notifications";
 import ManagementDashboard from "./pages/ManagementDashboard";
-
+import ManagementProducts from "./pages/ManagementProducts";
 function ManagementPage({ title }) {
   return (
     <div
@@ -53,10 +53,7 @@ function App() {
         {/* Management */}
         <Route path="/management/dashboard" element={<ManagementDashboard />} />
 
-        <Route
-          path="/management/products"
-          element={<ManagementPage title="Products Management" />}
-        />
+        <Route path="/management/products" element={<ManagementProducts />} />
 
         <Route
           path="/management/orders"

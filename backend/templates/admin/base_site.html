@@ -4,7 +4,11 @@
 
 {% block branding %}
 <div id="site-name">
-    <a href="{% url 'admin:index' %}">WaterFlow Administration</a>
+    <a href="{% url 'admin:index' %}">
+        <span class="wf-brand-mark">W</span>
+        <span>WaterFlow</span>
+        <span class="wf-brand-admin">Administration</span>
+    </a>
 </div>
 {% endblock %}
 
@@ -13,32 +17,61 @@
 
 <style>
     :root {
-        --primary: #0284C7;
-        --primary-dark: #0369A1;
-        --navy: #0F172A;
-        --slate: #1E293B;
-        --background: #F8FAFC;
-        --white: #FFFFFF;
-        --success: #16A34A;
-        --success-dark: #15803D;
-        --warning: #F59E0B;
-        --danger: #EF4444;
-        --danger-dark: #DC2626;
-        --text: #0F172A;
-        --muted: #64748B;
-        --border: #E2E8F0;
+        --wf-blue: #0284C7;
+        --wf-blue-dark: #0369A1;
+        --wf-blue-light: #E0F2FE;
+
+        --wf-navy: #0F172A;
+        --wf-slate: #1E293B;
+
+        --wf-bg: #F8FAFC;
+        --wf-white: #FFFFFF;
+
+        --wf-green: #16A34A;
+        --wf-green-dark: #15803D;
+
+        --wf-red: #DC2626;
+        --wf-red-dark: #B91C1C;
+
+        --wf-border: #E2E8F0;
+        --wf-text: #0F172A;
+        --wf-muted: #64748B;
     }
+
+    /* =========================================================
+       GENERAL
+       ========================================================= */
 
     body {
-        background: var(--background);
-        color: var(--text);
+        background: var(--wf-bg);
+        color: var(--wf-text);
     }
 
+    a:link,
+    a:visited {
+        color: var(--wf-blue);
+    }
+
+    a:hover,
+    a:focus {
+        color: var(--wf-blue-dark);
+    }
+
+
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
     #header {
-        background: var(--navy);
-        color: var(--white);
-        padding: 14px 24px;
-        border-bottom: 4px solid var(--primary);
+        background: var(--wf-navy);
+        border-bottom: 4px solid var(--wf-blue);
+        padding: 16px 28px;
+        min-height: 58px;
+    }
+
+    #branding {
+        display: flex;
+        align-items: center;
     }
 
     #site-name {
@@ -47,14 +80,44 @@
     }
 
     #site-name a {
-        color: var(--white) !important;
-        font-size: 24px;
-        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        color: white !important;
         text-decoration: none !important;
+
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
     }
 
     #site-name a:hover {
         color: #BAE6FD !important;
+    }
+
+    .wf-brand-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 34px;
+        height: 34px;
+
+        background: var(--wf-blue);
+        color: white;
+
+        border-radius: 9px;
+
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .wf-brand-admin {
+        color: #94A3B8;
+        font-size: 14px;
+        font-weight: 500;
+        margin-left: 2px;
     }
 
     #user-tools {
@@ -63,85 +126,97 @@
     }
 
     #user-tools a {
-        color: var(--white) !important;
+        color: white !important;
+        text-decoration: none !important;
     }
 
     #user-tools a:hover {
         color: #7DD3FC !important;
     }
 
+
+    /* =========================================================
+       BREADCRUMBS
+       ========================================================= */
+
     div.breadcrumbs {
-        background: var(--slate);
+        background: var(--wf-slate);
         color: #CBD5E1;
-        padding: 12px 24px;
+        padding: 11px 28px;
     }
 
     div.breadcrumbs a {
         color: #7DD3FC !important;
     }
 
+
+    /* =========================================================
+       MAIN CONTENT
+       ========================================================= */
+
     #content {
-        padding: 24px;
+        padding: 28px;
+    }
+
+    #content-main {
+        width: 100%;
     }
 
     h1 {
-        color: var(--navy);
+        color: var(--wf-navy);
+        font-size: 25px;
         font-weight: 700;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
     }
 
     h2,
     h3 {
-        color: var(--navy);
+        color: var(--wf-navy);
     }
 
-    a,
-    a:link,
-    a:visited {
-        color: var(--primary) !important;
-    }
 
-    a:hover,
-    a:focus {
-        color: var(--primary-dark) !important;
-    }
+    /* =========================================================
+       DASHBOARD MODULES
+       ========================================================= */
 
     .module {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: 10px;
+        background: var(--wf-white);
+
+        border: 1px solid var(--wf-border);
+        border-radius: 12px;
+
         overflow: hidden;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+
+        margin-bottom: 22px;
+
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 4px 12px rgba(15, 23, 42, 0.04);
     }
 
     .module caption,
     .module h2 {
-        background: var(--primary);
-        color: var(--white) !important;
-        padding: 14px 16px;
-        font-size: 16px;
+        background: var(--wf-blue);
+        color: white !important;
+
+        padding: 14px 18px;
+
+        font-size: 15px;
         font-weight: 700;
+
         text-align: left;
     }
 
     .module caption a,
     .module caption a:link,
     .module caption a:visited {
-        display: block;
-        color: var(--white) !important;
-        background: transparent !important;
-        font-size: 16px;
-        font-weight: 700;
+        color: white !important;
         text-decoration: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
+        font-weight: 700;
     }
 
-    .module caption a:hover,
-    .module caption a:focus {
-        color: var(--white) !important;
-        background: transparent !important;
+    .module caption a:hover {
+        color: #E0F2FE !important;
     }
 
     .module table {
@@ -149,286 +224,478 @@
     }
 
     .module th {
-        color: var(--text) !important;
-        font-weight: 700;
-        padding: 12px 16px;
+        color: var(--wf-text);
+        font-weight: 600;
+        padding: 13px 18px;
     }
 
     .module td {
-        color: var(--text) !important;
-        padding: 12px 16px;
-    }
-
-    .module th a,
-    .module th a:link,
-    .module th a:visited,
-    .module td a,
-    .module td a:link,
-    .module td a:visited {
-        color: var(--primary) !important;
-        font-weight: 700 !important;
-        text-decoration: underline !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-
-    .module th a:hover,
-    .module th a:focus,
-    .module td a:hover,
-    .module td a:focus {
-        color: var(--primary-dark) !important;
+        color: var(--wf-text);
+        padding: 13px 18px;
     }
 
     .module tr {
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--wf-border);
     }
 
     .module tr:last-child {
         border-bottom: none;
     }
 
+
+    /* =========================================================
+       MODEL LINKS
+       ========================================================= */
+
+    .module th a,
+    .module td a {
+        color: var(--wf-blue) !important;
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+
+    .module th a:hover,
+    .module td a:hover {
+        color: var(--wf-blue-dark) !important;
+        text-decoration: underline !important;
+    }
+
+
+    /* =========================================================
+       ADD BUTTONS
+       ========================================================= */
+
     .addlink {
-        background: var(--success) !important;
-        color: var(--white) !important;
-        border-radius: 5px;
+        display: inline-block;
+
+        background: var(--wf-green) !important;
+        color: white !important;
+
+        border-radius: 6px;
+
         padding: 6px 10px;
+
         font-size: 12px;
-        font-weight: 700 !important;
+        font-weight: 700;
+
         text-decoration: none !important;
     }
 
     .addlink:hover {
-        background: var(--success-dark) !important;
-        color: var(--white) !important;
+        background: var(--wf-green-dark) !important;
+        color: white !important;
     }
 
+
+    /* =========================================================
+       CHANGE BUTTONS
+       ========================================================= */
+
     .changelink {
-        background: var(--primary) !important;
-        color: var(--white) !important;
-        border-radius: 5px;
+        display: inline-block;
+
+        background: var(--wf-blue) !important;
+        color: white !important;
+
+        border-radius: 6px;
+
         padding: 6px 10px;
+
         font-size: 12px;
-        font-weight: 700 !important;
+        font-weight: 700;
+
         text-decoration: none !important;
     }
 
     .changelink:hover {
-        background: var(--primary-dark) !important;
-        color: var(--white) !important;
+        background: var(--wf-blue-dark) !important;
+        color: white !important;
     }
 
-    input,
-    textarea,
-    select {
-        color: var(--text) !important;
-        background: var(--white) !important;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 8px;
-    }
 
-    select option {
-        color: var(--text) !important;
-        background: var(--white) !important;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-        border-color: var(--primary);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
-    }
-
-    input[type="submit"],
-    .submit-row input,
-    .button {
-        background: var(--primary);
-        border: none;
-        border-radius: 6px;
-        color: var(--white) !important;
-        font-weight: 700;
-        padding: 10px 16px;
-    }
-
-    input[type="submit"]:hover,
-    .submit-row input:hover,
-    .button:hover {
-        background: var(--primary-dark);
-    }
-
-    input[name="_save"] {
-        background: var(--success);
-    }
-
-    input[name="_save"]:hover {
-        background: var(--success-dark);
-    }
-
-    .deletelink {
-        background: var(--danger) !important;
-        color: var(--white) !important;
-        border-radius: 6px;
-        padding: 10px 16px;
-    }
-
-    .deletelink:hover {
-        background: var(--danger-dark) !important;
-    }
-
-    .submit-row {
-        background: var(--background);
-        border: 1px solid var(--border);
-    }
-
-    .object-tools a {
-        background: var(--primary) !important;
-        color: var(--white) !important;
-        border-radius: 6px;
-    }
-
-    .object-tools a:hover {
-        background: var(--primary-dark) !important;
-        color: var(--white) !important;
-    }
+    /* =========================================================
+       CHANGE LIST TABLE
+       ========================================================= */
 
     #result_list {
-        border-radius: 8px;
+        background: white;
+
+        border: 1px solid var(--wf-border);
+        border-radius: 10px;
+
         overflow: hidden;
     }
 
     #result_list thead th {
-        background: var(--slate);
-        color: var(--white) !important;
+        background: var(--wf-slate);
+        color: white !important;
+
+        font-weight: 700;
     }
 
     #result_list tbody tr:hover {
         background: #F0F9FF;
     }
 
+    #result_list tbody td,
+    #result_list tbody th {
+        color: var(--wf-text);
+    }
+
+
+    /* =========================================================
+       FILTER PANEL
+       ========================================================= */
+
     #changelist-filter {
-        background: var(--white);
-        border-left: 1px solid var(--border);
+        background: white;
+
+        border-left: 1px solid var(--wf-border);
     }
 
     #changelist-filter h2 {
-        background: var(--navy);
-        color: var(--white) !important;
+        background: var(--wf-navy);
+        color: white !important;
+
+        padding: 13px;
+    }
+
+    #changelist-filter h3 {
+        color: var(--wf-navy);
+    }
+
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    #toolbar {
+        background: white;
+
+        border: 1px solid var(--wf-border);
+        border-radius: 10px;
+
         padding: 12px;
+
+        margin-bottom: 18px;
     }
 
-    .paginator a {
-        background: var(--primary);
-        color: var(--white) !important;
-        border-radius: 4px;
-        padding: 6px 10px;
+    #toolbar input[type="text"] {
+        min-height: 38px;
     }
 
-    .paginator a:hover {
-        background: var(--primary-dark);
+
+    /* =========================================================
+       FORMS
+       ========================================================= */
+
+    input,
+    textarea,
+    select {
+        color: var(--wf-text) !important;
+
+        background: white !important;
+
+        border: 1px solid var(--wf-border);
+
+        border-radius: 6px;
+
+        padding: 8px;
     }
+
+    select option {
+        color: var(--wf-text);
+        background: white;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--wf-blue);
+
+        outline: none;
+
+        box-shadow:
+            0 0 0 2px rgba(2, 132, 199, 0.15);
+    }
+
+
+    /* =========================================================
+       BUTTONS
+       ========================================================= */
+
+    .button,
+    input[type="submit"],
+    input[type="button"] {
+        background: var(--wf-blue);
+
+        border: none;
+        border-radius: 6px;
+
+        color: white !important;
+
+        font-weight: 600;
+
+        padding: 9px 15px;
+
+        cursor: pointer;
+    }
+
+    .button:hover,
+    input[type="submit"]:hover,
+    input[type="button"]:hover {
+        background: var(--wf-blue-dark);
+    }
+
+
+    /* =========================================================
+       SAVE BUTTON AREA
+       ========================================================= */
+
+    .submit-row {
+        display: flex !important;
+        align-items: center;
+        flex-wrap: wrap;
+
+        gap: 10px;
+
+        min-height: 60px;
+
+        padding: 14px 16px !important;
+
+        margin: 20px 0 !important;
+
+        background: white !important;
+
+        border: 1px solid var(--wf-border) !important;
+
+        border-radius: 8px;
+    }
+
+    .submit-row input {
+        display: inline-block !important;
+
+        visibility: visible !important;
+        opacity: 1 !important;
+
+        width: auto !important;
+        height: auto !important;
+
+        min-width: 100px;
+        min-height: 40px;
+
+        padding: 10px 16px !important;
+
+        margin: 0 !important;
+
+        border: none !important;
+
+        border-radius: 6px !important;
+
+        color: white !important;
+
+        font-size: 14px !important;
+        font-weight: 700 !important;
+
+        cursor: pointer;
+    }
+
+    .submit-row input[name="_save"] {
+        background: var(--wf-green) !important;
+    }
+
+    .submit-row input[name="_save"]:hover {
+        background: var(--wf-green-dark) !important;
+    }
+
+    .submit-row input[name="_addanother"],
+    .submit-row input[name="_continue"] {
+        background: var(--wf-blue) !important;
+    }
+
+    .submit-row input[name="_addanother"]:hover,
+    .submit-row input[name="_continue"]:hover {
+        background: var(--wf-blue-dark) !important;
+    }
+
+
+    /* =========================================================
+       DELETE
+       ========================================================= */
+
+    .deletelink {
+        background: var(--wf-red) !important;
+
+        color: white !important;
+
+        border-radius: 6px;
+
+        padding: 10px 16px;
+    }
+
+    .deletelink:hover {
+        background: var(--wf-red-dark) !important;
+    }
+
+
+    /* =========================================================
+       OBJECT TOOLS
+       ========================================================= */
+
+    .object-tools a {
+        background: var(--wf-blue) !important;
+
+        color: white !important;
+
+        border-radius: 6px;
+
+        text-decoration: none !important;
+    }
+
+    .object-tools a:hover {
+        background: var(--wf-blue-dark) !important;
+    }
+
+
+    /* =========================================================
+       INLINE FORMS
+       ========================================================= */
 
     .inline-group {
-        border: 1px solid var(--border);
+        background: white;
+
+        border: 1px solid var(--wf-border);
+
         border-radius: 8px;
+
         overflow: hidden;
+
         margin-bottom: 20px;
     }
 
     .inline-group h2 {
-        background: var(--slate);
-        color: var(--white) !important;
+        background: var(--wf-slate);
+
+        color: white !important;
     }
+
+
+    /* =========================================================
+       FORM TEXT
+       ========================================================= */
 
     .form-row,
     .aligned label,
     fieldset,
     fieldset h2,
     fieldset h3 {
-        color: var(--text) !important;
+        color: var(--wf-text);
     }
 
     .help,
     .helptext,
     p.help {
-        color: var(--muted) !important;
+        color: var(--wf-muted) !important;
     }
+
+
+    /* =========================================================
+       MESSAGES
+       ========================================================= */
 
     ul.messagelist li.success {
-        background: var(--success);
-        color: var(--white);
-        border-radius: 6px;
-    }
+        background: var(--wf-green);
 
-    ul.messagelist li.warning {
-        background: var(--warning);
-        color: var(--navy);
+        color: white;
+
         border-radius: 6px;
     }
 
     ul.messagelist li.error {
-        background: var(--danger);
-        color: var(--white);
+        background: var(--wf-red);
+
+        color: white;
+
         border-radius: 6px;
     }
 
+
+    /* =========================================================
+       PAGINATION
+       ========================================================= */
+
+    .paginator a {
+        background: var(--wf-blue);
+
+        color: white !important;
+
+        border-radius: 5px;
+
+        padding: 6px 10px;
+    }
+
+    .paginator a:hover {
+        background: var(--wf-blue-dark);
+    }
+
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
     #footer {
-        padding: 20px;
-        color: var(--muted);
+        padding: 24px;
+
+        color: var(--wf-muted);
+
         text-align: center;
     }
 
-.submit-row {
-    display: flex !important;
-    align-items: center;
-    gap: 10px;
-    min-height: 60px;
-    padding: 14px 16px !important;
-    margin: 20px 0 !important;
-    background: var(--background) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px;
-}
 
-.submit-row input,
-.submit-row input[type="submit"],
-.submit-row input[name="_save"],
-.submit-row input[name="_addanother"],
-.submit-row input[name="_continue"] {
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: auto !important;
-    height: auto !important;
-    min-width: 100px;
-    min-height: 40px;
-    padding: 10px 16px !important;
-    margin: 0 !important;
-    border: none !important;
-    border-radius: 6px !important;
-    color: white !important;
-    background: var(--primary) !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    cursor: pointer;
-}
+    /* =========================================================
+       MOBILE
+       ========================================================= */
 
-.submit-row input[name="_save"] {
-    background: var(--success) !important;
-}
+    @media (max-width: 767px) {
 
-.submit-row input[name="_save"]:hover {
-    background: var(--success-dark) !important;
-}
+        #header {
+            padding: 12px 16px;
+        }
 
-.submit-row input[name="_addanother"],
-.submit-row input[name="_continue"] {
-    background: var(--primary) !important;
-}
+        #content {
+            padding: 16px;
+        }
 
-.submit-row input[name="_addanother"]:hover,
-.submit-row input[name="_continue"]:hover {
-    background: var(--primary-dark) !important;
-}
+        #site-name a {
+            font-size: 19px;
+        }
+
+        .wf-brand-mark {
+            width: 30px;
+            height: 30px;
+        }
+
+        .wf-brand-admin {
+            display: none;
+        }
+
+        #user-tools {
+            font-size: 11px;
+        }
+
+        .module {
+            overflow-x: auto;
+        }
+
+        .submit-row {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .submit-row input {
+            width: 100% !important;
+        }
+    }
 </style>
+
 {% endblock %}

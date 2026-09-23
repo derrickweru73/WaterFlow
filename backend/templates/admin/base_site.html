@@ -4,10 +4,10 @@
 
 {% block branding %}
 <div id="site-name">
-    <a href="{% url 'admin:index' %}">
-        <span class="wf-brand-mark">W</span>
-        <span>WaterFlow</span>
-        <span class="wf-brand-admin">Administration</span>
+    <a href="{% url 'admin:index' %}" class="wf-admin-brand">
+        <span class="wf-admin-icon">W</span>
+        <span class="wf-admin-name">WaterFlow</span>
+        <span class="wf-admin-label">Administration</span>
     </a>
 </div>
 {% endblock %}
@@ -16,45 +16,57 @@
 {{ block.super }}
 
 <style>
-    :root {
-        --wf-blue: #0284C7;
-        --wf-blue-dark: #0369A1;
-        --wf-blue-light: #E0F2FE;
-
-        --wf-navy: #0F172A;
-        --wf-slate: #1E293B;
-
-        --wf-bg: #F8FAFC;
-        --wf-white: #FFFFFF;
-
-        --wf-green: #16A34A;
-        --wf-green-dark: #15803D;
-
-        --wf-red: #DC2626;
-        --wf-red-dark: #B91C1C;
-
-        --wf-border: #E2E8F0;
-        --wf-text: #0F172A;
-        --wf-muted: #64748B;
-    }
-
     /* =========================================================
-       GENERAL
+       WATERFLOW ADMIN COLOR SYSTEM
+       Matches the React frontend
        ========================================================= */
 
+    :root {
+        --wf-primary: #168aad;
+        --wf-primary-dark: #126d87;
+
+        --wf-background: #f5f7fa;
+        --wf-white: #ffffff;
+
+        --wf-text: #1f2937;
+        --wf-secondary: #374151;
+        --wf-muted: #6b7280;
+
+        --wf-border: #e5e7eb;
+        --wf-light-border: #f3f4f6;
+
+        --wf-success: #15803d;
+        --wf-success-light: #dcfce7;
+
+        --wf-danger: #dc2626;
+        --wf-danger-dark: #b91c1c;
+
+        --wf-navy: #1f2937;
+        --wf-light-blue: #ecfeff;
+    }
+
+
+    /* =========================================================
+       GENERAL PAGE
+       ========================================================= */
+
+    html,
     body {
-        background: var(--wf-bg);
+        background: var(--wf-background);
+    }
+
+    body {
         color: var(--wf-text);
     }
 
     a:link,
     a:visited {
-        color: var(--wf-blue);
+        color: var(--wf-primary);
     }
 
     a:hover,
     a:focus {
-        color: var(--wf-blue-dark);
+        color: var(--wf-primary-dark);
     }
 
 
@@ -63,10 +75,14 @@
        ========================================================= */
 
     #header {
-        background: var(--wf-navy);
-        border-bottom: 4px solid var(--wf-blue);
-        padding: 16px 28px;
-        min-height: 58px;
+        background: var(--wf-white);
+        color: var(--wf-text);
+
+        border-bottom: 3px solid var(--wf-primary);
+
+        padding: 15px 28px;
+
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     #branding {
@@ -79,59 +95,64 @@
         padding: 0;
     }
 
-    #site-name a {
+    .wf-admin-brand {
         display: flex;
         align-items: center;
         gap: 10px;
 
-        color: white !important;
         text-decoration: none !important;
-
-        font-size: 23px;
-        font-weight: 700;
-        letter-spacing: -0.3px;
     }
 
-    #site-name a:hover {
-        color: #BAE6FD !important;
-    }
+    .wf-admin-icon {
+        width: 36px;
+        height: 36px;
 
-    .wf-brand-mark {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
 
-        width: 34px;
-        height: 34px;
-
-        background: var(--wf-blue);
-        color: white;
-
         border-radius: 9px;
+
+        background: var(--wf-primary);
+        color: white;
 
         font-size: 18px;
         font-weight: 800;
     }
 
-    .wf-brand-admin {
-        color: #94A3B8;
-        font-size: 14px;
-        font-weight: 500;
-        margin-left: 2px;
+    .wf-admin-name {
+        color: var(--wf-primary) !important;
+
+        font-size: 23px;
+        font-weight: 700;
     }
 
+    .wf-admin-label {
+        color: var(--wf-muted);
+
+        font-size: 14px;
+        font-weight: 500;
+
+        padding-left: 3px;
+    }
+
+
+    /* =========================================================
+       USER TOOLS
+       ========================================================= */
+
     #user-tools {
-        color: #CBD5E1;
+        color: var(--wf-muted);
         font-size: 13px;
     }
 
     #user-tools a {
-        color: white !important;
+        color: var(--wf-primary) !important;
         text-decoration: none !important;
     }
 
     #user-tools a:hover {
-        color: #7DD3FC !important;
+        color: var(--wf-primary-dark) !important;
     }
 
 
@@ -140,13 +161,17 @@
        ========================================================= */
 
     div.breadcrumbs {
-        background: var(--wf-slate);
-        color: #CBD5E1;
+        background: var(--wf-white);
+
+        color: var(--wf-muted);
+
         padding: 11px 28px;
+
+        border-bottom: 1px solid var(--wf-border);
     }
 
     div.breadcrumbs a {
-        color: #7DD3FC !important;
+        color: var(--wf-primary) !important;
     }
 
 
@@ -158,25 +183,23 @@
         padding: 28px;
     }
 
-    #content-main {
-        width: 100%;
-    }
-
     h1 {
-        color: var(--wf-navy);
-        font-size: 25px;
+        color: var(--wf-text);
+
+        font-size: 26px;
         font-weight: 700;
+
         margin-bottom: 24px;
     }
 
     h2,
     h3 {
-        color: var(--wf-navy);
+        color: var(--wf-text);
     }
 
 
     /* =========================================================
-       DASHBOARD MODULES
+       ADMIN DASHBOARD MODULES
        ========================================================= */
 
     .module {
@@ -190,13 +213,13 @@
         margin-bottom: 22px;
 
         box-shadow:
-            0 1px 2px rgba(15, 23, 42, 0.04),
-            0 4px 12px rgba(15, 23, 42, 0.04);
+            0 2px 8px rgba(0, 0, 0, 0.035);
     }
 
     .module caption,
     .module h2 {
-        background: var(--wf-blue);
+        background: var(--wf-primary);
+
         color: white !important;
 
         padding: 14px 18px;
@@ -211,13 +234,20 @@
     .module caption a:link,
     .module caption a:visited {
         color: white !important;
+
         text-decoration: none !important;
+
         font-weight: 700;
     }
 
     .module caption a:hover {
-        color: #E0F2FE !important;
+        color: #dff7fa !important;
     }
+
+
+    /* =========================================================
+       MODEL ROWS
+       ========================================================= */
 
     .module table {
         width: 100%;
@@ -225,55 +255,57 @@
 
     .module th {
         color: var(--wf-text);
+
         font-weight: 600;
+
         padding: 13px 18px;
     }
 
     .module td {
-        color: var(--wf-text);
+        color: var(--wf-secondary);
+
         padding: 13px 18px;
     }
 
     .module tr {
-        border-bottom: 1px solid var(--wf-border);
+        border-bottom: 1px solid var(--wf-light-border);
     }
 
     .module tr:last-child {
         border-bottom: none;
     }
 
-
-    /* =========================================================
-       MODEL LINKS
-       ========================================================= */
-
     .module th a,
     .module td a {
-        color: var(--wf-blue) !important;
+        color: var(--wf-primary) !important;
+
         font-weight: 600;
+
         text-decoration: none !important;
     }
 
     .module th a:hover,
     .module td a:hover {
-        color: var(--wf-blue-dark) !important;
+        color: var(--wf-primary-dark) !important;
+
         text-decoration: underline !important;
     }
 
 
     /* =========================================================
-       ADD BUTTONS
+       ADD BUTTON
        ========================================================= */
 
     .addlink {
         display: inline-block;
 
-        background: var(--wf-green) !important;
+        background: var(--wf-success) !important;
+
         color: white !important;
 
-        border-radius: 6px;
+        border-radius: 7px;
 
-        padding: 6px 10px;
+        padding: 6px 11px;
 
         font-size: 12px;
         font-weight: 700;
@@ -282,24 +314,26 @@
     }
 
     .addlink:hover {
-        background: var(--wf-green-dark) !important;
+        background: #166534 !important;
+
         color: white !important;
     }
 
 
     /* =========================================================
-       CHANGE BUTTONS
+       CHANGE BUTTON
        ========================================================= */
 
     .changelink {
         display: inline-block;
 
-        background: var(--wf-blue) !important;
+        background: var(--wf-primary) !important;
+
         color: white !important;
 
-        border-radius: 6px;
+        border-radius: 7px;
 
-        padding: 6px 10px;
+        padding: 6px 11px;
 
         font-size: 12px;
         font-weight: 700;
@@ -308,33 +342,36 @@
     }
 
     .changelink:hover {
-        background: var(--wf-blue-dark) !important;
+        background: var(--wf-primary-dark) !important;
+
         color: white !important;
     }
 
 
     /* =========================================================
-       CHANGE LIST TABLE
+       CHANGE LIST
        ========================================================= */
 
     #result_list {
-        background: white;
+        background: var(--wf-white);
 
         border: 1px solid var(--wf-border);
+
         border-radius: 10px;
 
         overflow: hidden;
     }
 
     #result_list thead th {
-        background: var(--wf-slate);
+        background: var(--wf-primary);
+
         color: white !important;
 
         font-weight: 700;
     }
 
     #result_list tbody tr:hover {
-        background: #F0F9FF;
+        background: #f0fbfc;
     }
 
     #result_list tbody td,
@@ -348,31 +385,33 @@
        ========================================================= */
 
     #changelist-filter {
-        background: white;
+        background: var(--wf-white);
 
         border-left: 1px solid var(--wf-border);
     }
 
     #changelist-filter h2 {
-        background: var(--wf-navy);
+        background: var(--wf-primary);
+
         color: white !important;
 
         padding: 13px;
     }
 
     #changelist-filter h3 {
-        color: var(--wf-navy);
+        color: var(--wf-text);
     }
 
 
     /* =========================================================
-       SEARCH
+       SEARCH BAR
        ========================================================= */
 
     #toolbar {
-        background: white;
+        background: var(--wf-white);
 
         border: 1px solid var(--wf-border);
+
         border-radius: 10px;
 
         padding: 12px;
@@ -380,13 +419,9 @@
         margin-bottom: 18px;
     }
 
-    #toolbar input[type="text"] {
-        min-height: 38px;
-    }
-
 
     /* =========================================================
-       FORMS
+       FORM FIELDS
        ========================================================= */
 
     input,
@@ -394,29 +429,30 @@
     select {
         color: var(--wf-text) !important;
 
-        background: white !important;
+        background: var(--wf-white) !important;
 
-        border: 1px solid var(--wf-border);
+        border: 1px solid #d1d5db;
 
-        border-radius: 6px;
+        border-radius: 7px;
 
-        padding: 8px;
+        padding: 9px;
     }
 
     select option {
         color: var(--wf-text);
-        background: white;
+
+        background: var(--wf-white);
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-        border-color: var(--wf-blue);
+        border-color: var(--wf-primary);
 
         outline: none;
 
         box-shadow:
-            0 0 0 2px rgba(2, 132, 199, 0.15);
+            0 0 0 2px rgba(22, 138, 173, 0.15);
     }
 
 
@@ -427,16 +463,17 @@
     .button,
     input[type="submit"],
     input[type="button"] {
-        background: var(--wf-blue);
+        background: var(--wf-primary);
 
         border: none;
-        border-radius: 6px;
+
+        border-radius: 7px;
 
         color: white !important;
 
         font-weight: 600;
 
-        padding: 9px 15px;
+        padding: 10px 16px;
 
         cursor: pointer;
     }
@@ -444,17 +481,19 @@
     .button:hover,
     input[type="submit"]:hover,
     input[type="button"]:hover {
-        background: var(--wf-blue-dark);
+        background: var(--wf-primary-dark);
     }
 
 
     /* =========================================================
-       SAVE BUTTON AREA
+       SAVE BUTTON ROW
        ========================================================= */
 
     .submit-row {
         display: flex !important;
+
         align-items: center;
+
         flex-wrap: wrap;
 
         gap: 10px;
@@ -465,23 +504,26 @@
 
         margin: 20px 0 !important;
 
-        background: white !important;
+        background: var(--wf-white) !important;
 
         border: 1px solid var(--wf-border) !important;
 
-        border-radius: 8px;
+        border-radius: 9px;
     }
 
     .submit-row input {
         display: inline-block !important;
 
         visibility: visible !important;
+
         opacity: 1 !important;
 
         width: auto !important;
+
         height: auto !important;
 
-        min-width: 100px;
+        min-width: 105px;
+
         min-height: 40px;
 
         padding: 10px 16px !important;
@@ -490,32 +532,33 @@
 
         border: none !important;
 
-        border-radius: 6px !important;
+        border-radius: 7px !important;
 
         color: white !important;
 
         font-size: 14px !important;
+
         font-weight: 700 !important;
 
         cursor: pointer;
     }
 
     .submit-row input[name="_save"] {
-        background: var(--wf-green) !important;
+        background: var(--wf-success) !important;
     }
 
     .submit-row input[name="_save"]:hover {
-        background: var(--wf-green-dark) !important;
+        background: #166534 !important;
     }
 
     .submit-row input[name="_addanother"],
     .submit-row input[name="_continue"] {
-        background: var(--wf-blue) !important;
+        background: var(--wf-primary) !important;
     }
 
     .submit-row input[name="_addanother"]:hover,
     .submit-row input[name="_continue"]:hover {
-        background: var(--wf-blue-dark) !important;
+        background: var(--wf-primary-dark) !important;
     }
 
 
@@ -524,17 +567,17 @@
        ========================================================= */
 
     .deletelink {
-        background: var(--wf-red) !important;
+        background: var(--wf-danger) !important;
 
         color: white !important;
 
-        border-radius: 6px;
+        border-radius: 7px;
 
         padding: 10px 16px;
     }
 
     .deletelink:hover {
-        background: var(--wf-red-dark) !important;
+        background: var(--wf-danger-dark) !important;
     }
 
 
@@ -543,17 +586,17 @@
        ========================================================= */
 
     .object-tools a {
-        background: var(--wf-blue) !important;
+        background: var(--wf-primary) !important;
 
         color: white !important;
 
-        border-radius: 6px;
+        border-radius: 7px;
 
         text-decoration: none !important;
     }
 
     .object-tools a:hover {
-        background: var(--wf-blue-dark) !important;
+        background: var(--wf-primary-dark) !important;
     }
 
 
@@ -562,11 +605,11 @@
        ========================================================= */
 
     .inline-group {
-        background: white;
+        background: var(--wf-white);
 
         border: 1px solid var(--wf-border);
 
-        border-radius: 8px;
+        border-radius: 9px;
 
         overflow: hidden;
 
@@ -574,7 +617,7 @@
     }
 
     .inline-group h2 {
-        background: var(--wf-slate);
+        background: var(--wf-primary);
 
         color: white !important;
     }
@@ -600,23 +643,23 @@
 
 
     /* =========================================================
-       MESSAGES
+       SUCCESS / ERROR MESSAGES
        ========================================================= */
 
     ul.messagelist li.success {
-        background: var(--wf-green);
+        background: var(--wf-success);
 
         color: white;
 
-        border-radius: 6px;
+        border-radius: 7px;
     }
 
     ul.messagelist li.error {
-        background: var(--wf-red);
+        background: var(--wf-danger);
 
         color: white;
 
-        border-radius: 6px;
+        border-radius: 7px;
     }
 
 
@@ -625,7 +668,7 @@
        ========================================================= */
 
     .paginator a {
-        background: var(--wf-blue);
+        background: var(--wf-primary);
 
         color: white !important;
 
@@ -635,7 +678,7 @@
     }
 
     .paginator a:hover {
-        background: var(--wf-blue-dark);
+        background: var(--wf-primary-dark);
     }
 
 
@@ -644,7 +687,7 @@
        ========================================================= */
 
     #footer {
-        padding: 24px;
+        padding: 25px;
 
         color: var(--wf-muted);
 
@@ -666,17 +709,19 @@
             padding: 16px;
         }
 
-        #site-name a {
+        .wf-admin-name {
             font-size: 19px;
         }
 
-        .wf-brand-mark {
-            width: 30px;
-            height: 30px;
+        .wf-admin-label {
+            display: none;
         }
 
-        .wf-brand-admin {
-            display: none;
+        .wf-admin-icon {
+            width: 31px;
+            height: 31px;
+
+            font-size: 16px;
         }
 
         #user-tools {
@@ -689,6 +734,7 @@
 
         .submit-row {
             align-items: stretch;
+
             flex-direction: column;
         }
 

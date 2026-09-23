@@ -3,12 +3,9 @@
 {% block title %}WaterFlow Administration{% endblock %}
 
 {% block branding %}
+
 <div id="site-name">
-    <a href="{% url 'admin:index' %}" class="wf-admin-brand">
-        <span class="wf-admin-icon">W</span>
-        <span class="wf-admin-name">WaterFlow</span>
-        <span class="wf-admin-label">Administration</span>
-    </a>
+    <a href="{% url 'admin:index' %}">WaterFlow Administration</a>
 </div>
 {% endblock %}
 
@@ -17,23 +14,23 @@
 
 <style>
     /* =========================================================
-       WATERFLOW ADMIN COLOR SYSTEM
-       Matches the React frontend
+       WATERFLOW ADMIN
+       Colors matched to the WaterFlow React frontend
        ========================================================= */
 
     :root {
         --wf-primary: #168aad;
         --wf-primary-dark: #126d87;
+        --wf-primary-deep: #0f7894;
 
         --wf-background: #f5f7fa;
         --wf-white: #ffffff;
 
         --wf-text: #1f2937;
-        --wf-secondary: #374151;
         --wf-muted: #6b7280;
 
         --wf-border: #e5e7eb;
-        --wf-light-border: #f3f4f6;
+        --wf-border-dark: #d1d5db;
 
         --wf-success: #15803d;
         --wf-success-light: #dcfce7;
@@ -41,8 +38,12 @@
         --wf-danger: #dc2626;
         --wf-danger-dark: #b91c1c;
 
-        --wf-navy: #1f2937;
-        --wf-light-blue: #ecfeff;
+        --wf-blue: #2563eb;
+        --wf-blue-light: #eff6ff;
+
+        --wf-cyan-light: #ecfeff;
+        --wf-gray-light: #f3f4f6;
+        --wf-gray-dark: #9ca3af;
     }
 
 
@@ -53,10 +54,18 @@
     html,
     body {
         background: var(--wf-background);
+        color: var(--wf-text);
     }
 
     body {
-        color: var(--wf-text);
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
     }
 
     a:link,
@@ -75,14 +84,10 @@
        ========================================================= */
 
     #header {
-        background: var(--wf-white);
-        color: var(--wf-text);
-
-        border-bottom: 3px solid var(--wf-primary);
-
-        padding: 15px 28px;
-
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        background: var(--wf-primary) !important;
+        color: var(--wf-white) !important;
+        border-bottom: 4px solid var(--wf-primary-deep);
+        padding: 14px 24px;
     }
 
     #branding {
@@ -95,64 +100,35 @@
         padding: 0;
     }
 
-    .wf-admin-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
+    #site-name a,
+    #site-name a:link,
+    #site-name a:visited {
+        color: var(--wf-white) !important;
+        font-size: 23px;
+        font-weight: 700;
         text-decoration: none !important;
     }
 
-    .wf-admin-icon {
-        width: 36px;
-        height: 36px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 9px;
-
-        background: var(--wf-primary);
-        color: white;
-
-        font-size: 18px;
-        font-weight: 800;
+    #site-name a:hover,
+    #site-name a:focus {
+        color: #ecfeff !important;
     }
-
-    .wf-admin-name {
-        color: var(--wf-primary) !important;
-
-        font-size: 23px;
-        font-weight: 700;
-    }
-
-    .wf-admin-label {
-        color: var(--wf-muted);
-
-        font-size: 14px;
-        font-weight: 500;
-
-        padding-left: 3px;
-    }
-
-
-    /* =========================================================
-       USER TOOLS
-       ========================================================= */
 
     #user-tools {
-        color: var(--wf-muted);
+        color: #e0f2fe !important;
         font-size: 13px;
     }
 
-    #user-tools a {
-        color: var(--wf-primary) !important;
+    #user-tools a,
+    #user-tools a:link,
+    #user-tools a:visited {
+        color: var(--wf-white) !important;
         text-decoration: none !important;
     }
 
-    #user-tools a:hover {
-        color: var(--wf-primary-dark) !important;
+    #user-tools a:hover,
+    #user-tools a:focus {
+        color: #ecfeff !important;
     }
 
 
@@ -161,190 +137,228 @@
        ========================================================= */
 
     div.breadcrumbs {
-        background: var(--wf-white);
-
-        color: var(--wf-muted);
-
-        padding: 11px 28px;
-
-        border-bottom: 1px solid var(--wf-border);
+        background: var(--wf-primary-deep) !important;
+        color: var(--wf-white) !important;
+        padding: 11px 24px;
     }
 
-    div.breadcrumbs a {
-        color: var(--wf-primary) !important;
+    div.breadcrumbs a,
+    div.breadcrumbs a:link,
+    div.breadcrumbs a:visited {
+        color: #ecfeff !important;
+    }
+
+    div.breadcrumbs a:hover {
+        color: var(--wf-white) !important;
     }
 
 
     /* =========================================================
-       MAIN CONTENT
+       CONTENT
        ========================================================= */
 
     #content {
-        padding: 28px;
+        padding: 24px;
     }
 
     h1 {
-        color: var(--wf-text);
-
-        font-size: 26px;
+        color: var(--wf-text) !important;
         font-weight: 700;
-
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
     h2,
     h3 {
-        color: var(--wf-text);
+        color: var(--wf-text) !important;
     }
 
 
     /* =========================================================
-       ADMIN DASHBOARD MODULES
+       DASHBOARD MODULES
        ========================================================= */
 
     .module {
-        background: var(--wf-white);
-
-        border: 1px solid var(--wf-border);
-        border-radius: 12px;
-
+        background: var(--wf-white) !important;
+        border: 1px solid var(--wf-border) !important;
+        border-radius: 10px;
         overflow: hidden;
-
-        margin-bottom: 22px;
-
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.035);
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(15, 118, 143, 0.08);
     }
 
     .module caption,
     .module h2 {
-        background: var(--wf-primary);
-
-        color: white !important;
-
-        padding: 14px 18px;
-
+        background: var(--wf-primary) !important;
+        color: var(--wf-white) !important;
+        padding: 13px 16px;
         font-size: 15px;
         font-weight: 700;
-
         text-align: left;
     }
 
     .module caption a,
     .module caption a:link,
     .module caption a:visited {
-        color: white !important;
-
+        color: var(--wf-white) !important;
         text-decoration: none !important;
-
         font-weight: 700;
     }
 
     .module caption a:hover {
-        color: #dff7fa !important;
+        color: #ecfeff !important;
     }
-
-
-    /* =========================================================
-       MODEL ROWS
-       ========================================================= */
 
     .module table {
         width: 100%;
     }
 
     .module th {
-        color: var(--wf-text);
-
+        color: var(--wf-text) !important;
         font-weight: 600;
-
-        padding: 13px 18px;
+        padding: 11px 16px;
     }
 
     .module td {
-        color: var(--wf-secondary);
-
-        padding: 13px 18px;
+        color: var(--wf-text) !important;
+        padding: 11px 16px;
     }
 
     .module tr {
-        border-bottom: 1px solid var(--wf-light-border);
+        border-bottom: 1px solid var(--wf-border);
     }
 
     .module tr:last-child {
         border-bottom: none;
     }
 
+
+    /* =========================================================
+       DASHBOARD MODEL LINKS
+       ========================================================= */
+
     .module th a,
-    .module td a {
+    .module td a,
+    .module th a:link,
+    .module th a:visited,
+    .module td a:link,
+    .module td a:visited {
         color: var(--wf-primary) !important;
-
         font-weight: 600;
-
         text-decoration: none !important;
     }
 
     .module th a:hover,
-    .module td a:hover {
+    .module th a:focus,
+    .module td a:hover,
+    .module td a:focus {
         color: var(--wf-primary-dark) !important;
-
         text-decoration: underline !important;
     }
 
 
     /* =========================================================
-       ADD BUTTON
+       ADD / CHANGE LINKS
        ========================================================= */
 
-    .addlink {
+    .addlink,
+    .addlink:link,
+    .addlink:visited {
         display: inline-block;
-
         background: var(--wf-success) !important;
-
-        color: white !important;
-
-        border-radius: 7px;
-
-        padding: 6px 11px;
-
+        color: var(--wf-white) !important;
+        border-radius: 6px;
+        padding: 6px 10px;
         font-size: 12px;
-        font-weight: 700;
-
+        font-weight: 600;
         text-decoration: none !important;
     }
 
-    .addlink:hover {
+    .addlink:hover,
+    .addlink:focus {
         background: #166534 !important;
+        color: var(--wf-white) !important;
+    }
 
-        color: white !important;
+    .changelink,
+    .changelink:link,
+    .changelink:visited {
+        display: inline-block;
+        background: var(--wf-primary) !important;
+        color: var(--wf-white) !important;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+
+    .changelink:hover,
+    .changelink:focus {
+        background: var(--wf-primary-dark) !important;
+        color: var(--wf-white) !important;
     }
 
 
     /* =========================================================
-       CHANGE BUTTON
+       RECENT ACTIONS
+       THIS WAS ONE OF THE AREAS BEING OVERRIDDEN
        ========================================================= */
 
-    .changelink {
-        display: inline-block;
+    #content-main .module ul.actionlist {
+        background: var(--wf-white) !important;
+    }
 
-        background: var(--wf-primary) !important;
+    .actionlist {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
 
-        color: white !important;
+    .actionlist li {
+        color: var(--wf-text) !important;
+        background: var(--wf-white) !important;
+        border-bottom: 1px solid var(--wf-border) !important;
+        padding: 10px 14px !important;
+    }
 
-        border-radius: 7px;
+    .actionlist li:last-child {
+        border-bottom: none !important;
+    }
 
-        padding: 6px 11px;
+    .actionlist li:hover {
+        background: var(--wf-cyan-light) !important;
+    }
 
-        font-size: 12px;
-        font-weight: 700;
-
+    .actionlist a,
+    .actionlist a:link,
+    .actionlist a:visited {
+        color: var(--wf-primary) !important;
+        font-weight: 600 !important;
         text-decoration: none !important;
     }
 
-    .changelink:hover {
-        background: var(--wf-primary-dark) !important;
+    .actionlist a:hover,
+    .actionlist a:focus {
+        color: var(--wf-primary-dark) !important;
+        text-decoration: underline !important;
+    }
 
-        color: white !important;
+    .actionlist .mini {
+        color: var(--wf-muted) !important;
+    }
+
+    .actionlist li .addlink {
+        color: var(--wf-success) !important;
+        background: transparent !important;
+    }
+
+    .actionlist li .changelink {
+        color: var(--wf-primary) !important;
+        background: transparent !important;
+    }
+
+    .quiet {
+        color: var(--wf-muted) !important;
     }
 
 
@@ -353,30 +367,36 @@
        ========================================================= */
 
     #result_list {
-        background: var(--wf-white);
-
-        border: 1px solid var(--wf-border);
-
-        border-radius: 10px;
-
+        border-radius: 8px;
         overflow: hidden;
+        background: var(--wf-white) !important;
+        border: 1px solid var(--wf-border);
     }
 
     #result_list thead th {
-        background: var(--wf-primary);
+        background: var(--wf-primary-deep) !important;
+        color: var(--wf-white) !important;
+    }
 
-        color: white !important;
-
-        font-weight: 700;
+    #result_list thead th a,
+    #result_list thead th a:link,
+    #result_list thead th a:visited {
+        color: var(--wf-white) !important;
     }
 
     #result_list tbody tr:hover {
-        background: #f0fbfc;
+        background: var(--wf-cyan-light) !important;
     }
 
     #result_list tbody td,
     #result_list tbody th {
-        color: var(--wf-text);
+        color: var(--wf-text) !important;
+        border-bottom: 1px solid var(--wf-border);
+    }
+
+    #result_list tbody td a,
+    #result_list tbody th a {
+        color: var(--wf-primary) !important;
     }
 
 
@@ -385,74 +405,91 @@
        ========================================================= */
 
     #changelist-filter {
-        background: var(--wf-white);
-
-        border-left: 1px solid var(--wf-border);
+        background: var(--wf-white) !important;
+        border-left: 1px solid var(--wf-border) !important;
     }
 
     #changelist-filter h2 {
-        background: var(--wf-primary);
-
-        color: white !important;
-
-        padding: 13px;
+        background: var(--wf-primary) !important;
+        color: var(--wf-white) !important;
+        padding: 12px;
     }
 
     #changelist-filter h3 {
-        color: var(--wf-text);
+        color: var(--wf-text) !important;
+    }
+
+    #changelist-filter li {
+        color: var(--wf-text) !important;
+    }
+
+    #changelist-filter a,
+    #changelist-filter a:link,
+    #changelist-filter a:visited {
+        color: var(--wf-primary) !important;
+    }
+
+    #changelist-filter a:hover {
+        color: var(--wf-primary-dark) !important;
     }
 
 
     /* =========================================================
-       SEARCH BAR
+       SEARCH
        ========================================================= */
 
-    #toolbar {
-        background: var(--wf-white);
+    #searchbar {
+        border: 1px solid var(--wf-border-dark) !important;
+        border-radius: 6px;
+        background: var(--wf-white) !important;
+        color: var(--wf-text) !important;
+    }
 
-        border: 1px solid var(--wf-border);
+    #toolbar input[type="submit"] {
+        background: var(--wf-primary) !important;
+        color: var(--wf-white) !important;
+    }
 
-        border-radius: 10px;
-
-        padding: 12px;
-
-        margin-bottom: 18px;
+    #toolbar input[type="submit"]:hover {
+        background: var(--wf-primary-dark) !important;
     }
 
 
     /* =========================================================
-       FORM FIELDS
+       FORMS
        ========================================================= */
 
     input,
     textarea,
     select {
         color: var(--wf-text) !important;
-
         background: var(--wf-white) !important;
-
-        border: 1px solid #d1d5db;
-
-        border-radius: 7px;
-
-        padding: 9px;
+        border: 1px solid var(--wf-border-dark) !important;
+        border-radius: 6px;
+        padding: 8px;
     }
 
     select option {
-        color: var(--wf-text);
-
-        background: var(--wf-white);
+        color: var(--wf-text) !important;
+        background: var(--wf-white) !important;
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-        border-color: var(--wf-primary);
+        border-color: var(--wf-primary) !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(22, 138, 173, 0.15) !important;
+    }
 
-        outline: none;
+    label {
+        color: var(--wf-text) !important;
+    }
 
-        box-shadow:
-            0 0 0 2px rgba(22, 138, 173, 0.15);
+    .help,
+    .helptext,
+    p.help {
+        color: var(--wf-muted) !important;
     }
 
 
@@ -462,84 +499,58 @@
 
     .button,
     input[type="submit"],
-    input[type="button"] {
-        background: var(--wf-primary);
-
-        border: none;
-
-        border-radius: 7px;
-
-        color: white !important;
-
-        font-weight: 600;
-
-        padding: 10px 16px;
-
+    input[type="button"],
+    button {
+        border: none !important;
+        border-radius: 6px !important;
+        color: var(--wf-white) !important;
+        background: var(--wf-primary) !important;
+        font-weight: 600 !important;
+        padding: 9px 15px;
         cursor: pointer;
     }
 
     .button:hover,
     input[type="submit"]:hover,
-    input[type="button"]:hover {
-        background: var(--wf-primary-dark);
+    input[type="button"]:hover,
+    button:hover {
+        background: var(--wf-primary-dark) !important;
+        color: var(--wf-white) !important;
     }
 
 
     /* =========================================================
-       SAVE BUTTON ROW
+       SAVE / ADD ANOTHER / CONTINUE
        ========================================================= */
 
     .submit-row {
         display: flex !important;
-
         align-items: center;
-
         flex-wrap: wrap;
-
         gap: 10px;
-
         min-height: 60px;
-
         padding: 14px 16px !important;
-
         margin: 20px 0 !important;
-
         background: var(--wf-white) !important;
-
         border: 1px solid var(--wf-border) !important;
-
-        border-radius: 9px;
+        border-radius: 8px;
     }
 
     .submit-row input {
         display: inline-block !important;
-
         visibility: visible !important;
-
         opacity: 1 !important;
-
         width: auto !important;
-
         height: auto !important;
-
-        min-width: 105px;
-
+        min-width: 100px;
         min-height: 40px;
-
         padding: 10px 16px !important;
-
         margin: 0 !important;
-
         border: none !important;
-
-        border-radius: 7px !important;
-
-        color: white !important;
-
+        border-radius: 6px !important;
+        color: var(--wf-white) !important;
         font-size: 14px !important;
-
         font-weight: 700 !important;
-
         cursor: pointer;
     }
 
@@ -566,18 +577,20 @@
        DELETE
        ========================================================= */
 
-    .deletelink {
+    .deletelink,
+    .deletelink:link,
+    .deletelink:visited {
         background: var(--wf-danger) !important;
-
-        color: white !important;
-
-        border-radius: 7px;
-
+        color: var(--wf-white) !important;
+        border-radius: 6px;
         padding: 10px 16px;
+        text-decoration: none !important;
     }
 
-    .deletelink:hover {
+    .deletelink:hover,
+    .deletelink:focus {
         background: var(--wf-danger-dark) !important;
+        color: var(--wf-white) !important;
     }
 
 
@@ -585,18 +598,34 @@
        OBJECT TOOLS
        ========================================================= */
 
-    .object-tools a {
+    .object-tools a,
+    .object-tools a:link,
+    .object-tools a:visited {
         background: var(--wf-primary) !important;
-
-        color: white !important;
-
-        border-radius: 7px;
-
+        color: var(--wf-white) !important;
+        border-radius: 6px;
         text-decoration: none !important;
     }
 
-    .object-tools a:hover {
+    .object-tools a:hover,
+    .object-tools a:focus {
         background: var(--wf-primary-dark) !important;
+        color: var(--wf-white) !important;
+    }
+
+
+    /* =========================================================
+       PAGINATION
+       ========================================================= */
+
+    .paginator {
+        color: var(--wf-text) !important;
+        background: var(--wf-white) !important;
+        border-top: 1px solid var(--wf-border);
+    }
+
+    .paginator a {
+        color: var(--wf-primary) !important;
     }
 
 
@@ -605,80 +634,69 @@
        ========================================================= */
 
     .inline-group {
-        background: var(--wf-white);
-
-        border: 1px solid var(--wf-border);
-
-        border-radius: 9px;
-
+        border: 1px solid var(--wf-border) !important;
+        border-radius: 8px;
         overflow: hidden;
-
         margin-bottom: 20px;
+        background: var(--wf-white) !important;
     }
 
     .inline-group h2 {
-        background: var(--wf-primary);
-
-        color: white !important;
+        background: var(--wf-primary-deep) !important;
+        color: var(--wf-white) !important;
     }
 
 
     /* =========================================================
-       FORM TEXT
+       FIELDSETS
        ========================================================= */
 
-    .form-row,
-    .aligned label,
-    fieldset,
-    fieldset h2,
-    fieldset h3 {
-        color: var(--wf-text);
+    fieldset {
+        border-color: var(--wf-border) !important;
     }
 
-    .help,
-    .helptext,
-    p.help {
-        color: var(--wf-muted) !important;
+    fieldset h2,
+    fieldset h3 {
+        color: var(--wf-text) !important;
+    }
+
+    .form-row {
+        color: var(--wf-text) !important;
     }
 
 
     /* =========================================================
-       SUCCESS / ERROR MESSAGES
+       MESSAGES
        ========================================================= */
 
     ul.messagelist li.success {
-        background: var(--wf-success);
+        background: var(--wf-success-light) !important;
+        color: var(--wf-success) !important;
+        border-left: 4px solid var(--wf-success);
+        border-radius: 6px;
+    }
 
-        color: white;
-
-        border-radius: 7px;
+    ul.messagelist li.warning {
+        background: #fff7ed !important;
+        color: #9a3412 !important;
+        border-left: 4px solid #ea580c;
+        border-radius: 6px;
     }
 
     ul.messagelist li.error {
-        background: var(--wf-danger);
-
-        color: white;
-
-        border-radius: 7px;
+        background: #fee2e2 !important;
+        color: var(--wf-danger-dark) !important;
+        border-left: 4px solid var(--wf-danger);
+        border-radius: 6px;
     }
 
 
     /* =========================================================
-       PAGINATION
+       ERROR LIST
        ========================================================= */
 
-    .paginator a {
-        background: var(--wf-primary);
-
-        color: white !important;
-
-        border-radius: 5px;
-
-        padding: 6px 10px;
-    }
-
-    .paginator a:hover {
-        background: var(--wf-primary-dark);
+    ul.errorlist li {
+        color: var(--wf-danger) !important;
     }
 
 
@@ -687,10 +705,8 @@
        ========================================================= */
 
     #footer {
-        padding: 25px;
-
-        color: var(--wf-muted);
-
+        padding: 20px;
+        color: var(--wf-muted) !important;
         text-align: center;
     }
 
@@ -709,19 +725,8 @@
             padding: 16px;
         }
 
-        .wf-admin-name {
+        #site-name a {
             font-size: 19px;
-        }
-
-        .wf-admin-label {
-            display: none;
-        }
-
-        .wf-admin-icon {
-            width: 31px;
-            height: 31px;
-
-            font-size: 16px;
         }
 
         #user-tools {
@@ -734,7 +739,6 @@
 
         .submit-row {
             align-items: stretch;
-
             flex-direction: column;
         }
 

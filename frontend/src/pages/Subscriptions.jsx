@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   Pause,
   Play,
   Plus,
   RefreshCw,
   Repeat,
-  Trash2,
   Truck,
   X,
 } from "lucide-react";
@@ -48,6 +48,7 @@ function Subscriptions() {
   const [message, setMessage] = useState("");
 
   const [showForm, setShowForm] = useState(false);
+  const [showCancelled, setShowCancelled] = useState(false);
 
   const [frequency, setFrequency] = useState("WEEKLY");
   const [productId, setProductId] = useState("");
@@ -147,6 +148,22 @@ function Subscriptions() {
     [subscriptions],
   );
 
+  const cancelledSubscriptions = useMemo(
+    () =>
+      subscriptions.filter(
+        (subscription) => subscription.status === "CANCELLED",
+      ),
+    [subscriptions],
+  );
+
+  const visibleSubscriptions = useMemo(
+    () =>
+      subscriptions.filter(
+        (subscription) => subscription.status !== "CANCELLED",
+      ),
+    [subscriptions],
+  );
+
   const nextSubscription = useMemo(() => {
     const upcoming = subscriptions
       .filter(
@@ -196,15 +213,10 @@ function Subscriptions() {
   const openForm = () => {
     setMessage("");
 
-    if (!nextDeliveryDate) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const formattedDate = tomorrow.toISOString().split("T")[0];
-
-      setNextDeliveryDate(formattedDate);
-    }
-
+    setNextDeliveryDate(tomorrow.toISOString().split("T")[0]);
     setShowForm(true);
   };
 
@@ -245,7 +257,6 @@ function Subscriptions() {
         [];
 
       setSuggestions(Array.isArray(results) ? results : []);
-
       setShowSuggestions(true);
     } catch (error) {
       console.error("Google autocomplete error:", error);
@@ -283,7 +294,6 @@ function Subscriptions() {
       });
 
       const place = response.data?.result || response.data;
-
       const formattedAddress = place?.formatted_address || description;
 
       setDeliveryPlace(formattedAddress);
@@ -381,11 +391,6 @@ function Subscriptions() {
         return;
       }
 
-      /*
-       * The subscription is still PENDING_PAYMENT.
-       * Send the first subscription order to the
-       * existing M-Pesa payment page.
-       */
       navigate("/payment", {
         state: {
           order: createdOrder,
@@ -477,6 +482,131 @@ function Subscriptions() {
     }
   };
 
+  const renderSubscriptionCard = (subscription) => {
+    const frequency = FREQUENCIES.find(
+      (item) => item.value === subscription.frequency,
+    );
+
+    return (
+      <article className="subscription-card" key={subscription.id}>
+        <div className="subscription-card-top">
+          <div>
+            <span className="subscription-card-label">
+              PLAN #{subscription.id}
+            </span>
+
+            <h3>{frequency?.label || subscription.frequency}</h3>
+          </div>
+
+          <span
+            className={`subscription-status ${subscription.status.toLowerCase()}`}
+          >
+            {subscription.status === "PENDING_PAYMENT"
+              ? "Awaiting Payment"
+              : subscription.status}
+          </span>
+        </div>
+
+        <div className="subscription-card-body">
+          <div className="subscription-detail">
+            <Repeat size={17} />
+
+            <div>
+              <span>Frequency</span>
+
+              <strong>
+                {frequency?.description || subscription.frequency}
+              </strong>
+            </div>
+          </div>
+
+          <div className="subscription-detail">
+            <CalendarDays size={17} />
+
+            <div>
+              <span>Next delivery</span>
+
+              <strong>
+                {subscription.next_delivery_date
+                  ? new Date(
+                      subscription.next_delivery_date,
+                    ).toLocaleDateString()
+                  : "Not scheduled"}
+              </strong>
+            </div>
+          </div>
+
+          <div className="subscription-detail">
+            <Truck size={17} />
+
+            <div>
+              <span>Delivery address</span>
+
+              <strong>{subscription.delivery_address}</strong>
+            </div>
+          </div>
+
+          <div className="subscription-products">
+            {subscription.items?.map((item) => (
+              <div className="subscription-product-row" key={item.id}>
+                <span>{item.product_name}</span>
+
+                <strong>× {item.quantity}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {subscription.status === "PENDING_PAYMENT" && (
+          <div className="subscription-pending-note">
+            <Clock3 size={16} />
+            Complete the first payment to activate this subscription.
+          </div>
+        )}
+
+        {subscription.status !== "PENDING_PAYMENT" &&
+          subscription.status !== "CANCELLED" && (
+            <div className="subscription-actions">
+              {subscription.status === "ACTIVE" && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleSubscriptionAction(subscription, "pause")
+                  }
+                >
+                  <Pause size={15} />
+                  Pause
+                </button>
+              )}
+
+              {subscription.status === "PAUSED" && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleSubscriptionAction(subscription, "resume")
+                  }
+                >
+                  <Play size={15} />
+                  Resume
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="danger"
+                onClick={() =>
+                  handleSubscriptionAction(subscription, "cancel")
+                }
+              >
+                <X size={15} />
+                Cancel
+              </button>
+            </div>
+          )}
+      </article>
+    );
+  };
+
   if (!token) {
     return (
       <div className="products-page">
@@ -557,9 +687,9 @@ function Subscriptions() {
             </h1>
 
             <p>
-              Choose a delivery frequency that works for you. Subscriptions are
-              optional, and your first subscription delivery is paid securely
-              through M-Pesa.
+              Choose a delivery frequency that works for you. Subscriptions
+              are optional, and your first subscription delivery is paid
+              securely through M-Pesa.
             </p>
 
             <button
@@ -620,6 +750,7 @@ function Subscriptions() {
 
             <div>
               <span>Next Delivery</span>
+
               <strong>
                 {nextSubscription
                   ? new Date(
@@ -671,130 +802,61 @@ function Subscriptions() {
               </button>
             </div>
 
-            <div className="subscription-cards">
-              {subscriptions.map((subscription) => {
-                const frequency = FREQUENCIES.find(
-                  (item) => item.value === subscription.frequency,
-                );
+            {visibleSubscriptions.length > 0 ? (
+              <div className="subscription-cards">
+                {visibleSubscriptions.map(renderSubscriptionCard)}
+              </div>
+            ) : (
+              <div className="subscriptions-empty subscriptions-empty-small">
+                <div className="subscriptions-empty-icon">
+                  <Repeat size={26} />
+                </div>
 
-                return (
-                  <article className="subscription-card" key={subscription.id}>
-                    <div className="subscription-card-top">
-                      <div>
-                        <span className="subscription-card-label">
-                          PLAN #{subscription.id}
-                        </span>
+                <h2>No active plans</h2>
 
-                        <h3>{frequency?.label || subscription.frequency}</h3>
-                      </div>
+                <p>
+                  Your previous subscriptions are available in your cancelled
+                  plans below.
+                </p>
 
-                      <span
-                        className={`subscription-status ${subscription.status.toLowerCase()}`}
-                      >
-                        {subscription.status === "PENDING_PAYMENT"
-                          ? "Awaiting Payment"
-                          : subscription.status}
-                      </span>
-                    </div>
+                <button
+                  type="button"
+                  className="subscription-primary-button"
+                  onClick={openForm}
+                >
+                  <Plus size={18} />
+                  Create Subscription
+                </button>
+              </div>
+            )}
 
-                    <div className="subscription-card-body">
-                      <div className="subscription-detail">
-                        <Repeat size={17} />
-                        <div>
-                          <span>Frequency</span>
-                          <strong>
-                            {frequency?.description || subscription.frequency}
-                          </strong>
-                        </div>
-                      </div>
+            {cancelledSubscriptions.length > 0 && (
+              <section className="cancelled-subscriptions-section">
+                <button
+                  type="button"
+                  className="cancelled-subscriptions-toggle"
+                  onClick={() => setShowCancelled((current) => !current)}
+                  aria-expanded={showCancelled}
+                >
+                  <span>
+                    <X size={17} />
+                    Cancelled Plans
+                    <strong>{cancelledSubscriptions.length}</strong>
+                  </span>
 
-                      <div className="subscription-detail">
-                        <CalendarDays size={17} />
-                        <div>
-                          <span>Next delivery</span>
-                          <strong>
-                            {subscription.next_delivery_date
-                              ? new Date(
-                                  subscription.next_delivery_date,
-                                ).toLocaleDateString()
-                              : "Not scheduled"}
-                          </strong>
-                        </div>
-                      </div>
+                  <ChevronDown
+                    size={19}
+                    className={showCancelled ? "rotated" : ""}
+                  />
+                </button>
 
-                      <div className="subscription-detail">
-                        <Truck size={17} />
-                        <div>
-                          <span>Delivery address</span>
-                          <strong>{subscription.delivery_address}</strong>
-                        </div>
-                      </div>
-
-                      <div className="subscription-products">
-                        {subscription.items?.map((item) => (
-                          <div
-                            className="subscription-product-row"
-                            key={item.id}
-                          >
-                            <span>{item.product_name}</span>
-
-                            <strong>× {item.quantity}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {subscription.status === "PENDING_PAYMENT" && (
-                      <div className="subscription-pending-note">
-                        <Clock3 size={16} />
-                        Complete the first payment to activate this
-                        subscription.
-                      </div>
-                    )}
-
-                    {subscription.status !== "PENDING_PAYMENT" &&
-                      subscription.status !== "CANCELLED" && (
-                        <div className="subscription-actions">
-                          {subscription.status === "ACTIVE" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleSubscriptionAction(subscription, "pause")
-                              }
-                            >
-                              <Pause size={15} />
-                              Pause
-                            </button>
-                          )}
-
-                          {subscription.status === "PAUSED" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleSubscriptionAction(subscription, "resume")
-                              }
-                            >
-                              <Play size={15} />
-                              Resume
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            className="danger"
-                            onClick={() =>
-                              handleSubscriptionAction(subscription, "cancel")
-                            }
-                          >
-                            <Trash2 size={15} />
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                  </article>
-                );
-              })}
-            </div>
+                {showCancelled && (
+                  <div className="subscription-cards cancelled-cards">
+                    {cancelledSubscriptions.map(renderSubscriptionCard)}
+                  </div>
+                )}
+              </section>
+            )}
           </section>
         )}
 
@@ -850,7 +912,9 @@ function Subscriptions() {
 
                   <div className="subscription-form-grid">
                     <div className="form-group">
-                      <label htmlFor="subscriptionProduct">Water Product</label>
+                      <label htmlFor="subscriptionProduct">
+                        Water Product
+                      </label>
 
                       <select
                         id="subscriptionProduct"
@@ -907,11 +971,7 @@ function Subscriptions() {
                       Delivery Address
                     </label>
 
-                    <div
-                      style={{
-                        position: "relative",
-                      }}
-                    >
+                    <div style={{ position: "relative" }}>
                       <input
                         id="subscriptionAddress"
                         type="text"
@@ -947,7 +1007,9 @@ function Subscriptions() {
                                   index
                                 }
                                 type="button"
-                                onMouseDown={(event) => event.preventDefault()}
+                                onMouseDown={(event) =>
+                                  event.preventDefault()
+                                }
                                 onClick={() =>
                                   handleSuggestionClick(suggestion)
                                 }
@@ -994,7 +1056,9 @@ function Subscriptions() {
                     <textarea
                       id="subscriptionInstructions"
                       value={deliveryInstructions}
-                      onChange={(e) => setDeliveryInstructions(e.target.value)}
+                      onChange={(e) =>
+                        setDeliveryInstructions(e.target.value)
+                      }
                       placeholder="Optional instructions for the driver"
                       rows="3"
                     />

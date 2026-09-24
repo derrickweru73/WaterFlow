@@ -728,3 +728,96 @@
         align-items: stretch;
     }
 }
+
+
+
+/* Cancelled subscription history */
+
+.cancelled-subscriptions-section {
+    margin-top: 32px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 22px;
+}
+
+.cancelled-subscriptions-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px 17px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.cancelled-subscriptions-toggle:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.cancelled-subscriptions-toggle>span {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.cancelled-subscriptions-toggle>span svg {
+    color: #6b7280;
+}
+
+.cancelled-subscriptions-toggle strong {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.cancelled-subscriptions-toggle>svg {
+    color: #6b7280;
+    transition: transform 0.2s ease;
+}
+
+.cancelled-subscriptions-toggle>svg.rotated {
+    transform: rotate(180deg);
+}
+
+.cancelled-cards {
+    margin-top: 15px;
+}
+
+.cancelled-cards .subscription-card {
+    opacity: 0.82;
+    box-shadow: none;
+}
+
+.cancelled-cards .subscription-card:hover {
+    opacity: 1;
+}
+
+.subscriptions-empty-small {
+    margin-top: 0;
+    padding: 35px 20px;
+}
+
+@media (max-width: 650px) {
+    .cancelled-subscriptions-section {
+        margin-top: 25px;
+        padding-top: 18px;
+    }
+
+    .cancelled-subscriptions-toggle {
+        padding: 13px 14px;
+    }
+}

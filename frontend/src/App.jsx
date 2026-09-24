@@ -8,7 +8,7 @@ import Orders from "./pages/Orders";
 import Notifications from "./pages/Notifications";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
+import Subscriptions from "./pages/Subscriptions";
 import DriverDashboard from "./pages/DriverDashboard";
 
 import ManagementDashboard from "./pages/ManagementDashboard";
@@ -34,6 +34,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

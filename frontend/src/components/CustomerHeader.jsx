@@ -7,6 +7,7 @@ import {
   Droplets,
   Home,
   Package,
+  Repeat,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -75,7 +76,9 @@ function CustomerHeader({
     try {
       const response = await api.get("/notifications/");
 
-      const notifications = Array.isArray(response.data) ? response.data : [];
+      const notifications = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
 
       const unreadCount = notifications.filter(
         (notification) => !notification.is_read,
@@ -88,8 +91,6 @@ function CustomerHeader({
     }
   };
 
-  // Get the username from localStorage.
-  // The login page saves it after successful authentication.
   const fetchCustomerName = () => {
     const token = localStorage.getItem("access_token");
 
@@ -117,12 +118,10 @@ function CustomerHeader({
     };
 
     window.addEventListener("cartUpdated", handleCartUpdated);
-
     window.addEventListener("notificationsUpdated", handleNotificationsUpdated);
 
     return () => {
       window.removeEventListener("cartUpdated", handleCartUpdated);
-
       window.removeEventListener(
         "notificationsUpdated",
         handleNotificationsUpdated,
@@ -157,7 +156,6 @@ function CustomerHeader({
   return (
     <header className="customer-header">
       <div className="customer-header-inner">
-        {/* Brand */}
         <Link to="/products" className="customer-header-brand">
           <div className="customer-brand-icon">
             <Droplets size={21} />
@@ -182,7 +180,6 @@ function CustomerHeader({
           </div>
         ) : (
           <>
-            {/* Main Navigation */}
             <nav className="customer-nav">
               <Link
                 to="/products"
@@ -212,6 +209,16 @@ function CustomerHeader({
               >
                 <Package size={16} />
                 <span>My Orders</span>
+              </Link>
+
+              <Link
+                to="/subscriptions"
+                className={`customer-nav-link ${
+                  isActive("/subscriptions") ? "active" : ""
+                }`}
+              >
+                <Repeat size={16} />
+                <span>Subscriptions</span>
               </Link>
 
               <Link
@@ -252,7 +259,6 @@ function CustomerHeader({
               </button>
             </nav>
 
-            {/* Customer Area */}
             <div className="customer-header-right">
               {customerName && (
                 <div className="customer-profile">

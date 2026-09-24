@@ -33,6 +33,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "id",
             "customer",
             "delivery_address",
+            "delivery_instructions",
+            "latitude",
+            "longitude",
             "delivery_zone",
             "frequency",
             "status",
@@ -41,6 +44,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
         read_only_fields = [
             "customer",
             "status",

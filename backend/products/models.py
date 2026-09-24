@@ -105,6 +105,14 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="orders"
     )
+
+    subscription = models.ForeignKey(
+        "subscriptions.Subscription",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+    )
     total_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2

@@ -1,17 +1,21 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from accounts.models import UserProfile
 
-from products.models import Product
+from accounts.models import UserProfile
+from products.models import Order, OrderItem, Product
 
 from .models import Subscription, SubscriptionItem
 from .serializers import SubscriptionSerializer
 
 
-class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
+class CustomerSubscriptionListCreateView(
+    generics.ListCreateAPIView
+):
     serializer_class = SubscriptionSerializer
     permission_classes = [IsAuthenticated]
 
@@ -23,12 +27,23 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
             .order_by("-created_at")
         )
 
-    def perform_create(self, serializer):
-        items = self.request.data.get("items", [])
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        items = request.data.get("items", [])
 
         if not isinstance(items, list) or not items:
             raise serializers.ValidationError(
-                {"items": ["At least one product is required."]}
+                {
+                    "items": [
+                        "At least one product is required."
+                    ]
+                }
             )
 
         validated_items = []
@@ -39,19 +54,31 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
 
             if not product_id:
                 raise serializers.ValidationError(
-                    {"items": ["Each item must include a product."]}
+                    {
+                        "items": [
+                            "Each item must include a product."
+                        ]
+                    }
                 )
 
             try:
                 quantity = int(quantity)
             except (TypeError, ValueError):
                 raise serializers.ValidationError(
-                    {"items": ["Quantity must be a valid number."]}
+                    {
+                        "items": [
+                            "Quantity must be a valid number."
+                        ]
+                    }
                 )
 
             if quantity < 1:
                 raise serializers.ValidationError(
-                    {"items": ["Quantity must be at least 1."]}
+                    {
+                        "items": [
+                            "Quantity must be at least 1."
+                        ]
+                    }
                 )
 
             product = get_object_or_404(
@@ -60,7 +87,11 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
                 is_active=True,
             )
 
-            inventory = getattr(product, "inventory", None)
+            inventory = getattr(
+                product,
+                "inventory",
+                None,
+            )
 
             if inventory is None:
                 raise serializers.ValidationError(
@@ -75,8 +106,8 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
                 raise serializers.ValidationError(
                     {
                         "items": [
-                            f"Only {inventory.quantity} units of "
-                            f"{product.name} are available."
+                            f"Only {inventory.quantity} units "
+                            f"of {product.name} are available."
                         ]
                     }
                 )
@@ -86,8 +117,8 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
             )
 
         subscription = serializer.save(
-            customer=self.request.user,
-            status=Subscription.Status.ACTIVE,
+            customer=request.user,
+            status=Subscription.Status.PENDING_PAYMENT,
         )
 
         for product, quantity in validated_items:
@@ -96,6 +127,90 @@ class CustomerSubscriptionListCreateView(generics.ListCreateAPIView):
                 product=product,
                 quantity=quantity,
             )
+
+        product_total = sum(
+            product.price * quantity
+            for product, quantity in validated_items
+        )
+
+        delivery_fee = subscription.delivery_zone.delivery_fee
+
+        total_amount = (
+            product_total + delivery_fee
+        )
+
+        order = Order.objects.create(
+            customer=request.user,
+            subscription=subscription,
+            total_amount=total_amount,
+            delivery_address=subscription.delivery_address,
+            delivery_instructions=(
+                subscription.delivery_instructions
+            ),
+            latitude=subscription.latitude,
+            longitude=subscription.longitude,
+            delivery_zone=subscription.delivery_zone,
+            status=Order.Status.PENDING_PAYMENT,
+        )
+
+        for product, quantity in validated_items:
+            unit_price = product.price
+            subtotal = unit_price * quantity
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=quantity,
+                unit_price=unit_price,
+                subtotal=subtotal,
+            )
+
+        return Response(
+            {
+                "subscription": SubscriptionSerializer(
+                    subscription
+                ).data,
+                "order": {
+                    "id": order.id,
+                    "customer": order.customer.id,
+                    "total": str(order.total_amount),
+                    "total_amount": str(
+                        order.total_amount
+                    ),
+                    "status": order.status,
+                    "delivery_address": (
+                        order.delivery_address
+                    ),
+                    "delivery_instructions": (
+                        order.delivery_instructions
+                    ),
+                    "delivery_zone": (
+                        order.delivery_zone.id
+                    ),
+                    "items": [
+                        {
+                            "id": item.id,
+                            "product": item.product.id,
+                            "product_name": (
+                                item.product.name
+                            ),
+                            "quantity": item.quantity,
+                            "unit_price": str(
+                                item.unit_price
+                            ),
+                            "subtotal": str(
+                                item.subtotal
+                            ),
+                        }
+                        for item in order.items.select_related(
+                            "product"
+                        ).all()
+                    ],
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class CustomerSubscriptionActionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -109,20 +224,40 @@ class CustomerSubscriptionActionView(APIView):
 
         action = request.data.get("action")
 
+        if subscription.status == (
+            Subscription.Status.PENDING_PAYMENT
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "This subscription must be paid "
+                        "before it can be managed."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if action == "pause":
-            subscription.status = Subscription.Status.PAUSED
+            subscription.status = (
+                Subscription.Status.PAUSED
+            )
 
         elif action == "resume":
-            subscription.status = Subscription.Status.ACTIVE
+            subscription.status = (
+                Subscription.Status.ACTIVE
+            )
 
         elif action == "cancel":
-            subscription.status = Subscription.Status.CANCELLED
+            subscription.status = (
+                Subscription.Status.CANCELLED
+            )
 
         else:
             return Response(
                 {
                     "detail": (
-                        "Invalid action. Use pause, resume, or cancel."
+                        "Invalid action. Use pause, "
+                        "resume, or cancel."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -144,7 +279,10 @@ class ManagementSubscriptionListView(generics.ListAPIView):
         if not hasattr(self.request.user, "profile"):
             return Subscription.objects.none()
 
-        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+        if (
+            self.request.user.profile.role
+            != UserProfile.Role.MANAGEMENT
+        ):
             return Subscription.objects.none()
 
         return (
@@ -161,13 +299,24 @@ class ManagementSubscriptionActionView(APIView):
     def patch(self, request, pk):
         if not hasattr(request.user, "profile"):
             return Response(
-                {"detail": "Management access required."},
+                {
+                    "detail": (
+                        "Management access required."
+                    )
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if request.user.profile.role != UserProfile.Role.MANAGEMENT:
+        if (
+            request.user.profile.role
+            != UserProfile.Role.MANAGEMENT
+        ):
             return Response(
-                {"detail": "Management access required."},
+                {
+                    "detail": (
+                        "Management access required."
+                    )
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -179,19 +328,26 @@ class ManagementSubscriptionActionView(APIView):
         action = request.data.get("action")
 
         if action == "pause":
-            subscription.status = Subscription.Status.PAUSED
+            subscription.status = (
+                Subscription.Status.PAUSED
+            )
 
         elif action == "resume":
-            subscription.status = Subscription.Status.ACTIVE
+            subscription.status = (
+                Subscription.Status.ACTIVE
+            )
 
         elif action == "cancel":
-            subscription.status = Subscription.Status.CANCELLED
+            subscription.status = (
+                Subscription.Status.CANCELLED
+            )
 
         else:
             return Response(
                 {
                     "detail": (
-                        "Invalid action. Use pause, resume, or cancel."
+                        "Invalid action. Use pause, "
+                        "resume, or cancel."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,

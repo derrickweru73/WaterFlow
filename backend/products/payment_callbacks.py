@@ -7,28 +7,23 @@ from rest_framework.views import APIView
 
 from deliveries.models import Delivery
 from notifications.services import create_notification
-
 from subscriptions.models import Subscription
 
-from .models import Payment
-from products.models import Order, Payment
-from deliveries.models import Delivery
+from .models import Order, Payment
+
+
 class MpesaCallbackView(APIView):
     authentication_classes = []
     permission_classes = []
 
     def post(self, request):
-        print(
-            "========== M-PESA CALLBACK RECEIVED =========="
-        )
+        print("========== M-PESA CALLBACK RECEIVED ==========")
         print("FULL CALLBACK:", request.data)
 
-        callback = request.data.get(
-            "Body",
-            {},
-        ).get(
-            "stkCallback",
-            {},
+        callback = (
+            request.data
+            .get("Body", {})
+            .get("stkCallback", {})
         )
 
         checkout_request_id = callback.get(
@@ -38,17 +33,15 @@ class MpesaCallbackView(APIView):
         result_code = callback.get("ResultCode")
         result_desc = callback.get("ResultDesc")
 
-        print(
-            "CheckoutRequestID:",
-            checkout_request_id,
-        )
+        print("CheckoutRequestID:", checkout_request_id)
         print("ResultCode:", result_code)
         print("ResultDesc:", result_desc)
 
+        # -------------------------------------------------
+        # Validate callback
+        # -------------------------------------------------
         if not checkout_request_id:
-            print(
-                "ERROR: CheckoutRequestID missing"
-            )
+            print("ERROR: CheckoutRequestID missing")
 
             return Response(
                 {
@@ -58,16 +51,15 @@ class MpesaCallbackView(APIView):
                 status=400,
             )
 
+        # -------------------------------------------------
+        # Find the payment
+        # -------------------------------------------------
         try:
             payment = (
                 Payment.objects
-                .select_related(
-                    "order",
-                )
+                .select_related("order")
                 .get(
-                    checkout_request_id=(
-                        checkout_request_id
-                    )
+                    checkout_request_id=checkout_request_id
                 )
             )
         except Payment.DoesNotExist:
@@ -97,7 +89,9 @@ class MpesaCallbackView(APIView):
             order.status,
         )
 
-        # Prevent duplicate callback processing.
+        # -------------------------------------------------
+        # Prevent duplicate callback processing
+        # -------------------------------------------------
         if payment.status == Payment.Status.COMPLETED:
             print(
                 "Payment already completed. "
@@ -113,7 +107,9 @@ class MpesaCallbackView(APIView):
                 }
             )
 
+        # -------------------------------------------------
         # PAYMENT FAILED / CANCELLED
+        # -------------------------------------------------
         if result_code != 0:
             payment.status = Payment.Status.FAILED
 
@@ -147,7 +143,9 @@ class MpesaCallbackView(APIView):
                 }
             )
 
+        # -------------------------------------------------
         # PAYMENT SUCCESSFUL
+        # -------------------------------------------------
         callback_items = (
             callback
             .get("CallbackMetadata", {})
@@ -161,11 +159,11 @@ class MpesaCallbackView(APIView):
                 receipt_number = item.get("Value")
                 break
 
-        print(
-            "M-PESA RECEIPT:",
-            receipt_number,
-        )
+        print("M-PESA RECEIPT:", receipt_number)
 
+        # -------------------------------------------------
+        # Complete payment and order atomically
+        # -------------------------------------------------
         with transaction.atomic():
             payment.status = Payment.Status.COMPLETED
 
@@ -181,6 +179,9 @@ class MpesaCallbackView(APIView):
                 ]
             )
 
+            # ---------------------------------------------
+            # Mark order as PAID
+            # ---------------------------------------------
             order.status = Order.Status.PAID
 
             order.save(
@@ -190,14 +191,20 @@ class MpesaCallbackView(APIView):
                 ]
             )
 
+            print(
+                "ORDER MARKED PAID:",
+                order.id,
+            )
+
+            # ---------------------------------------------
+            # Deduct inventory
+            # ---------------------------------------------
             for order_item in order.items.select_related(
                 "product"
             ):
                 inventory = order_item.product.inventory
 
-                inventory.quantity -= (
-                    order_item.quantity
-                )
+                inventory.quantity -= order_item.quantity
 
                 inventory.save(
                     update_fields=[
@@ -206,18 +213,43 @@ class MpesaCallbackView(APIView):
                     ]
                 )
 
-            Delivery.objects.get_or_create(
-                order=order,
-                defaults={
-                    "delivery_address": (
-                        order.delivery_address
-                    ),
-                    "status": Delivery.Status.PENDING,
-                },
+                print(
+                    "INVENTORY UPDATED:",
+                    order_item.product.name,
+                    "remaining:",
+                    inventory.quantity,
+                )
+
+            # ---------------------------------------------
+            # Create delivery
+            # ---------------------------------------------
+            delivery, created = (
+                Delivery.objects.get_or_create(
+                    order=order,
+                    defaults={
+                        "delivery_address": (
+                            order.delivery_address
+                        ),
+                        "status": Delivery.Status.PENDING,
+                    },
+                )
             )
 
-            # Subscription payment
-            subscription = order.subscription
+            print(
+                "DELIVERY:",
+                delivery.id,
+                "created:",
+                created,
+            )
+
+            # ---------------------------------------------
+            # Handle subscription order safely
+            # ---------------------------------------------
+            subscription = getattr(
+                order,
+                "subscription",
+                None,
+            )
 
             if subscription:
                 if (
@@ -266,6 +298,9 @@ class MpesaCallbackView(APIView):
                     notification_type="SUBSCRIPTION",
                 )
 
+            # ---------------------------------------------
+            # Payment notification
+            # ---------------------------------------------
             create_notification(
                 user=order.customer,
                 title="Payment Successful",
@@ -293,3 +328,4 @@ class MpesaCallbackView(APIView):
                 ),
             }
         )
+ 

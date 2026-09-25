@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-   Minus,
+  Minus,
   Plus,
   ShoppingCart,
   Trash2,

@@ -33,7 +33,6 @@ function Cart() {
 
   const saveGuestCart = (items) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
-
     window.dispatchEvent(new Event("cartUpdated"));
   };
 
@@ -119,7 +118,8 @@ function Cart() {
     try {
       setMessage("");
 
-      await api.patch(`/cart/${item.id}/`, {
+      // Logged-in customer: update the CART ITEM, not the cart itself.
+      await api.patch(`/cart/items/${item.id}/`, {
         quantity: newQuantity,
       });
 
@@ -128,7 +128,18 @@ function Cart() {
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Unable to update cart:", error);
-      setMessage("Unable to update item quantity.");
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        navigate("/login");
+        return;
+      }
+
+      setMessage(
+        error.response?.data?.detail ||
+          "Unable to update item quantity.",
+      );
     }
   };
 
@@ -141,19 +152,36 @@ function Cart() {
     try {
       setMessage("");
 
-      await api.delete(`/cart/${item.id}/`);
+      // Logged-in customer: delete the CART ITEM.
+      await api.delete(`/cart/items/${item.id}/delete/`);
 
       await fetchCart();
 
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Unable to remove item:", error);
-      setMessage("Unable to remove item.");
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        navigate("/login");
+        return;
+      }
+
+      setMessage(
+        error.response?.data?.detail ||
+          "Unable to remove item.",
+      );
     }
   };
 
   const getItemPrice = (item) => {
-    return Number(item.unit_price ?? item.price ?? item.product_price ?? 0);
+    return Number(
+      item.unit_price ??
+        item.price ??
+        item.product_price ??
+        0,
+    );
   };
 
   const getItemSubtotal = (item) => {
@@ -232,7 +260,11 @@ function Cart() {
           </div>
         </section>
 
-        {message && <div className="cart-message">{message}</div>}
+        {message && (
+          <div className="cart-message">
+            {message}
+          </div>
+        )}
 
         {cart.items.length === 0 ? (
           <section className="cart-empty">
@@ -242,9 +274,14 @@ function Cart() {
 
             <h2>Your cart is empty</h2>
 
-            <p>You have not added any water products to your cart yet.</p>
+            <p>
+              You have not added any water products to your cart yet.
+            </p>
 
-            <Link to="/products" className="cart-primary-button">
+            <Link
+              to="/products"
+              className="cart-primary-button"
+            >
               Browse Products
             </Link>
           </section>
@@ -254,6 +291,7 @@ function Cart() {
               <div className="cart-section-heading">
                 <div>
                   <h2>Selected Products</h2>
+
                   <p>
                     {totalItems} item
                     {totalItems !== 1 ? "s" : ""} in your cart
@@ -307,13 +345,17 @@ function Cart() {
                                     Number(item.quantity) - 1,
                                   )
                                 }
-                                disabled={Number(item.quantity) <= 1}
+                                disabled={
+                                  Number(item.quantity) <= 1
+                                }
                                 aria-label="Decrease quantity"
                               >
                                 <Minus size={15} />
                               </button>
 
-                              <strong>{item.quantity}</strong>
+                              <strong>
+                                {item.quantity}
+                              </strong>
 
                               <button
                                 type="button"
@@ -366,19 +408,25 @@ function Cart() {
 
                 <div>
                   <span>Subtotal</span>
-                  <strong>KSh {total.toFixed(2)}</strong>
+                  <strong>
+                    KSh {total.toFixed(2)}
+                  </strong>
                 </div>
 
                 <div>
                   <span>Delivery</span>
-                  <strong>Calculated at checkout</strong>
+                  <strong>
+                    Calculated at checkout
+                  </strong>
                 </div>
               </div>
 
               <div className="cart-total">
                 <span>Total</span>
 
-                <strong>KSh {total.toFixed(2)}</strong>
+                <strong>
+                  KSh {total.toFixed(2)}
+                </strong>
               </div>
 
               <button
@@ -389,7 +437,10 @@ function Cart() {
                 Proceed to Checkout
               </button>
 
-              <Link to="/products" className="cart-continue-button">
+              <Link
+                to="/products"
+                className="cart-continue-button"
+              >
                 <ArrowLeft size={16} />
                 Continue Shopping
               </Link>
@@ -402,3 +453,4 @@ function Cart() {
 }
 
 export default Cart;
+ 

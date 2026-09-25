@@ -1,0 +1,6952 @@
+================ MANAGEMENT FRONTEND FILES ================
+
+============================================================
+FILE: frontend/src/pages/ManagementCustomers.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { RefreshCw, Users } from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementCustomers() {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const buildCustomers = (orders) => {
+    const customerMap = {};
+
+    orders.forEach((order) => {
+      const customerId =
+        order.customer?.id ||
+        order.customer_id ||
+        order.customer_username ||
+        order.customer ||
+        "unknown";
+
+      const username =
+        order.customer_username ||
+        (typeof order.customer === "string"
+          ? order.customer
+          : `Customer ${customerId}`);
+
+      const key = String(customerId);
+
+      if (!customerMap[key]) {
+        customerMap[key] = {
+          id: customerId,
+          username,
+          orderCount: 0,
+          totalSpent: 0,
+          lastOrder: null,
+        };
+      }
+
+      customerMap[key].orderCount += 1;
+
+      const paidStatuses = [
+        "PAID",
+        "PROCESSING",
+        "ASSIGNED",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+      ];
+
+      if (
+        order.payment_status === "COMPLETED" ||
+        paidStatuses.includes(order.status)
+      ) {
+        customerMap[key].totalSpent += Number(order.total_amount || 0);
+      }
+
+      if (
+        !customerMap[key].lastOrder ||
+        new Date(order.created_at) > new Date(customerMap[key].lastOrder)
+      ) {
+        customerMap[key].lastOrder = order.created_at;
+      }
+    });
+
+    return Object.values(customerMap).sort(
+      (a, b) => b.orderCount - a.orderCount,
+    );
+  };
+
+  const loadCustomers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/management/orders/");
+
+      const orders = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      setCustomers(buildCustomers(orders));
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+
+      setError(
+        err.response?.data?.detail ||
+          "Failed to load customers. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await api.get("/management/orders/");
+
+        const orders = Array.isArray(response.data)
+          ? response.data
+          : response.data?.results || [];
+
+        setCustomers(buildCustomers(orders));
+      } catch (err) {
+        console.error("Failed to load customers:", err);
+
+        setError(
+          err.response?.data?.detail ||
+            "Failed to load customers. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
+
+  const formatAmount = (amount) =>
+    `KES ${Number(amount || 0).toLocaleString()}`;
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleDateString("en-KE", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <div className="management-layout">
+      <aside className="management-sidebar">
+        <div className="management-brand">
+          <h2>WaterFlow</h2>
+          <span>Management</span>
+        </div>
+
+        <nav className="management-nav">
+          <a href="/management/dashboard" className="management-nav-item">
+            Dashboard
+          </a>
+
+          <a href="/management/products" className="management-nav-item">
+            Products
+          </a>
+
+          <a href="/management/orders" className="management-nav-item">
+            Orders
+          </a>
+
+          <a href="/management/inventory" className="management-nav-item">
+            Inventory
+          </a>
+
+          <a href="/management/deliveries" className="management-nav-item">
+            Deliveries
+          </a>
+
+          <a href="/management/drivers" className="management-nav-item">
+            Drivers
+          </a>
+
+          <a href="/management/payments" className="management-nav-item">
+            Payments
+          </a>
+
+          <a
+            href="/management/customers"
+            className="management-nav-item management-nav-active"
+          >
+            Customers
+          </a>
+
+          <a href="/management/notifications" className="management-nav-item">
+            Notifications
+          </a>
+
+          <a href="/management/reports" className="management-nav-item">
+            Reports
+          </a>
+
+          <a href="/management/subscriptions" className="management-nav-item">
+            Subscriptions
+          </a>
+        </nav>
+      </aside>
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div>
+            <h1>Customers</h1>
+            <p>View customers and their WaterFlow order activity.</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadCustomers}
+            className="management-refresh-button"
+            disabled={loading}
+          >
+            <RefreshCw size={17} />
+            Refresh
+          </button>
+        </header>
+
+        <section className="management-content">
+          <div className="management-stat-grid">
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <Users size={21} />
+              </div>
+
+              <div>
+                <span>Total Customers</span>
+                <strong>{customers.length}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>Customer List</h2>
+                <p>Customers identified from management orders.</p>
+              </div>
+
+              <Users size={22} />
+            </div>
+
+            {loading ? (
+              <div className="management-loading">Loading customers...</div>
+            ) : error ? (
+              <div className="management-empty-table">{error}</div>
+            ) : customers.length === 0 ? (
+              <div className="management-empty-table">No customers found.</div>
+            ) : (
+              <div className="management-table-wrapper">
+                <table className="management-table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Customer ID</th>
+                      <th>Orders</th>
+                      <th>Total Spent</th>
+                      <th>Last Order</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {customers.map((customer) => (
+                      <tr key={customer.id}>
+                        <td>
+                          <strong>{customer.username}</strong>
+                        </td>
+
+                        <td>#{customer.id}</td>
+
+                        <td>{customer.orderCount}</td>
+
+                        <td>
+                          <strong>{formatAmount(customer.totalSpent)}</strong>
+                        </td>
+
+                        <td>{formatDate(customer.lastOrder)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default ManagementCustomers;
+
+============================================================
+FILE: frontend/src/pages/ManagementDashboard.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementDashboard() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const [orders, setOrders] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
+
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login", {
+          state: {
+            message: "Please sign in to access the management panel.",
+            returnTo: "/management/dashboard",
+          },
+        });
+        return;
+      }
+
+      try {
+        const profileResponse = await api.get("/auth/protected/");
+
+        const role = String(profileResponse.data.role || "")
+          .trim()
+          .toUpperCase();
+
+        if (role !== "MANAGEMENT") {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profileResponse.data.username || "");
+
+        const [ordersResponse, deliveriesResponse] = await Promise.all([
+          api.get("/management/orders/"),
+          api.get("/management/deliveries/"),
+        ]);
+
+        setOrders(
+          Array.isArray(ordersResponse.data) ? ordersResponse.data : [],
+        );
+
+        setDeliveries(
+          Array.isArray(deliveriesResponse.data) ? deliveriesResponse.data : [],
+        );
+      } catch (error) {
+        console.error("Management dashboard error:", error);
+
+        if (error.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+
+          navigate("/login", {
+            state: {
+              message: "Your session has expired. Please sign in again.",
+              returnTo: "/management/dashboard",
+            },
+          });
+        }
+      } finally {
+        setLoading(false);
+        setDashboardLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    navigate("/products", {
+      state: {
+        message: "You have been logged out successfully.",
+      },
+    });
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  const isToday = (dateString) => {
+    if (!dateString) {
+      return false;
+    }
+
+    const date = new Date(dateString);
+    const today = new Date();
+
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  };
+
+  const completedOrders = orders.filter(
+    (order) => order.payment_status === "COMPLETED",
+  );
+
+  const todaysCompletedOrders = completedOrders.filter((order) =>
+    isToday(order.updated_at || order.created_at),
+  );
+
+  const todaysSales = todaysCompletedOrders.reduce(
+    (total, order) => total + Number(order.total_amount || 0),
+    0,
+  );
+
+  const totalOrders = orders.length;
+
+  /*
+   * Orders that still need management attention.
+   * PAID orders are included because they have been paid
+   * but may still need processing/assignment.
+   */
+  const pendingOrders = orders.filter((order) =>
+    ["PENDING_PAYMENT", "PAID", "PROCESSING"].includes(order.status),
+  ).length;
+
+  const todaysDeliveries = deliveries.filter((delivery) =>
+    isToday(delivery.created_at),
+  );
+
+  const pendingDeliveries = todaysDeliveries.filter(
+    (delivery) => delivery.status === "PENDING",
+  ).length;
+
+  const assignedDeliveries = todaysDeliveries.filter(
+    (delivery) => delivery.status === "ASSIGNED",
+  ).length;
+
+  const onTheWayDeliveries = todaysDeliveries.filter(
+    (delivery) => delivery.status === "OUT_FOR_DELIVERY",
+  ).length;
+
+  const deliveredDeliveries = todaysDeliveries.filter(
+    (delivery) => delivery.status === "DELIVERED",
+  ).length;
+
+  /*
+   * Order status distribution.
+   *
+   * We group:
+   * PENDING_PAYMENT + PAID + ASSIGNED
+   * into the broader "Pending" category.
+   *
+   * This ensures every active order is represented
+   * in the four dashboard categories.
+   */
+  const pendingStatusOrders = orders.filter((order) =>
+    ["PENDING_PAYMENT", "PENDING", "PAID", "ASSIGNED"].includes(order.status),
+  ).length;
+
+  const processingStatusOrders = orders.filter(
+    (order) => order.status === "PROCESSING",
+  ).length;
+
+  const outForDeliveryOrders = orders.filter(
+    (order) => order.status === "OUT_FOR_DELIVERY",
+  ).length;
+
+  const deliveredStatusOrders = orders.filter(
+    (order) => order.status === "DELIVERED",
+  ).length;
+
+  const recentOrders = [...orders]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
+
+  const salesByDay = [];
+
+  for (let i = 6; i >= 0; i -= 1) {
+    const date = new Date();
+
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - i);
+
+    const daySales = completedOrders
+      .filter((order) => {
+        if (!order.updated_at && !order.created_at) {
+          return false;
+        }
+
+        const orderDate = new Date(order.updated_at || order.created_at);
+
+        return (
+          orderDate.getFullYear() === date.getFullYear() &&
+          orderDate.getMonth() === date.getMonth() &&
+          orderDate.getDate() === date.getDate()
+        );
+      })
+      .reduce((total, order) => total + Number(order.total_amount || 0), 0);
+
+    salesByDay.push({
+      label: date.toLocaleDateString("en-KE", {
+        weekday: "short",
+      }),
+      amount: daySales,
+    });
+  }
+
+  const maximumSales = Math.max(...salesByDay.map((day) => day.amount), 1);
+
+  const formatCurrency = (amount) =>
+    `KES ${Number(amount || 0).toLocaleString("en-KE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const formatDate = (dateString) => {
+    if (!dateString) {
+      return "—";
+    }
+
+    return new Date(dateString).toLocaleDateString("en-KE", {
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+  const getOrderStatusLabel = (status) => {
+    const labels = {
+      PENDING_PAYMENT: "Pending Payment",
+      PAID: "Paid",
+      PROCESSING: "Processing",
+      ASSIGNED: "Assigned",
+      OUT_FOR_DELIVERY: "Out for Delivery",
+      DELIVERED: "Delivered",
+      CANCELLED: "Cancelled",
+    };
+
+    return labels[status] || status || "Unknown";
+  };
+
+  const menuItems = [
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/management/dashboard",
+    },
+    {
+      label: "Products",
+      icon: Package,
+      path: "/management/products",
+    },
+    {
+      label: "Orders",
+      icon: ShoppingCart,
+      path: "/management/orders",
+    },
+    {
+      label: "Payments",
+      icon: CreditCard,
+      path: "/management/payments",
+    },
+    {
+      label: "Inventory",
+      icon: Boxes,
+      path: "/management/inventory",
+    },
+    {
+      label: "Deliveries",
+      icon: Truck,
+      path: "/management/deliveries",
+    },
+    {
+      label: "Customers",
+      icon: Users,
+      path: "/management/customers",
+    },
+    {
+      label: "Drivers",
+      icon: UserRoundCog,
+      path: "/management/drivers",
+    },
+    {
+      label: "Notifications",
+      icon: Bell,
+      path: "/management/notifications",
+    },
+    {
+      label: "Reports",
+      icon: BarChart3,
+      path: "/management/reports",
+    },
+    {
+      label: "Subscriptions",
+      icon: Repeat,
+      path: "/management/subscriptions",
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="management-loading">
+        <div className="management-spinner" />
+        <p>Loading management dashboard...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/management/dashboard" &&
+                location.pathname === "/management/dashboard/");
+
+            return (
+              <button
+                key={item.label}
+                type="button"
+                className={`management-nav-item ${
+                  isActive ? "management-nav-active" : ""
+                }`}
+                onClick={() => handleNavigation(item.path)}
+              >
+                <Icon size={19} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+
+              <h2>Dashboard</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <button
+              type="button"
+              className="management-topbar-icon"
+              title="Notifications"
+              onClick={() => handleNavigation("/management/notifications")}
+            >
+              <Bell size={20} />
+            </button>
+
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "M"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "Management"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Welcome back, {username || "Management"}!</h1>
+
+              <p>Here's an overview of your WaterFlow operations.</p>
+            </div>
+
+            <div className="management-date">
+              <span>Today</span>
+
+              <strong>
+                {new Date().toLocaleDateString("en-KE", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </strong>
+            </div>
+          </div>
+
+          <section className="management-stat-grid">
+            <article className="management-stat-card">
+              <div className="management-stat-icon sales">KES</div>
+
+              <div>
+                <p>Today's Sales</p>
+                <h3>{formatCurrency(todaysSales)}</h3>
+                <span>Today's completed payments</span>
+              </div>
+            </article>
+
+            <article className="management-stat-card">
+              <div className="management-stat-icon orders">
+                <ShoppingCart size={21} />
+              </div>
+
+              <div>
+                <p>Total Orders</p>
+                <h3>{totalOrders}</h3>
+                <span>Orders received</span>
+              </div>
+            </article>
+
+            <article className="management-stat-card">
+              <div className="management-stat-icon pending">
+                <Package size={21} />
+              </div>
+
+              <div>
+                <p>Pending Orders</p>
+                <h3>{pendingOrders}</h3>
+                <span>Orders awaiting processing</span>
+              </div>
+            </article>
+
+            <article className="management-stat-card">
+              <div className="management-stat-icon deliveries">
+                <Truck size={21} />
+              </div>
+
+              <div>
+                <p>Deliveries Today</p>
+                <h3>{todaysDeliveries.length}</h3>
+                <span>Scheduled deliveries</span>
+              </div>
+            </article>
+
+            <article className="management-stat-card">
+              <div className="management-stat-icon stock">
+                <Boxes size={21} />
+              </div>
+
+              <div>
+                <p>Low Stock</p>
+                <h3>—</h3>
+                <span>Inventory monitoring coming next</span>
+              </div>
+            </article>
+
+            <article className="management-stat-card">
+              <div className="management-stat-icon customers">
+                <Users size={21} />
+              </div>
+
+              <div>
+                <p>Customers</p>
+                <h3>—</h3>
+                <span>Customer endpoint coming next</span>
+              </div>
+            </article>
+          </section>
+
+          <section className="management-main-grid">
+            <article className="management-panel-card sales-panel">
+              <div className="management-panel-header">
+                <div>
+                  <h3>Sales Overview</h3>
+                  <p>Completed payments over the last 7 days</p>
+                </div>
+
+                <span className="management-sales-total">
+                  {formatCurrency(
+                    salesByDay.reduce((total, day) => total + day.amount, 0),
+                  )}
+                </span>
+              </div>
+
+              <div className="management-chart">
+                <div className="chart-y-labels">
+                  <span>{formatCurrency(maximumSales)}</span>
+                  <span>{formatCurrency(maximumSales * 0.75)}</span>
+                  <span>{formatCurrency(maximumSales * 0.5)}</span>
+                  <span>{formatCurrency(maximumSales * 0.25)}</span>
+                  <span>KES 0</span>
+                </div>
+
+                <div className="chart-area">
+                  <div className="chart-grid-line line-1" />
+                  <div className="chart-grid-line line-2" />
+                  <div className="chart-grid-line line-3" />
+                  <div className="chart-grid-line line-4" />
+                  <div className="chart-grid-line line-5" />
+
+                  <div className="chart-bars">
+                    {salesByDay.map((day) => (
+                      <div className="chart-bar-group" key={day.label}>
+                        <div
+                          className="chart-bar"
+                          style={{
+                            height: `${Math.max(
+                              (day.amount / maximumSales) * 100,
+                              day.amount > 0 ? 8 : 2,
+                            )}%`,
+                          }}
+                          title={formatCurrency(day.amount)}
+                        />
+
+                        <span>{day.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="management-panel-card order-panel">
+              <div className="management-panel-header">
+                <div>
+                  <h3>Order Status</h3>
+                  <p>Current order distribution</p>
+                </div>
+              </div>
+
+              <div className="order-status-chart">
+                <div className="status-donut">
+                  <div className="status-donut-inner">
+                    <strong>{totalOrders}</strong>
+                    <span>Orders</span>
+                  </div>
+                </div>
+
+                <div className="status-legend">
+                  <div>
+                    <span className="legend-dot pending-dot" />
+                    <p>Pending</p>
+                    <strong>{pendingStatusOrders}</strong>
+                  </div>
+
+                  <div>
+                    <span className="legend-dot processing-dot" />
+                    <p>Processing</p>
+                    <strong>{processingStatusOrders}</strong>
+                  </div>
+
+                  <div>
+                    <span className="legend-dot delivery-dot" />
+                    <p>Out for Delivery</p>
+                    <strong>{outForDeliveryOrders}</strong>
+                  </div>
+
+                  <div>
+                    <span className="legend-dot delivered-dot" />
+                    <p>Delivered</p>
+                    <strong>{deliveredStatusOrders}</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section className="management-bottom-grid">
+            <article className="management-panel-card">
+              <div className="management-panel-header">
+                <div>
+                  <h3>Recent Orders</h3>
+                  <p>Your latest customer orders</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/management/orders")}
+                >
+                  View All
+                </button>
+              </div>
+
+              {dashboardLoading ? (
+                <div className="management-empty-table">
+                  <p>Loading orders...</p>
+                </div>
+              ) : recentOrders.length === 0 ? (
+                <div className="management-empty-table">
+                  <ShoppingCart size={32} />
+                  <h4>No recent orders</h4>
+                  <p>Customer orders will appear here.</p>
+                </div>
+              ) : (
+                <div className="management-orders-list">
+                  {recentOrders.map((order) => (
+                    <div className="management-order-row" key={order.id}>
+                      <div className="management-order-icon">
+                        <ShoppingCart size={18} />
+                      </div>
+
+                      <div className="management-order-info">
+                        <strong>Order #{order.id}</strong>
+
+                        <span>
+                          {order.customer_username || "Customer"} •{" "}
+                          {formatDate(order.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="management-order-total">
+                        <strong>{formatCurrency(order.total_amount)}</strong>
+
+                        <span>{getOrderStatusLabel(order.status)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <article className="management-panel-card">
+              <div className="management-panel-header">
+                <div>
+                  <h3>Delivery Activity</h3>
+                  <p>Today's delivery progress</p>
+                </div>
+              </div>
+
+              <div className="delivery-summary">
+                <div className="delivery-summary-item">
+                  <div className="delivery-summary-icon">
+                    <Truck size={19} />
+                  </div>
+
+                  <div>
+                    <strong>{pendingDeliveries}</strong>
+                    <span>Pending</span>
+                  </div>
+                </div>
+
+                <div className="delivery-summary-item">
+                  <div className="delivery-summary-icon">
+                    <UserRoundCog size={19} />
+                  </div>
+
+                  <div>
+                    <strong>{assignedDeliveries}</strong>
+                    <span>Assigned</span>
+                  </div>
+                </div>
+
+                <div className="delivery-summary-item">
+                  <div className="delivery-summary-icon">
+                    <Truck size={19} />
+                  </div>
+
+                  <div>
+                    <strong>{onTheWayDeliveries}</strong>
+                    <span>On the way</span>
+                  </div>
+                </div>
+
+                <div className="delivery-summary-item">
+                  <div className="delivery-summary-icon">
+                    <Package size={19} />
+                  </div>
+
+                  <div>
+                    <strong>{deliveredDeliveries}</strong>
+                    <span>Delivered</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default ManagementDashboard;
+
+============================================================
+FILE: frontend/src/pages/ManagementDeliveries.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  RefreshCw,
+  UserPlus,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementDeliveries() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [deliveries, setDeliveries] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [selectedDrivers, setSelectedDrivers] = useState({});
+  const [assigningDelivery, setAssigningDelivery] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
+
+  const loadDeliveries = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const response = await api.get("/management/deliveries/");
+
+      setDeliveries(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Deliveries error:", error);
+      setMessage("Unable to load deliveries.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDrivers = async () => {
+    try {
+      const response = await api.get("/management/drivers/");
+
+      setDrivers(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Drivers error:", error);
+      setDrivers([]);
+      setMessage("Unable to load drivers.");
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+
+        await Promise.all([loadDeliveries(), loadDrivers()]);
+      } catch (error) {
+        console.error(error);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  const handleDriverChange = (deliveryId, driverId) => {
+    setSelectedDrivers((previous) => ({
+      ...previous,
+      [deliveryId]: driverId,
+    }));
+  };
+
+  const handleAssignDriver = async (delivery) => {
+    const driverId = selectedDrivers[delivery.id];
+
+    if (!driverId) {
+      setMessage("Please select a driver first.");
+      return;
+    }
+
+    try {
+      setAssigningDelivery(delivery.id);
+      setMessage("");
+
+      await api.patch(`/management/deliveries/${delivery.id}/assign/`, {
+        driver_id: Number(driverId),
+      });
+
+      setMessage(`Driver assigned successfully to Delivery #${delivery.id}.`);
+
+      await loadDeliveries();
+
+      setSelectedDrivers((previous) => ({
+        ...previous,
+        [delivery.id]: "",
+      }));
+    } catch (error) {
+      console.error("Assign driver error:", error);
+
+      setMessage(
+        error.response?.data?.detail ||
+          error.response?.data?.driver?.[0] ||
+          "Unable to assign driver. Please try again.",
+      );
+    } finally {
+      setAssigningDelivery(null);
+    }
+  };
+
+  const getStatusStyle = (status) => {
+    const value = String(status || "").toUpperCase();
+
+    if (value === "DELIVERED") {
+      return {
+        background: "#dcfce7",
+        color: "#15803d",
+      };
+    }
+
+    if (value === "OUT_FOR_DELIVERY") {
+      return {
+        background: "#ede9fe",
+        color: "#6d28d9",
+      };
+    }
+
+    if (value === "ASSIGNED") {
+      return {
+        background: "#dbeafe",
+        color: "#1d4ed8",
+      };
+    }
+
+    return {
+      background: "#fef3c7",
+      color: "#92400e",
+    };
+  };
+
+  const formatStatus = (status) =>
+    String(status || "PENDING")
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Deliveries" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Deliveries</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Delivery Management</h1>
+              <p>Monitor deliveries and assign them to drivers.</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                loadDeliveries();
+                loadDrivers();
+              }}
+              style={refreshButton}
+            >
+              <RefreshCw size={15} />
+              Refresh
+            </button>
+          </div>
+
+          {message && <div style={messageStyle}>{message}</div>}
+
+          <section className="management-panel-card">
+            {loading ? (
+              <div className="management-empty-table">
+                <p>Loading deliveries...</p>
+              </div>
+            ) : deliveries.length === 0 ? (
+              <div className="management-empty-table">
+                <Truck size={32} />
+                <h4>No deliveries found</h4>
+                <p>Delivery records will appear here.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Delivery</th>
+                      <th style={thStyle}>Order</th>
+                      <th style={thStyle}>Driver</th>
+                      <th style={thStyle}>Address</th>
+                      <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Created</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {deliveries.map((delivery) => {
+                      const driverName =
+                        delivery.driver_username ||
+                        delivery.driver_name ||
+                        delivery.driver?.username;
+
+                      const isUnassigned = !driverName;
+
+                      return (
+                        <tr key={delivery.id}>
+                          <td style={tdStyle}>
+                            <strong>#{delivery.id}</strong>
+                          </td>
+
+                          <td style={tdStyle}>#{delivery.order || "—"}</td>
+
+                          <td style={tdStyle}>
+                            {isUnassigned ? (
+                              <div style={assignContainer}>
+                                <select
+                                  value={selectedDrivers[delivery.id] || ""}
+                                  onChange={(event) =>
+                                    handleDriverChange(
+                                      delivery.id,
+                                      event.target.value,
+                                    )
+                                  }
+                                  style={selectStyle}
+                                  disabled={assigningDelivery === delivery.id}
+                                >
+                                  <option value="">Select driver</option>
+
+                                  {drivers.map((driver) => (
+                                    <option key={driver.id} value={driver.id}>
+                                      {driver.username}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleAssignDriver(delivery)}
+                                  disabled={
+                                    !selectedDrivers[delivery.id] ||
+                                    assigningDelivery === delivery.id
+                                  }
+                                  style={assignButton}
+                                >
+                                  <UserPlus size={14} />
+
+                                  {assigningDelivery === delivery.id
+                                    ? "Assigning..."
+                                    : "Assign"}
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={assignedDriver}>
+                                <div style={assignedDriverIcon}>
+                                  {driverName.charAt(0).toUpperCase()}
+                                </div>
+
+                                <strong>{driverName}</strong>
+                              </div>
+                            )}
+                          </td>
+
+                          <td style={tdStyle}>
+                            {delivery.delivery_address ||
+                              delivery.address ||
+                              "—"}
+                          </td>
+
+                          <td style={tdStyle}>
+                            <span
+                              style={{
+                                ...statusStyle,
+                                ...getStatusStyle(delivery.status),
+                              }}
+                            >
+                              {formatStatus(delivery.status)}
+                            </span>
+                          </td>
+
+                          <td style={tdStyle}>
+                            {delivery.created_at
+                              ? new Date(
+                                  delivery.created_at,
+                                ).toLocaleDateString("en-KE")
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 10px",
+  borderBottom: "1px solid #ece9f1",
+  color: "#777080",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "15px 10px",
+  borderBottom: "1px solid #f0edf3",
+  color: "#514b5a",
+  verticalAlign: "middle",
+};
+
+const statusStyle = {
+  display: "inline-block",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const refreshButton = {
+  border: "1px solid #e5e1ea",
+  background: "#fff",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+};
+
+const assignContainer = {
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+  minWidth: "220px",
+};
+
+const selectStyle = {
+  minWidth: "125px",
+  padding: "8px 9px",
+  border: "1px solid #ddd8e3",
+  borderRadius: "8px",
+  background: "#fff",
+  color: "#514b5a",
+  fontSize: "11px",
+  outline: "none",
+};
+
+const assignButton = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "5px",
+  padding: "8px 10px",
+  border: "none",
+  borderRadius: "8px",
+  background: "#075985",
+  color: "#fff",
+  cursor: "pointer",
+  fontSize: "11px",
+  fontWeight: 700,
+};
+
+const assignedDriver = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const assignedDriverIcon = {
+  width: "28px",
+  height: "28px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "50%",
+  background: "#eaf7fb",
+  color: "#075985",
+  fontSize: "11px",
+  fontWeight: 800,
+};
+
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
+};
+
+export default ManagementDeliveries;
+
+============================================================
+FILE: frontend/src/pages/ManagementDrivers.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  RefreshCw,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementDrivers() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
+
+  const loadDrivers = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const response = await api.get("/management/drivers/");
+
+      setDrivers(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Drivers error:", error);
+      setMessage("Unable to load drivers.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+        await loadDrivers();
+      } catch (error) {
+        console.error(error);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Drivers" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Drivers</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Driver Management</h1>
+              <p>View WaterFlow delivery drivers.</p>
+            </div>
+
+            <button type="button" onClick={loadDrivers} style={refreshButton}>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
+          </div>
+
+          {message && <div style={messageStyle}>{message}</div>}
+
+          <section className="management-panel-card">
+            {loading ? (
+              <div className="management-empty-table">
+                <p>Loading drivers...</p>
+              </div>
+            ) : drivers.length === 0 ? (
+              <div className="management-empty-table">
+                <UserRoundCog size={32} />
+                <h4>No drivers found</h4>
+                <p>Driver accounts will appear here.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>ID</th>
+                      <th style={thStyle}>Username</th>
+                      <th style={thStyle}>Email</th>
+                      <th style={thStyle}>Phone</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {drivers.map((driver) => (
+                      <tr key={driver.id}>
+                        <td style={tdStyle}>#{driver.id}</td>
+
+                        <td style={tdStyle}>
+                          <strong>{driver.username || "—"}</strong>
+                        </td>
+
+                        <td style={tdStyle}>{driver.email || "—"}</td>
+
+                        <td style={tdStyle}>
+                          {driver.phone_number ||
+                            driver.profile?.phone_number ||
+                            "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 10px",
+  borderBottom: "1px solid #ece9f1",
+  color: "#777080",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "15px 10px",
+  borderBottom: "1px solid #f0edf3",
+  color: "#514b5a",
+};
+
+const refreshButton = {
+  border: "1px solid #e5e1ea",
+  background: "#fff",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+};
+
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
+};
+
+export default ManagementDrivers;
+
+============================================================
+FILE: frontend/src/pages/ManagementInventory.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  RefreshCw,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementInventory() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
+
+  const loadInventory = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const response = await api.get("/inventory/");
+
+      setInventory(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Inventory error:", error);
+      setMessage("Unable to load inventory.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+        await loadInventory();
+      } catch (error) {
+        console.error(error);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Inventory" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Inventory</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Inventory Management</h1>
+              <p>Monitor available WaterFlow stock.</p>
+            </div>
+
+            <button type="button" onClick={loadInventory} style={refreshButton}>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
+          </div>
+
+          {message && <div style={messageStyle}>{message}</div>}
+
+          <section className="management-panel-card">
+            {loading ? (
+              <div className="management-empty-table">
+                <p>Loading inventory...</p>
+              </div>
+            ) : inventory.length === 0 ? (
+              <div className="management-empty-table">
+                <Boxes size={32} />
+                <h4>No inventory found</h4>
+                <p>Inventory records will appear here.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>ID</th>
+                      <th style={thStyle}>Product</th>
+                      <th style={thStyle}>Quantity</th>
+                      <th style={thStyle}>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {inventory.map((item) => {
+                      const quantity =
+                        item.quantity ??
+                        item.stock_quantity ??
+                        item.available_quantity ??
+                        0;
+
+                      const productName =
+                        item.product_name ||
+                        item.product?.name ||
+                        (typeof item.product === "string" ? item.product : "—");
+
+                      return (
+                        <tr key={item.id}>
+                          <td style={tdStyle}>#{item.id}</td>
+
+                          <td style={tdStyle}>
+                            <strong>{productName}</strong>
+                          </td>
+
+                          <td style={tdStyle}>{quantity}</td>
+
+                          <td style={tdStyle}>
+                            <span
+                              style={{
+                                ...statusStyle,
+                                ...(Number(quantity) <= 5
+                                  ? lowStockStyle
+                                  : stockStyle),
+                              }}
+                            >
+                              {Number(quantity) <= 5 ? "Low Stock" : "In Stock"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 10px",
+  borderBottom: "1px solid #ece9f1",
+  color: "#777080",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "15px 10px",
+  borderBottom: "1px solid #f0edf3",
+  color: "#514b5a",
+};
+
+const statusStyle = {
+  display: "inline-block",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const stockStyle = {
+  background: "#dcfce7",
+  color: "#15803d",
+};
+
+const lowStockStyle = {
+  background: "#fee2e2",
+  color: "#b91c1c",
+};
+
+const refreshButton = {
+  border: "1px solid #e5e1ea",
+  background: "#fff",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+};
+
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
+};
+
+export default ManagementInventory;
+
+============================================================
+FILE: frontend/src/pages/ManagementNotifications.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { Bell, RefreshCw } from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementNotifications() {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const getNotifications = (data) => {
+    if (Array.isArray(data)) return data;
+    return data?.results || [];
+  };
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      let response;
+
+      try {
+        response = await api.get("/management/notifications/");
+      } catch {
+        response = await api.get("/notifications/");
+      }
+
+      setNotifications(getNotifications(response.data));
+    } catch (err) {
+      console.error("Failed to load notifications:", err);
+
+      setError(
+        err.response?.data?.detail ||
+          "Failed to load notifications. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        let response;
+
+        try {
+          response = await api.get("/management/notifications/");
+        } catch {
+          response = await api.get("/notifications/");
+        }
+
+        setNotifications(getNotifications(response.data));
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+
+        setError(
+          err.response?.data?.detail ||
+            "Failed to load notifications. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const getMessage = (notification) =>
+    notification.message ||
+    notification.content ||
+    notification.text ||
+    notification.description ||
+    "Notification";
+
+  const getTitle = (notification) =>
+    notification.title ||
+    notification.subject ||
+    notification.type ||
+    "WaterFlow Notification";
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleString("en-KE", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  const isRead = (notification) =>
+    notification.is_read === true ||
+    notification.read === true ||
+    notification.status === "READ";
+
+  return (
+    <div className="management-layout">
+      <aside className="management-sidebar">
+        <div className="management-brand">
+          <h2>WaterFlow</h2>
+          <span>Management</span>
+        </div>
+
+        <nav className="management-nav">
+          <a href="/management/dashboard" className="management-nav-item">
+            Dashboard
+          </a>
+
+          <a href="/management/products" className="management-nav-item">
+            Products
+          </a>
+
+          <a href="/management/orders" className="management-nav-item">
+            Orders
+          </a>
+
+          <a href="/management/inventory" className="management-nav-item">
+            Inventory
+          </a>
+
+          <a href="/management/deliveries" className="management-nav-item">
+            Deliveries
+          </a>
+
+          <a href="/management/drivers" className="management-nav-item">
+            Drivers
+          </a>
+
+          <a href="/management/payments" className="management-nav-item">
+            Payments
+          </a>
+
+          <a href="/management/customers" className="management-nav-item">
+            Customers
+          </a>
+
+          <a
+            href="/management/notifications"
+            className="management-nav-item management-nav-active"
+          >
+            Notifications
+          </a>
+
+          <a href="/management/reports" className="management-nav-item">
+            Reports
+          </a>
+
+          <a href="/management/subscriptions" className="management-nav-item">
+            Subscriptions
+          </a>
+        </nav>
+      </aside>
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div>
+            <h1>Notifications</h1>
+            <p>View WaterFlow system notifications.</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadNotifications}
+            className="management-refresh-button"
+            disabled={loading}
+          >
+            <RefreshCw size={17} />
+            Refresh
+          </button>
+        </header>
+
+        <section className="management-content">
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>System Notifications</h2>
+                <p>
+                  {notifications.length} notification
+                  {notifications.length === 1 ? "" : "s"}
+                </p>
+              </div>
+
+              <Bell size={22} />
+            </div>
+
+            {loading ? (
+              <div className="management-loading">Loading notifications...</div>
+            ) : error ? (
+              <div className="management-empty-table">{error}</div>
+            ) : notifications.length === 0 ? (
+              <div className="management-empty-table">
+                No notifications found.
+              </div>
+            ) : (
+              <div className="management-table-wrapper">
+                <table className="management-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Message</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {notifications.map((notification) => (
+                      <tr key={notification.id}>
+                        <td>
+                          <strong>{getTitle(notification)}</strong>
+                        </td>
+
+                        <td>{getMessage(notification)}</td>
+
+                        <td>
+                          <span
+                            className={`management-status ${
+                              isRead(notification)
+                                ? "status-success"
+                                : "status-pending"
+                            }`}
+                          >
+                            {isRead(notification) ? "READ" : "UNREAD"}
+                          </span>
+                        </td>
+
+                        <td>{formatDate(notification.created_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default ManagementNotifications;
+
+============================================================
+FILE: frontend/src/pages/ManagementOrders.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  RefreshCw,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementOrders() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const response = await api.get("/management/orders/");
+
+      setOrders(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Orders error:", error);
+      setMessage("Unable to load orders.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+
+        try {
+          const response = await api.get("/management/orders/");
+          setOrders(Array.isArray(response.data) ? response.data : []);
+        } catch (error) {
+          console.error("Orders error:", error);
+          setMessage("Unable to load orders.");
+        } finally {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  const getStatus = (order) => {
+    return String(order.status || "UNKNOWN")
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  };
+
+  const getStatusStyle = (status) => {
+    const value = String(status || "").toUpperCase();
+
+    if (value === "DELIVERED") {
+      return {
+        background: "#dcfce7",
+        color: "#15803d",
+      };
+    }
+
+    if (value === "PAID" || value === "PROCESSING") {
+      return {
+        background: "#ede9fe",
+        color: "#6d28d9",
+      };
+    }
+
+    if (value === "CANCELLED") {
+      return {
+        background: "#fee2e2",
+        color: "#b91c1c",
+      };
+    }
+
+    return {
+      background: "#fef3c7",
+      color: "#92400e",
+    };
+  };
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Orders" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Orders</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Orders Management</h1>
+              <p>View and monitor all WaterFlow customer orders.</p>
+            </div>
+
+            <button type="button" onClick={loadOrders} style={refreshButton}>
+              <RefreshCw size={15} />
+              Refresh
+            </button>
+          </div>
+
+          {message && <div style={messageStyle}>{message}</div>}
+
+          <section className="management-panel-card">
+            {loading ? (
+              <div className="management-empty-table">
+                <p>Loading orders...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="management-empty-table">
+                <ShoppingCart size={32} />
+                <h4>No orders found</h4>
+                <p>Customer orders will appear here.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Order</th>
+                      <th style={thStyle}>Customer</th>
+                      <th style={thStyle}>Items</th>
+                      <th style={thStyle}>Total</th>
+                      <th style={thStyle}>Payment</th>
+                      <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Date</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {orders.map((order) => (
+                      <tr key={order.id}>
+                        <td style={tdStyle}>
+                          <strong>#{order.id}</strong>
+                        </td>
+
+                        <td style={tdStyle}>
+                          {order.customer_username || order.customer || "—"}
+                        </td>
+
+                        <td style={tdStyle}>
+                          {Array.isArray(order.items)
+                            ? order.items.reduce(
+                                (total, item) =>
+                                  total + Number(item.quantity || 0),
+                                0,
+                              )
+                            : "—"}
+                        </td>
+
+                        <td style={tdStyle}>
+                          KES{" "}
+                          {Number(order.total_amount || 0).toLocaleString(
+                            "en-KE",
+                            {
+                              minimumFractionDigits: 2,
+                            },
+                          )}
+                        </td>
+
+                        <td style={tdStyle}>{order.payment_status || "—"}</td>
+
+                        <td style={tdStyle}>
+                          <span
+                            style={{
+                              ...statusStyle,
+                              ...getStatusStyle(order.status),
+                            }}
+                          >
+                            {getStatus(order)}
+                          </span>
+                        </td>
+
+                        <td style={tdStyle}>
+                          {order.created_at
+                            ? new Date(order.created_at).toLocaleDateString(
+                                "en-KE",
+                              )
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 10px",
+  borderBottom: "1px solid #ece9f1",
+  color: "#777080",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "15px 10px",
+  borderBottom: "1px solid #f0edf3",
+  color: "#514b5a",
+};
+
+const statusStyle = {
+  display: "inline-block",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const refreshButton = {
+  border: "1px solid #e5e1ea",
+  background: "#fff",
+  borderRadius: "9px",
+  padding: "10px 14px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+};
+
+const messageStyle = {
+  marginBottom: "18px",
+  padding: "12px 15px",
+  background: "#f0e7ff",
+  color: "#6d28d9",
+  borderRadius: "9px",
+  fontSize: "13px",
+};
+
+export default ManagementOrders;
+
+============================================================
+FILE: frontend/src/pages/ManagementPayments.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { RefreshCw, CreditCard } from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementPayments() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/management/orders/");
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      setOrders(data);
+    } catch (err) {
+      console.error("Failed to load payment information:", err);
+
+      setError(
+        err.response?.data?.detail || "Unable to load payment information.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await api.get("/management/orders/");
+
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data?.results || [];
+
+        setOrders(data);
+      } catch (err) {
+        console.error("Failed to load payment information:", err);
+
+        setError(
+          err.response?.data?.detail || "Unable to load payment information.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, []);
+
+  const formatAmount = (amount) =>
+    `KES ${Number(amount || 0).toLocaleString()}`;
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleString("en-KE", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  const getPaymentStatusClass = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return "status-success";
+
+      case "FAILED":
+        return "status-danger";
+
+      case "REFUNDED":
+        return "status-warning";
+
+      default:
+        return "status-pending";
+    }
+  };
+
+  return (
+    <div className="management-layout">
+      <aside className="management-sidebar">
+        <div className="management-brand">
+          <h2>WaterFlow</h2>
+          <span>Management</span>
+        </div>
+
+        <nav className="management-nav">
+          <a href="/management/dashboard" className="management-nav-item">
+            Dashboard
+          </a>
+
+          <a href="/management/products" className="management-nav-item">
+            Products
+          </a>
+
+          <a href="/management/orders" className="management-nav-item">
+            Orders
+          </a>
+
+          <a
+            href="/management/payments"
+            className="management-nav-item management-nav-active"
+          >
+            Payments
+          </a>
+
+          <a href="/management/inventory" className="management-nav-item">
+            Inventory
+          </a>
+
+          <a href="/management/deliveries" className="management-nav-item">
+            Deliveries
+          </a>
+
+          <a href="/management/customers" className="management-nav-item">
+            Customers
+          </a>
+
+          <a href="/management/drivers" className="management-nav-item">
+            Drivers
+          </a>
+
+          <a href="/management/notifications" className="management-nav-item">
+            Notifications
+          </a>
+
+          <a href="/management/reports" className="management-nav-item">
+            Reports
+          </a>
+
+          <a href="/management/subscriptions" className="management-nav-item">
+            Subscriptions
+          </a>
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <a href="/login" className="management-nav-item">
+            Logout
+          </a>
+        </div>
+      </aside>
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div>
+            <h1>Payments Management</h1>
+            <p>View and monitor WaterFlow customer payments.</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadPayments}
+            className="management-refresh-button"
+            disabled={loading}
+          >
+            <RefreshCw size={17} />
+            Refresh
+          </button>
+        </header>
+
+        <section className="management-content">
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>Customer Payments</h2>
+                <p>Payment information from customer orders.</p>
+              </div>
+
+              <CreditCard size={22} />
+            </div>
+
+            {loading ? (
+              <div className="management-loading">Loading payments...</div>
+            ) : error ? (
+              <div className="management-empty-table">{error}</div>
+            ) : orders.length === 0 ? (
+              <div className="management-empty-table">No payments found.</div>
+            ) : (
+              <div className="management-table-wrapper">
+                <table className="management-table">
+                  <thead>
+                    <tr>
+                      <th>Order</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Payment Status</th>
+                      <th>Order Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {orders.map((order) => (
+                      <tr key={order.id}>
+                        <td>
+                          <strong>#{order.id}</strong>
+                        </td>
+
+                        <td>{order.customer_username || "—"}</td>
+
+                        <td>
+                          <strong>{formatAmount(order.total_amount)}</strong>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`management-status ${getPaymentStatusClass(
+                              order.payment_status,
+                            )}`}
+                          >
+                            {order.payment_status || "PENDING"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="management-status status-pending">
+                            {order.status || "—"}
+                          </span>
+                        </td>
+
+                        <td>{formatDate(order.created_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default ManagementPayments;
+
+============================================================
+FILE: frontend/src/pages/ManagementProducts.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
+  BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementProducts() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const response = await api.get("/products/");
+
+      setProducts(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Products error:", error);
+      setMessage("Unable to load products.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+        await loadProducts();
+      } catch (error) {
+        console.error(error);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
+  return (
+    <div className="management-layout">
+      <aside
+        className={`management-sidebar ${
+          sidebarOpen ? "management-sidebar-open" : ""
+        }`}
+      >
+        <div className="management-brand">
+          <div className="management-brand-icon">W</div>
+
+          <div>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
+          </div>
+
+          <button
+            type="button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Products" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button
+            type="button"
+            className="management-logout-button"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div className="management-topbar-left">
+            <button
+              type="button"
+              className="management-mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Products</h2>
+            </div>
+          </div>
+
+          <div className="management-topbar-right">
+            <div className="management-user">
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
+
+              <div className="management-user-info">
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="management-content">
+          <div className="management-welcome">
+            <div>
+              <h1>Products Management</h1>
+              <p>Manage WaterFlow products and their prices.</p>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={loadProducts}
+                style={{
+                  border: "1px solid #e5e1ea",
+                  background: "#fff",
+                  borderRadius: "9px",
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                }}
+              >
+                <RefreshCw size={15} />
+                Refresh
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  border: 0,
+                  background: "#7c3aed",
+                  color: "#fff",
+                  borderRadius: "9px",
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                }}
+                onClick={() =>
+                  setMessage("Product creation form will be connected next.")
+                }
+              >
+                <Plus size={15} />
+                Add Product
+              </button>
+            </div>
+          </div>
+
+          {message && (
+            <div
+              style={{
+                marginBottom: "18px",
+                padding: "12px 15px",
+                background: "#f0e7ff",
+                color: "#6d28d9",
+                borderRadius: "9px",
+                fontSize: "13px",
+              }}
+            >
+              {message}
+            </div>
+          )}
+
+          <section className="management-panel-card">
+            {loading ? (
+              <div className="management-empty-table">
+                <p>Loading products...</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="management-empty-table">
+                <Package size={32} />
+                <h4>No products found</h4>
+                <p>Add products from the management system.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: "13px",
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Product</th>
+                      <th style={thStyle}>Category</th>
+                      <th style={thStyle}>Price</th>
+                      <th style={thStyle}>Availability</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {products.map((product) => (
+                      <tr key={product.id}>
+                        <td style={tdStyle}>
+                          <strong>{product.name || "Unnamed Product"}</strong>
+                        </td>
+
+                        <td style={tdStyle}>
+                          {product.category?.name ||
+                            product.category_name ||
+                            "—"}
+                        </td>
+
+                        <td style={tdStyle}>
+                          KES{" "}
+                          {Number(product.price || 0).toLocaleString("en-KE", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </td>
+
+                        <td style={tdStyle}>
+                          {product.is_available === false
+                            ? "Unavailable"
+                            : "Available"}
+                        </td>
+
+                        <td style={tdStyle}>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                            }}
+                          >
+                            <button
+                              type="button"
+                              title="Edit"
+                              onClick={() =>
+                                setMessage(
+                                  `Edit Product #${product.id} will be connected next.`,
+                                )
+                              }
+                              style={actionButton}
+                            >
+                              <Pencil size={15} />
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Delete"
+                              onClick={() =>
+                                setMessage(
+                                  `Delete Product #${product.id} will be connected next.`,
+                                )
+                              }
+                              style={deleteButton}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 10px",
+  borderBottom: "1px solid #ece9f1",
+  color: "#777080",
+  fontSize: "11px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "15px 10px",
+  borderBottom: "1px solid #f0edf3",
+  color: "#514b5a",
+};
+
+const actionButton = {
+  border: "1px solid #e5e1ea",
+  background: "#fff",
+  color: "#7c3aed",
+  borderRadius: "7px",
+  width: "32px",
+  height: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+};
+
+const deleteButton = {
+  ...actionButton,
+  color: "#dc2626",
+};
+
+export default ManagementProducts;
+
+============================================================
+FILE: frontend/src/pages/ManagementReports.jsx
+============================================================
+import { useEffect, useMemo, useState } from "react";
+import {
+  BarChart3,
+  CheckCircle2,
+  Clock3,
+  DollarSign,
+  RefreshCw,
+  ShoppingBag,
+  XCircle,
+} from "lucide-react";
+import api from "../services/api";
+
+function ManagementReports() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/management/orders/");
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.results || [];
+
+      setOrders(data);
+    } catch (err) {
+      console.error("Reports error:", err);
+      setError(err.response?.data?.detail || "Failed to load report data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const report = useMemo(() => {
+    const completedPaymentStatuses = ["COMPLETED"];
+    const paidOrderStatuses = [
+      "PAID",
+      "PROCESSING",
+      "ASSIGNED",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+    ];
+
+    const completedOrders = orders.filter(
+      (order) =>
+        completedPaymentStatuses.includes(order.payment_status) ||
+        paidOrderStatuses.includes(order.status),
+    );
+
+    const pendingPayments = orders.filter(
+      (order) =>
+        order.payment_status === "PENDING" ||
+        order.status === "PENDING_PAYMENT",
+    );
+
+    const failedPayments = orders.filter(
+      (order) => order.payment_status === "FAILED",
+    );
+
+    const refundedPayments = orders.filter(
+      (order) => order.payment_status === "REFUNDED",
+    );
+
+    const totalRevenue = completedOrders.reduce(
+      (total, order) => total + Number(order.total_amount || 0),
+      0,
+    );
+
+    const pendingAmount = pendingPayments.reduce(
+      (total, order) => total + Number(order.total_amount || 0),
+      0,
+    );
+
+    const failedAmount = failedPayments.reduce(
+      (total, order) => total + Number(order.total_amount || 0),
+      0,
+    );
+
+    const refundedAmount = refundedPayments.reduce(
+      (total, order) => total + Number(order.total_amount || 0),
+      0,
+    );
+
+    const statusCounts = {};
+
+    orders.forEach((order) => {
+      const status = order.status || "UNKNOWN";
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    return {
+      totalOrders: orders.length,
+      completedOrders: completedOrders.length,
+      pendingPayments: pendingPayments.length,
+      failedPayments: failedPayments.length,
+      refundedPayments: refundedPayments.length,
+      totalRevenue,
+      pendingAmount,
+      failedAmount,
+      refundedAmount,
+      statusCounts,
+    };
+  }, [orders]);
+
+  const formatCurrency = (amount) =>
+    `KES ${Number(amount || 0).toLocaleString("en-KE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const formatStatus = (status) =>
+    status
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+  return (
+    <div className="management-page">
+      <div className="management-page-header">
+        <div>
+          <h1>Reports</h1>
+          <p>Business performance and payment summaries.</p>
+        </div>
+
+        <button
+          type="button"
+          className="management-refresh-button"
+          onClick={loadReports}
+          disabled={loading}
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </div>
+
+      {loading && <div className="management-loading">Loading reports...</div>}
+
+      {error && <div className="management-error">{error}</div>}
+
+      {!loading && !error && (
+        <>
+          <div className="management-stat-grid">
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <ShoppingBag size={20} />
+              </div>
+              <div>
+                <span>Total Orders</span>
+                <strong>{report.totalOrders}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <DollarSign size={20} />
+              </div>
+              <div>
+                <span>Total Revenue</span>
+                <strong>{formatCurrency(report.totalRevenue)}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <span>Completed Payments</span>
+                <strong>{report.completedOrders}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <Clock3 size={20} />
+              </div>
+              <div>
+                <span>Pending Payments</span>
+                <strong>{report.pendingPayments}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <XCircle size={20} />
+              </div>
+              <div>
+                <span>Failed Payments</span>
+                <strong>{report.failedPayments}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>Payment Summary</h2>
+                <p>Summary calculated from customer order records.</p>
+              </div>
+            </div>
+
+            <div className="management-report-grid">
+              <div className="management-report-item">
+                <span>Completed Revenue</span>
+                <strong>{formatCurrency(report.totalRevenue)}</strong>
+              </div>
+
+              <div className="management-report-item">
+                <span>Pending Amount</span>
+                <strong>{formatCurrency(report.pendingAmount)}</strong>
+              </div>
+
+              <div className="management-report-item">
+                <span>Failed Amount</span>
+                <strong>{formatCurrency(report.failedAmount)}</strong>
+              </div>
+
+              <div className="management-report-item">
+                <span>Refunded Amount</span>
+                <strong>{formatCurrency(report.refundedAmount)}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>Order Status Summary</h2>
+                <p>Current status of all WaterFlow orders.</p>
+              </div>
+
+              <BarChart3 size={20} />
+            </div>
+
+            {Object.keys(report.statusCounts).length === 0 ? (
+              <div className="management-empty-table">
+                No order data available.
+              </div>
+            ) : (
+              <div className="management-table-wrapper">
+                <table className="management-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Orders</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {Object.entries(report.statusCounts).map(
+                      ([status, count]) => (
+                        <tr key={status}>
+                          <td>{formatStatus(status)}</td>
+                          <td>{count}</td>
+                        </tr>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default ManagementReports;
+
+============================================================
+FILE: frontend/src/pages/ManagementSubscriptions.jsx
+============================================================
+import { useEffect, useState } from "react";
+import { RefreshCw, Repeat } from "lucide-react";
+import api from "../services/api";
+import "./ManagementDashboard.css";
+
+function ManagementSubscriptions() {
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const getSubscriptions = (data) => {
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return data?.results || [];
+  };
+
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // IMPORTANT:
+      // This is the management endpoint from subscriptions/urls.py
+      const response = await api.get("/subscriptions/management/");
+
+      const data = getSubscriptions(response.data);
+
+      setSubscriptions(data);
+    } catch (err) {
+      console.error("Failed to load subscriptions:", err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+
+        window.location.href = "/login";
+        return;
+      }
+
+      if (err.response?.status === 403) {
+        setError("You do not have management access.");
+      } else {
+        setError(
+          err.response?.data?.detail ||
+            "Failed to load subscriptions. Please try again.",
+        );
+      }
+
+      setSubscriptions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSubscriptions();
+  }, []);
+
+  const getCustomer = (subscription) => {
+    if (subscription.customer_username) {
+      return subscription.customer_username;
+    }
+
+    if (typeof subscription.customer === "string") {
+      return subscription.customer;
+    }
+
+    if (subscription.customer?.username) {
+      return subscription.customer.username;
+    }
+
+    if (subscription.customer?.email) {
+      return subscription.customer.email;
+    }
+
+    return `User #${subscription.customer || "—"}`;
+  };
+
+  const getProduct = (subscription) => {
+    // Your backend serializer returns items[],
+    // and each item has product_name.
+    if (subscription.items?.length > 0) {
+      return subscription.items
+        .map((item) => {
+          const quantity = item.quantity || 1;
+          return `${item.product_name} × ${quantity}`;
+        })
+        .join(", ");
+    }
+
+    if (subscription.product_name) {
+      return subscription.product_name;
+    }
+
+    if (typeof subscription.product === "string") {
+      return subscription.product;
+    }
+
+    if (subscription.product?.name) {
+      return subscription.product.name;
+    }
+
+    return "—";
+  };
+
+  const getFrequency = (subscription) =>
+    subscription.frequency ||
+    subscription.interval ||
+    subscription.plan ||
+    "—";
+
+  const getStatus = (subscription) =>
+    subscription.status || "ACTIVE";
+
+  const getNextDelivery = (subscription) =>
+    subscription.next_delivery ||
+    subscription.next_delivery_date ||
+    subscription.next_billing_date ||
+    "—";
+
+  const formatDate = (date) => {
+    if (!date || date === "—") {
+      return "—";
+    }
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return String(date);
+    }
+
+    return parsedDate.toLocaleDateString("en-KE", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getStatusClass = (status) => {
+    const normalized = String(status).toUpperCase();
+
+    if (normalized === "ACTIVE") {
+      return "status-success";
+    }
+
+    if (
+      normalized === "PAUSED" ||
+      normalized === "PENDING" ||
+      normalized === "PENDING_PAYMENT"
+    ) {
+      return "status-pending";
+    }
+
+    if (
+      normalized === "CANCELLED" ||
+      normalized === "CANCELED"
+    ) {
+      return "status-danger";
+    }
+
+    return "status-warning";
+  };
+
+  const activeCount = subscriptions.filter(
+    (subscription) =>
+      String(getStatus(subscription)).toUpperCase() === "ACTIVE",
+  ).length;
+
+  const pausedCount = subscriptions.filter(
+    (subscription) =>
+      String(getStatus(subscription)).toUpperCase() === "PAUSED",
+  ).length;
+
+  return (
+    <div className="management-layout">
+      <aside className="management-sidebar">
+        <div className="management-brand">
+          <h2>WaterFlow</h2>
+          <span>Management</span>
+        </div>
+
+        <nav className="management-nav">
+          <a
+            href="/management/dashboard"
+            className="management-nav-item"
+          >
+            Dashboard
+          </a>
+
+          <a
+            href="/management/products"
+            className="management-nav-item"
+          >
+            Products
+          </a>
+
+          <a
+            href="/management/orders"
+            className="management-nav-item"
+          >
+            Orders
+          </a>
+
+          <a
+            href="/management/inventory"
+            className="management-nav-item"
+          >
+            Inventory
+          </a>
+
+          <a
+            href="/management/deliveries"
+            className="management-nav-item"
+          >
+            Deliveries
+          </a>
+
+          <a
+            href="/management/drivers"
+            className="management-nav-item"
+          >
+            Drivers
+          </a>
+
+          <a
+            href="/management/payments"
+            className="management-nav-item"
+          >
+            Payments
+          </a>
+
+          <a
+            href="/management/customers"
+            className="management-nav-item"
+          >
+            Customers
+          </a>
+
+          <a
+            href="/management/notifications"
+            className="management-nav-item"
+          >
+            Notifications
+          </a>
+
+          <a
+            href="/management/reports"
+            className="management-nav-item"
+          >
+            Reports
+          </a>
+
+          <a
+            href="/management/subscriptions"
+            className="management-nav-item management-nav-active"
+          >
+            Subscriptions
+          </a>
+        </nav>
+      </aside>
+
+      <main className="management-main">
+        <header className="management-topbar">
+          <div>
+            <h1>Subscriptions</h1>
+            <p>
+              Monitor recurring WaterFlow customer deliveries.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadSubscriptions}
+            className="management-refresh-button"
+            disabled={loading}
+          >
+            <RefreshCw size={17} />
+            {loading ? "Loading..." : "Refresh"}
+          </button>
+        </header>
+
+        <section className="management-content">
+          <div className="management-stat-grid">
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <Repeat size={21} />
+              </div>
+
+              <div>
+                <span>Total Subscriptions</span>
+                <strong>{subscriptions.length}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <Repeat size={21} />
+              </div>
+
+              <div>
+                <span>Active</span>
+                <strong>{activeCount}</strong>
+              </div>
+            </div>
+
+            <div className="management-stat-card">
+              <div className="management-stat-icon">
+                <Repeat size={21} />
+              </div>
+
+              <div>
+                <span>Paused</span>
+                <strong>{pausedCount}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="management-panel-card">
+            <div className="management-panel-header">
+              <div>
+                <h2>Subscription List</h2>
+
+                <p>
+                  {subscriptions.length} subscription
+                  {subscriptions.length === 1 ? "" : "s"}
+                </p>
+              </div>
+
+              <Repeat size={22} />
+            </div>
+
+            {loading ? (
+              <div className="management-loading">
+                Loading subscriptions...
+              </div>
+            ) : error ? (
+              <div className="management-empty-table">
+                {error}
+              </div>
+            ) : subscriptions.length === 0 ? (
+              <div className="management-empty-table">
+                No subscriptions found.
+              </div>
+            ) : (
+              <div className="management-table-wrapper">
+                <table className="management-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Customer</th>
+                      <th>Product</th>
+                      <th>Frequency</th>
+                      <th>Status</th>
+                      <th>Next Delivery</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {subscriptions.map((subscription) => {
+                      const status = getStatus(subscription);
+
+                      return (
+                        <tr key={subscription.id}>
+                          <td>#{subscription.id}</td>
+
+                          <td>
+                            <strong>
+                              {getCustomer(subscription)}
+                            </strong>
+                          </td>
+
+                          <td>
+                            {getProduct(subscription)}
+                          </td>
+
+                          <td>
+                            {getFrequency(subscription)}
+                          </td>
+
+                          <td>
+                            <span
+                              className={`management-status ${getStatusClass(
+                                status,
+                              )}`}
+                            >
+                              {status === "PENDING_PAYMENT"
+                                ? "AWAITING PAYMENT"
+                                : status}
+                            </span>
+                          </td>
+
+                          <td>
+                            {formatDate(
+                              getNextDelivery(subscription),
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default ManagementSubscriptions;
+ 
+================ MANAGEMENT DASHBOARD CSS ================
+.management-layout {
+    min-height: 100vh;
+    display: flex;
+    background: #f7f9fc;
+    color: #172033;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+}
+
+/* SIDEBAR */
+
+.management-sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #e4e9f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+}
+
+.management-brand {
+    height: 82px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.management-brand-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #e8f7fb;
+    color: #087ea4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.management-brand h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #073b66;
+}
+
+.management-brand span {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: #8a96a5;
+    font-weight: 600;
+}
+
+.management-mobile-close {
+    display: none;
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #687587;
+}
+
+/* NAVIGATION */
+
+.management-nav {
+    padding: 25px 14px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.management-nav-title {
+    margin: 0 12px 12px;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    color: #9aa5b4;
+}
+
+.management-nav-item {
+    width: 100%;
+    min-height: 44px;
+    margin-bottom: 5px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #687587;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 550;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.management-nav-item svg {
+    flex-shrink: 0;
+}
+
+.management-nav-item:hover {
+    background: #eef8fb;
+    color: #075985;
+}
+
+.management-nav-active {
+    background: #e8f7fb;
+    color: #075985;
+    font-weight: 700;
+}
+
+.management-nav-active svg {
+    color: #087ea4;
+}
+
+/* SIDEBAR BOTTOM */
+
+.management-sidebar-bottom {
+    padding: 18px 14px;
+    border-top: 1px solid #edf1f5;
+}
+
+.management-logout-button {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #687587;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.management-logout-button:hover {
+    background: #fff3f3;
+    color: #dc2626;
+}
+
+
+.management-main {
+    width: calc(100% - 250px);
+    margin-left: 250px;
+    min-height: 100vh;
+}
+
+/*TOP BAR */
+
+.management-topbar {
+    height: 82px;
+    padding: 0 32px;
+    background: #ffffff;
+    border-bottom: 1px solid #e4e9f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.management-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.management-page-label {
+    margin: 0 0 2px;
+    font-size: 11px;
+    color: #8a96a5;
+    font-weight: 600;
+}
+
+.management-topbar h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 750;
+    color: #073b66;
+    letter-spacing: -0.02em;
+}
+
+.management-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.management-topbar-icon {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #e1e7ed;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #687587;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.management-topbar-icon:hover {
+    border-color: #b9dce7;
+    background: #f4fbfd;
+    color: #075985;
+}
+
+.management-topbar-icon::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    background: #0784a8;
+    border-radius: 50%;
+}
+
+/* USER */
+
+.management-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.management-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e8f7fb;
+    color: #087ea4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 750;
+    border: 1px solid #d8eef4;
+}
+
+.management-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.management-user-info strong {
+    font-size: 13px;
+    color: #253146;
+}
+
+.management-user-info span {
+    font-size: 11px;
+    color: #8a96a5;
+}
+
+/* CONTENT */
+
+.management-content {
+    padding: 30px 32px 45px;
+}
+
+.management-welcome {
+    margin-bottom: 25px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.management-welcome h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    font-weight: 750;
+    color: #073b66;
+    letter-spacing: -0.025em;
+}
+
+.management-welcome p {
+    margin: 0;
+    color: #7a8797;
+    font-size: 13px;
+}
+
+.management-date {
+    min-width: 145px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid #e4e9f0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: right;
+}
+
+.management-date span {
+    font-size: 10px;
+    color: #9aa5b4;
+}
+
+.management-date strong {
+    font-size: 12px;
+    color: #315066;
+}
+
+/*  STAT CARDS */
+
+.management-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.management-stat-card {
+    min-height: 120px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e4e9f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.035);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.management-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(23, 32, 51, 0.06);
+}
+
+.management-stat-icon {
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+/* WaterFlow blue/teal based icons */
+
+.management-stat-icon.sales {
+    background: #e8f7fb;
+    color: #087ea4;
+}
+
+.management-stat-icon.orders {
+    background: #e8f7fb;
+    color: #075985;
+}
+
+.management-stat-icon.pending {
+    background: #fff7e6;
+    color: #d97706;
+}
+
+.management-stat-icon.deliveries {
+    background: #e8f7f1;
+    color: #0f9f6e;
+}
+
+.management-stat-icon.stock {
+    background: #fff0f2;
+    color: #db3d62;
+}
+
+.management-stat-icon.customers {
+    background: #edf4ff;
+    color: #356fc5;
+}
+
+.management-stat-card p {
+    margin: 0 0 5px;
+    font-size: 12px;
+    color: #7a8797;
+}
+
+.management-stat-card h3 {
+    margin: 0 0 5px;
+    font-size: 21px;
+    color: #172033;
+    font-weight: 750;
+}
+
+.management-stat-card span {
+    font-size: 10px;
+    color: #9aa5b4;
+}
+
+/* MAIN PANELS  */
+
+.management-main-grid {
+    display: grid;
+    grid-template-columns: 1.65fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.management-bottom-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+}
+
+.management-panel-card {
+    background: #ffffff;
+    border: 1px solid #e4e9f0;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.035);
+}
+
+.management-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.management-panel-header h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 750;
+    color: #253146;
+}
+
+.management-panel-header p {
+    margin: 0;
+    font-size: 11px;
+    color: #8a96a5;
+}
+
+.management-panel-header select {
+    padding: 8px 11px;
+    border: 1px solid #dce3eb;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #687587;
+    font-family: inherit;
+    font-size: 11px;
+    outline: none;
+}
+
+.management-panel-header select:focus {
+    border-color: #0784a8;
+}
+
+.management-panel-header button {
+    border: 0;
+    background: transparent;
+    color: #0784a8;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.management-panel-header button:hover {
+    color: #075985;
+    text-decoration: underline;
+}
+
+/* SALES CHART */
+
+.management-chart {
+    height: 260px;
+    display: flex;
+    gap: 10px;
+}
+
+.chart-y-labels {
+    width: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 28px;
+}
+
+.chart-y-labels span {
+    font-size: 9px;
+    color: #9aa5b4;
+}
+
+.chart-area {
+    flex: 1;
+    position: relative;
+    padding-bottom: 28px;
+}
+
+.chart-grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed #e8edf2;
+}
+
+.line-1 {
+    top: 0;
+}
+
+.line-2 {
+    top: 25%;
+}
+
+.line-3 {
+    top: 50%;
+}
+
+.line-4 {
+    top: 75%;
+}
+
+.line-5 {
+    top: 100%;
+}
+
+.chart-bars {
+    position: absolute;
+    inset: 0 8px 0 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 12px;
+}
+
+.chart-bar-group {
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.chart-bar {
+    width: min(34px, 70%);
+    min-height: 4px;
+    border-radius: 6px 6px 2px 2px;
+    background: #0784a8;
+    transition:
+        height 0.3s ease,
+        opacity 0.2s ease;
+}
+
+.chart-bar:hover {
+    opacity: 0.82;
+}
+
+.chart-bar-group span {
+    font-size: 9px;
+    color: #8a96a5;
+}
+
+.management-sales-total {
+    color: #075985;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+/* ORDER STATUS */
+
+.order-status-chart {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+}
+
+.status-donut {
+    width: 155px;
+    height: 155px;
+    border-radius: 50%;
+    background: conic-gradient(#0784a8 0deg 90deg,
+            #f4b740 90deg 180deg,
+            #40b98a 180deg 260deg,
+            #e4e9f0 260deg 360deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-donut-inner {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-donut-inner strong {
+    font-size: 23px;
+    color: #172033;
+}
+
+.status-donut-inner span {
+    font-size: 10px;
+    color: #8a96a5;
+}
+
+.status-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.status-legend>div {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-legend p {
+    margin: 0;
+    font-size: 11px;
+    color: #687587;
+}
+
+.status-legend strong {
+    font-size: 11px;
+    color: #253146;
+}
+
+.legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.pending-dot {
+    background: #0784a8;
+}
+
+.processing-dot {
+    background: #f4b740;
+}
+
+.delivery-dot {
+    background: #40b98a;
+}
+
+.delivered-dot {
+    background: #cbd5df;
+}
+
+ 
+.management-empty-table {
+    min-height: 190px;
+    border: 1px dashed #dfe6ed;
+    border-radius: 9px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #9aa5b4;
+}
+
+.management-empty-table svg {
+    color: #9acbd8;
+}
+
+.management-empty-table h4 {
+    margin: 10px 0 4px;
+    color: #536276;
+    font-size: 13px;
+}
+
+.management-empty-table p {
+    margin: 0;
+    font-size: 11px;
+}
+
+/*  RECENT ORDERS */
+
+.management-orders-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.management-order-row {
+    min-height: 62px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1f5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.management-order-row:last-child {
+    border-bottom: 0;
+}
+
+.management-order-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 9px;
+    background: #e8f7fb;
+    color: #087ea4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.management-order-info {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.management-order-info strong {
+    font-size: 12px;
+    color: #253146;
+}
+
+.management-order-info span {
+    font-size: 10px;
+    color: #8a96a5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.management-order-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.management-order-total strong {
+    font-size: 12px;
+    color: #075985;
+}
+
+.management-order-total span {
+    font-size: 9px;
+    color: #8a96a5;
+}
+
+/*   DELIVERY SUMMARY*/
+
+.delivery-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.delivery-summary-item {
+    padding: 14px;
+    border: 1px solid #e7edf2;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.delivery-summary-item:hover {
+    border-color: #cfe6ed;
+    background: #fbfeff;
+}
+
+.delivery-summary-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #e8f7fb;
+    color: #087ea4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delivery-summary-item div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.delivery-summary-item strong {
+    font-size: 18px;
+    color: #172033;
+}
+
+.delivery-summary-item span {
+    font-size: 10px;
+    color: #8a96a5;
+}
+
+/*  LOADING */
+
+.management-loading {
+    min-height: 100vh;
+    background: #f7f9fc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #687587;
+    gap: 12px;
+}
+
+.management-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #d9eef4;
+    border-top-color: #0784a8;
+    border-radius: 50%;
+    animation: management-spin 0.8s linear infinite;
+}
+
+.management-loading p {
+    margin: 0;
+    font-size: 13px;
+}
+
+@keyframes management-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/*  
+   MOBILE
+     */
+
+.management-mobile-menu {
+    display: none;
+    border: 0;
+    background: transparent;
+    color: #315066;
+    cursor: pointer;
+}
+
+.management-sidebar-overlay {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .management-stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .management-main-grid,
+    .management-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 800px) {
+    .management-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+    }
+
+    .management-sidebar-open {
+        transform: translateX(0);
+    }
+
+    .management-mobile-close {
+        display: flex;
+    }
+
+    .management-sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 32, 51, 0.35);
+        z-index: 90;
+    }
+
+    .management-main {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .management-mobile-menu {
+        display: flex;
+    }
+
+    .management-topbar {
+        padding: 0 18px;
+    }
+
+    .management-content {
+        padding: 22px 18px 35px;
+    }
+
+    .management-user-info {
+        display: none;
+    }
+
+    .management-welcome {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .management-date {
+        text-align: left;
+    }
+}
+
+@media (max-width: 560px) {
+    .management-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .management-stat-card {
+        min-height: 105px;
+    }
+
+    .management-welcome h1 {
+        font-size: 20px;
+    }
+
+    .management-topbar {
+        height: 70px;
+    }
+
+    .management-topbar h2 {
+        font-size: 17px;
+    }
+
+    .management-topbar-right {
+        gap: 10px;
+    }
+
+    .management-content {
+        padding: 18px 12px 30px;
+    }
+
+    .management-panel-card {
+        padding: 16px;
+    }
+
+    .order-status-chart {
+        flex-direction: column;
+    }
+
+    .status-legend {
+        width: 100%;
+    }
+
+    .delivery-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .management-order-total strong {
+        font-size: 11px;
+    }
+}================ PRODUCTS URLS ================
+from django.urls import path
+from .payment_callbacks import MpesaCallbackView
+from .payment_views import PaymentCreateView
+from .views import (
+    CategoryListView,
+    ProductListView,
+    ProductDetailView,
+    ProductCreateView,
+    ProductUpdateView,
+    ProductDeleteView,
+    InventoryListView,
+    InventoryDetailView,
+    InventoryCreateView,
+    InventoryUpdateView,
+    InventoryDeleteView,
+    DeliveryZoneListView,
+    ManagementDeliveryZoneListCreateView,
+    CartView,
+    CartItemCreateView,
+    CartItemUpdateView,
+    CartItemDeleteView,
+    OrderCreateView,
+    CustomerOrderListView,
+    CustomerOrderDetailView,
+    ManagementOrderListView,
+    ManagementOrderDetailView,
+    ManagementOrderStatusUpdateView,
+    
+)
+
+urlpatterns = [
+    path("categories/", CategoryListView.as_view(), name="category-list"),
+
+    path("products/", ProductListView.as_view(), name="product-list"),
+    path(
+        "products/<int:pk>/",
+        ProductDetailView.as_view(),
+        name="product-detail",
+    ),
+
+    path(
+        "management/products/",
+        ProductCreateView.as_view(),
+        name="product-create",
+    ),
+    path(
+        "management/products/<int:pk>/",
+        ProductUpdateView.as_view(),
+        name="product-update",
+    ),
+    path(
+        "management/products/<int:pk>/delete/",
+        ProductDeleteView.as_view(),
+        name="product-delete",
+    ),
+
+    path(
+        "inventory/",
+        InventoryListView.as_view(),
+        name="inventory-list",
+    ),
+    path(
+        "inventory/<int:pk>/",
+        InventoryDetailView.as_view(),
+        name="inventory-detail",
+    ),
+
+    path(
+        "management/inventory/",
+        InventoryCreateView.as_view(),
+        name="inventory-create",
+    ),
+    path(
+        "management/inventory/<int:pk>/",
+        InventoryUpdateView.as_view(),
+        name="inventory-update",
+    ),
+    path(
+        "management/inventory/<int:pk>/delete/",
+        InventoryDeleteView.as_view(),
+        name="inventory-delete",
+    ),
+
+        path(
+        "delivery-zones/",
+        DeliveryZoneListView.as_view(),
+        name="delivery-zone-list",
+    ),
+    path(
+        "management/delivery-zones/",
+        ManagementDeliveryZoneListCreateView.as_view(),
+        name="management-delivery-zone-list-create",
+    ),
+        path(
+        "cart/",
+        CartView.as_view(),
+        name="cart",
+    ),
+    path(
+        "cart/items/",
+        CartItemCreateView.as_view(),
+        name="cart-item-create",
+    ),
+    path(
+        "cart/items/<int:pk>/",
+        CartItemUpdateView.as_view(),
+        name="cart-item-update",
+    ),
+    path(
+        "cart/items/<int:pk>/delete/",
+        CartItemDeleteView.as_view(),
+        name="cart-item-delete",
+    ),
+        path(
+        "orders/",
+        OrderCreateView.as_view(),
+        name="order-create",
+    ),
+    path(
+        "my-orders/",
+        CustomerOrderListView.as_view(),
+        name="customer-orders",
+    ),
+    path(
+        "my-orders/<int:pk>/",
+        CustomerOrderDetailView.as_view(),
+        name="customer-order-detail",
+    ),
+
+    path(
+        "management/orders/",
+        ManagementOrderListView.as_view(),
+        name="management-order-list",
+    ),
+    path(
+        "management/orders/<int:pk>/",
+        ManagementOrderDetailView.as_view(),
+        name="management-order-detail",
+    ),
+    path(
+        "management/orders/<int:pk>/status/",
+        ManagementOrderStatusUpdateView.as_view(),
+        name="management-order-status",
+    ),
+    path(
+    "payments/",
+    PaymentCreateView.as_view(),
+    name="payment-create",
+   ),
+
+   path(
+    "payments/mpesa/callback/",
+    MpesaCallbackView.as_view(),
+    name="mpesa-callback",
+),
+ 
+]================ PRODUCTS VIEWS ================
+from django.db import transaction
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from deliveries.google_maps import get_place_details
+from notifications.services import create_notification
+
+from .cart_serializers import CartSerializer, CartItemSerializer
+from .inventory_serializers import InventorySerializer
+from .models import (
+    Category,
+    Product,
+    Inventory,
+    DeliveryZone,
+    Cart,
+    CartItem,
+    Order,
+    OrderItem,
+    Payment,
+)
+from .order_serializers import OrderSerializer
+from .permissions import IsManagement
+from .delivery_zone_serializers import DeliveryZoneSerializer
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    PaymentSerializer,
+)
+
+
+class CategoryListView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
+
+class ProductListView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(
+            is_active=True
+        ).order_by("name")
+
+        search = self.request.query_params.get("search")
+        category = self.request.query_params.get("category")
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
+
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(description__icontains=search)
+            )
+
+        if category:
+            queryset = queryset.filter(
+                category_id=category
+            )
+
+        if min_price:
+            queryset = queryset.filter(
+                price__gte=min_price
+            )
+
+        if max_price:
+            queryset = queryset.filter(
+                price__lte=max_price
+            )
+
+        return queryset
+
+class ProductDetailView(generics.RetrieveAPIView):
+    queryset = Product.objects.filter(is_active=True)
+    serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
+
+
+class ProductCreateView(generics.CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class ProductUpdateView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class ProductDeleteView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class InventoryListView(generics.ListAPIView):
+    queryset = Inventory.objects.select_related("product").all()
+    serializer_class = InventorySerializer
+    permission_classes = [AllowAny]
+
+
+class InventoryDetailView(generics.RetrieveAPIView):
+    queryset = Inventory.objects.select_related("product").all()
+    serializer_class = InventorySerializer
+    permission_classes = [AllowAny]
+
+
+class InventoryCreateView(generics.CreateAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class InventoryUpdateView(generics.UpdateAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class InventoryDeleteView(generics.DestroyAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class DeliveryZoneListView(generics.ListAPIView):
+    queryset = DeliveryZone.objects.filter(is_active=True)
+    serializer_class = DeliveryZoneSerializer
+    permission_classes = [AllowAny]
+
+
+class ManagementDeliveryZoneListCreateView(generics.ListCreateAPIView):
+    queryset = DeliveryZone.objects.all()
+    serializer_class = DeliveryZoneSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+
+class CartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cart, created = Cart.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = CartSerializer(cart)
+
+        return Response(serializer.data)
+
+
+class CartItemCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        cart, created = Cart.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = CartItemSerializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        product = serializer.validated_data["product"]
+        quantity = serializer.validated_data["quantity"]
+
+        inventory = getattr(product, "inventory", None)
+
+        if inventory is None:
+            return Response(
+                {
+                    "detail": (
+                        "This product has no inventory record."
+                    )
+                },
+                status=400,
+            )
+
+        if quantity > inventory.quantity:
+            return Response(
+                {
+                    "detail": (
+                        f"Only {inventory.quantity} "
+                        "units are available."
+                    )
+                },
+                status=400,
+            )
+
+        existing_item = CartItem.objects.filter(
+            cart=cart,
+            product=product,
+        ).first()
+
+        if existing_item:
+            new_quantity = (
+                existing_item.quantity + quantity
+            )
+
+            if new_quantity > inventory.quantity:
+                return Response(
+                    {
+                        "detail": (
+                            f"Only {inventory.quantity} "
+                            "units are available."
+                        )
+                    },
+                    status=400,
+                )
+
+            existing_item.quantity = new_quantity
+            existing_item.save()
+
+            return Response(
+                CartItemSerializer(existing_item).data,
+                status=200,
+            )
+
+        cart_item = serializer.save(cart=cart)
+
+        return Response(
+            CartItemSerializer(cart_item).data,
+            status=201,
+        )
+
+
+class CartItemUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        cart = get_object_or_404(
+            Cart,
+            user=request.user,
+        )
+
+        cart_item = get_object_or_404(
+            CartItem,
+            id=pk,
+            cart=cart,
+        )
+
+        quantity = request.data.get("quantity")
+
+        if quantity is None:
+            return Response(
+                {
+                    "quantity": [
+                        "This field is required."
+                    ]
+                },
+                status=400,
+            )
+
+        try:
+            quantity = int(quantity)
+        except (TypeError, ValueError):
+            return Response(
+                {
+                    "quantity": [
+                        "Quantity must be a valid number."
+                    ]
+                },
+                status=400,
+            )
+
+        if quantity < 1:
+            return Response(
+                {
+                    "quantity": [
+                        "Quantity must be at least 1."
+                    ]
+                },
+                status=400,
+            )
+
+        inventory = getattr(
+            cart_item.product,
+            "inventory",
+            None,
+        )
+
+        if inventory is None:
+            return Response(
+                {
+                    "detail": (
+                        "This product has no inventory record."
+                    )
+                },
+                status=400,
+            )
+
+        if quantity > inventory.quantity:
+            return Response(
+                {
+                    "detail": (
+                        f"Only {inventory.quantity} "
+                        "units are available."
+                    )
+                },
+                status=400,
+            )
+
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        return Response(
+            CartItemSerializer(cart_item).data,
+            status=200,
+        )
+
+
+class CartItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        cart = get_object_or_404(
+            Cart,
+            user=request.user,
+        )
+
+        cart_item = get_object_or_404(
+            CartItem,
+            id=pk,
+            cart=cart,
+        )
+
+        cart_item.delete()
+
+        return Response(status=204)
+
+
+class OrderCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        cart = get_object_or_404(
+            Cart,
+            user=request.user,
+        )
+
+        cart_items = cart.items.select_related(
+            "product"
+        ).all()
+
+        if not cart_items.exists():
+            return Response(
+                {"detail": "Your cart is empty."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        place_id = request.data.get("place_id")
+        delivery_place = request.data.get("delivery_place")
+
+        google_result = None
+
+        if place_id and str(place_id).strip():
+            google_result = get_place_details(
+                str(place_id).strip()
+            )
+
+            if google_result.get("google_status") != "OK":
+                return Response(
+                    {
+                        "detail": "The selected Google place could not be found.",
+                        "google_status": google_result.get(
+                            "google_status"
+                        ),
+                        "google_error": google_result.get(
+                            "google_error"
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        elif delivery_place and str(delivery_place).strip():
+            from deliveries.google_maps import search_place
+
+            google_result = search_place(
+                str(delivery_place).strip()
+            )
+
+            if not google_result.get("formatted_address"):
+                return Response(
+                    {
+                        "delivery_place": [
+                            "The delivery place could not be found."
+                        ],
+                        "google_status": google_result.get(
+                            "google_status"
+                        ),
+                        "google_error": google_result.get(
+                            "google_error"
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        else:
+            return Response(
+                {
+                    "delivery_place": [
+                        "A delivery place or Google place_id is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery_address = google_result["formatted_address"]
+        latitude = google_result["latitude"]
+        longitude = google_result["longitude"]
+
+        delivery_instructions = request.data.get(
+            "delivery_instructions",
+            ""
+        )
+
+        delivery_zone_id = request.data.get(
+            "delivery_zone"
+        )
+
+        if not delivery_zone_id:
+            return Response(
+                {
+                    "delivery_zone": [
+                        "A delivery zone is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery_zone = get_object_or_404(
+            DeliveryZone,
+            id=delivery_zone_id,
+            is_active=True,
+        )
+
+        products_total = 0
+
+        for cart_item in cart_items:
+            try:
+                inventory = cart_item.product.inventory
+            except Inventory.DoesNotExist:
+                return Response(
+                    {
+                        "detail": (
+                            f"{cart_item.product.name} "
+                            "is currently unavailable."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if inventory.quantity < cart_item.quantity:
+                return Response(
+                    {
+                        "detail": (
+                            f"Not enough stock for "
+                            f"{cart_item.product.name}."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            products_total += (
+                cart_item.product.price
+                * cart_item.quantity
+            )
+
+        total_amount = (
+            products_total
+            + delivery_zone.delivery_fee
+        )
+
+        order = Order.objects.create(
+            customer=request.user,
+            total_amount=total_amount,
+            status=Order.Status.PENDING_PAYMENT,
+            delivery_address=str(
+                delivery_address
+            ).strip(),
+            delivery_instructions=str(
+                delivery_instructions
+            ).strip(),
+            delivery_zone=delivery_zone,
+            latitude=latitude,
+            longitude=longitude,
+        )
+
+        for cart_item in cart_items:
+            unit_price = cart_item.product.price
+            subtotal = (
+                unit_price * cart_item.quantity
+            )
+
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                unit_price=unit_price,
+                subtotal=subtotal,
+            )
+
+        cart_items.delete()
+
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CustomerOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(
+            customer=self.request.user
+        ).prefetch_related(
+            "items__product"
+        ).order_by(
+            "-created_at"
+        )
+
+
+class CustomerOrderDetailView(generics.RetrieveAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(
+            customer=self.request.user
+        ).prefetch_related(
+            "items__product"
+        )
+
+
+class ManagementOrderListView(generics.ListAPIView):
+    queryset = Order.objects.all().prefetch_related(
+        "items__product"
+    ).select_related(
+        "customer",
+        "delivery_zone",
+    ).order_by(
+        "-created_at"
+    )
+    serializer_class = OrderSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
+
+
+class ManagementOrderDetailView(generics.RetrieveAPIView):
+    queryset = Order.objects.all().prefetch_related(
+        "items__product"
+    ).select_related(
+        "customer",
+        "delivery_zone",
+    )
+    serializer_class = OrderSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
+
+
+class ManagementOrderStatusUpdateView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsManagement,
+    ]
+
+    def patch(self, request, pk):
+        order = get_object_or_404(
+            Order,
+            id=pk,
+        )
+
+        new_status = request.data.get("status")
+
+        valid_statuses = {
+            choice[0]
+            for choice in Order.Status.choices
+        }
+
+        if new_status not in valid_statuses:
+            return Response(
+                {"status": ["Invalid order status."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_status == Order.Status.CANCELLED:
+            if order.status == Order.Status.DELIVERED:
+                return Response(
+                    {"detail": "Delivered orders cannot be cancelled."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if order.status == Order.Status.CANCELLED:
+                return Response(
+                    {"detail": "Order is already cancelled."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment = getattr(order, "payment", None)
+
+            if payment and payment.status == Payment.Status.COMPLETED:
+                for order_item in order.items.select_related(
+                    "product",
+                    "product__inventory",
+                ):
+                    inventory = getattr(
+                        order_item.product,
+                        "inventory",
+                        None,
+                    )
+
+                    if inventory:
+                        inventory.quantity += order_item.quantity
+                        inventory.save(
+                            update_fields=[
+                                "quantity",
+                                "updated_at",
+                            ]
+                        )
+
+                payment.status = Payment.Status.REFUNDED
+                payment.save(
+                    update_fields=[
+                        "status",
+                        "updated_at",
+                    ]
+                )
+
+                if new_status == Order.Status.CANCELLED:
+                    create_notification(
+                        user=order.customer,
+                        title="Order Cancelled",
+                        message=f"Your Order #{order.id} has been cancelled.",
+                        notification_type="ORDER",
+                    )
+
+        
+
+        order.status = new_status
+
+        order.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class PaymentCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get("order")
+
+        if not order_id:
+            return Response(
+                {
+                    "order": [
+                        "Order is required."
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order = get_object_or_404(
+            Order,
+            id=order_id,
+            customer=request.user,
+        )
+
+        if Payment.objects.filter(
+            order=order
+        ).exists():
+            return Response(
+                {
+                    "detail": (
+                        "A payment already exists "
+                        "for this order."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = PaymentSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        payment = serializer.save(
+            customer=request.user,
+            order=order,
+        )
+
+        return Response(
+            PaymentSerializer(payment).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+================ DELIVERIES URLS ================
+from django.urls import path
+
+from .views import (
+    ManagementDeliveryListView,
+    ManagementDeliveryAssignView,
+    DriverDeliveryListView,
+    DriverDeliveryStatusUpdateView,
+    ManagementDriverListView,
+    GooglePlaceSearchView,
+    ManagementDriverCreateView,
+    GooglePlaceAutocompleteView,
+    GooglePlaceDetailsView,
+ )
+
+urlpatterns = [
+    path(
+        "management/deliveries/",
+        ManagementDeliveryListView.as_view(),
+        name="management-delivery-list",
+    ),
+    path(
+        "management/deliveries/<int:pk>/assign/",
+        ManagementDeliveryAssignView.as_view(),
+        name="management-delivery-assign",
+    ),
+    path(
+        "driver/deliveries/",
+        DriverDeliveryListView.as_view(),
+        name="driver-delivery-list",
+    ),
+    path(
+        "driver/deliveries/<int:pk>/status/",
+        DriverDeliveryStatusUpdateView.as_view(),
+        name="driver-delivery-status",
+    ),
+    path(
+    "management/drivers/",
+    ManagementDriverListView.as_view(),
+    name="management-driver-list",
+   ),
+   path("google/place-search/", GooglePlaceSearchView.as_view(), name="google-place-search"),
+
+   path(
+    "management/drivers/create/",
+    ManagementDriverCreateView.as_view(),
+    name="management-driver-create",
+   ),
+   path(
+    "google/place-autocomplete/",
+    GooglePlaceAutocompleteView.as_view(),
+    name="google-place-autocomplete",
+   ),
+   path(
+    "google/place-details/",
+    GooglePlaceDetailsView.as_view(),
+    name="google-place-details",
+   ),
+
+]================ DELIVERIES VIEWS ================
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from accounts.models import UserProfile
+from products.models import Order
+from notifications.services import create_notification
+
+from .models import Delivery
+from .serializers import DeliverySerializer
+from .driver_serializers import DriverSerializer
+
+class ManagementDeliveryListView(generics.ListAPIView):
+    queryset = (
+        Delivery.objects
+        .select_related(
+            "order__customer",
+            "driver",
+        )
+        .order_by("-created_at")
+    )
+    serializer_class = DeliverySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return Delivery.objects.none()
+
+        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return Delivery.objects.none()
+
+        return super().get_queryset()
+
+
+class ManagementDeliveryAssignView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not hasattr(request.user, "profile"):
+            return Response(
+                {"detail": "Management access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return Response(
+                {"detail": "Management access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        delivery = get_object_or_404(
+            Delivery.objects.select_related("order"),
+            pk=pk,
+        )
+
+        driver_id = request.data.get("driver_id")
+
+        if not driver_id:
+            return Response(
+                {"driver_id": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        driver = get_object_or_404(
+            User,
+            id=driver_id,
+        )
+
+        if not hasattr(driver, "profile"):
+            return Response(
+                {"detail": "Selected user is not a driver."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if driver.profile.role != UserProfile.Role.DRIVER:
+            return Response(
+                {"detail": "Selected user is not a driver."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery.driver = driver
+        delivery.status = Delivery.Status.ASSIGNED
+        delivery.assigned_at = timezone.now()
+
+        delivery.save(
+            update_fields=[
+                "driver",
+                "status",
+                "assigned_at",
+                "updated_at",
+            ]
+        )
+
+        order = delivery.order
+        order.status = Order.Status.ASSIGNED
+        order.save(update_fields=["status", "updated_at"])
+
+        create_notification(
+            user=order.customer,
+            title="Driver Assigned",
+            message=f"A driver has been assigned to your Order #{order.id}.",
+            notification_type="DELIVERY",
+)
+
+        return Response(
+            DeliverySerializer(delivery).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class DriverDeliveryListView(generics.ListAPIView):
+    serializer_class = DeliverySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return Delivery.objects.none()
+
+        if self.request.user.profile.role != UserProfile.Role.DRIVER:
+            return Delivery.objects.none()
+
+        return (
+            Delivery.objects
+            .filter(driver=self.request.user)
+            .select_related(
+                "order__customer",
+                "driver",
+            )
+            .order_by("-created_at")
+        )
+
+
+class DriverDeliveryStatusUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not hasattr(request.user, "profile"):
+            return Response(
+                {"detail": "Driver access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.user.profile.role != UserProfile.Role.DRIVER:
+            return Response(
+                {"detail": "Driver access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        delivery = get_object_or_404(
+            Delivery,
+            pk=pk,
+            driver=request.user,
+        )
+
+        new_status = request.data.get("status")
+
+        allowed_statuses = [
+            Delivery.Status.OUT_FOR_DELIVERY,
+            Delivery.Status.DELIVERED,
+            Delivery.Status.FAILED,
+        ]
+
+        if new_status not in allowed_statuses:
+            return Response(
+                {"status": ["Invalid delivery status."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        delivery.status = new_status
+
+        update_fields = [
+            "status",
+            "updated_at",
+        ]
+
+        if new_status == Delivery.Status.DELIVERED:
+            delivery.delivered_at = timezone.now()
+            update_fields.append("delivered_at")
+
+        delivery.save(update_fields=update_fields)
+
+        order = delivery.order
+
+        if new_status == Delivery.Status.OUT_FOR_DELIVERY:
+            order.status = Order.Status.OUT_FOR_DELIVERY
+
+            create_notification(
+                user=order.customer,
+                title="Order Out for Delivery",
+                message=f"Your Order #{order.id} is now out for delivery.",
+                notification_type="DELIVERY",
+            )
+
+        elif new_status == Delivery.Status.DELIVERED:
+            order.status = Order.Status.DELIVERED
+
+            create_notification(
+                user=order.customer,
+                title="Order Delivered",
+                message=f"Your Order #{order.id} has been delivered successfully.",
+                notification_type="DELIVERY",
+            )
+
+        elif new_status == Delivery.Status.FAILED:
+            order.status = Order.Status.PROCESSING
+
+            create_notification(
+                user=order.customer,
+                title="Delivery Failed",
+                message=f"Delivery for Order #{order.id} could not be completed.",
+                notification_type="DELIVERY",
+            )
+
+        order.save(update_fields=["status", "updated_at"])
+
+        return Response(
+            DeliverySerializer(delivery).data,
+            status=status.HTTP_200_OK,
+        )
+
+class ManagementDriverListView(generics.ListAPIView):
+    serializer_class = DriverSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return User.objects.none()
+
+        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+            return User.objects.none()
+
+        return (
+            User.objects
+            .filter(profile__role=UserProfile.Role.DRIVER)
+            .select_related("profile")
+            .order_by("username")
+        )
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from .google_maps import (
+    search_place,
+    autocomplete_places,
+    get_place_details,
+)
+class GooglePlaceSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        place = request.query_params.get("place")
+
+        if not place:
+            return Response(
+                {"detail": "Please provide a place."},
+                status=400,
+            )
+
+        result = search_place(place)
+
+        if not result:
+            return Response(
+                {"detail": "Place not found."},
+                status=404,
+            )
+
+        return Response(result)
+
+    from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
+
+from accounts.models import UserProfile
+from products.permissions import IsManagement
+
+class ManagementDriverCreateView(APIView):
+    permission_classes = [IsManagement]
+
+    def post(self, request):
+        username = request.data.get("username")
+        email = request.data.get("email")
+        password = request.data.get("password")
+        phone_number = request.data.get("phone_number")
+
+        if not username or not email or not password:
+            return Response(
+                {
+                    "detail": "Username, email and password are required."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"detail": "Username already exists."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+
+        UserProfile.objects.create(
+            user=user,
+            role=UserProfile.Role.DRIVER,
+            phone_number=phone_number or "",
+        )
+
+        return Response(
+            {
+                "message": "Driver created successfully.",
+                "driver": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "phone_number": phone_number or "",
+                    "role": UserProfile.Role.DRIVER,
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+class GooglePlaceAutocompleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        search_text = request.query_params.get("input")
+
+        if not search_text or not search_text.strip():
+            return Response(
+                {
+                    "detail": "Please provide a search input."
+                },
+                status=400,
+            )
+
+        result = autocomplete_places(search_text.strip())
+
+        return Response(result)
+
+class GooglePlaceDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        place_id = request.query_params.get("place_id")
+
+        if not place_id or not place_id.strip():
+            return Response(
+                {"detail": "Please provide a place_id."},
+                status=400,
+            )
+
+        result = get_place_details(place_id.strip())
+
+        if result.get("google_status") != "OK":
+            return Response(
+                result,
+                status=404,
+            )
+
+        return Response(result)================ SUBSCRIPTIONS URLS ================
+from django.urls import path
+
+from .views import (
+    CustomerSubscriptionListCreateView,
+    CustomerSubscriptionActionView,
+    ManagementSubscriptionListView,
+    ManagementSubscriptionActionView,
+)
+
+urlpatterns = [
+    path(
+        "",
+        CustomerSubscriptionListCreateView.as_view(),
+        name="customer-subscription-list-create",
+    ),
+    path(
+        "<int:pk>/action/",
+        CustomerSubscriptionActionView.as_view(),
+        name="customer-subscription-action",
+    ),
+    path(
+        "management/",
+        ManagementSubscriptionListView.as_view(),
+        name="management-subscription-list",
+    ),
+    path(
+        "management/<int:pk>/action/",
+        ManagementSubscriptionActionView.as_view(),
+        name="management-subscription-action",
+    ),
+]================ SUBSCRIPTIONS VIEWS ================
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+
+from rest_framework import generics, serializers, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from accounts.models import UserProfile
+from products.models import Order, OrderItem, Product
+
+from .models import Subscription, SubscriptionItem
+from .serializers import SubscriptionSerializer
+
+
+class CustomerSubscriptionListCreateView(
+    generics.ListCreateAPIView
+):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            Subscription.objects
+            .filter(customer=self.request.user)
+            .prefetch_related("items__product")
+            .order_by("-created_at")
+        )
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        items = request.data.get("items", [])
+
+        if not isinstance(items, list) or not items:
+            raise serializers.ValidationError(
+                {
+                    "items": [
+                        "At least one product is required."
+                    ]
+                }
+            )
+
+        validated_items = []
+
+        for item in items:
+            product_id = item.get("product")
+            quantity = item.get("quantity", 1)
+
+            if not product_id:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            "Each item must include a product."
+                        ]
+                    }
+                )
+
+            try:
+                quantity = int(quantity)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            "Quantity must be a valid number."
+                        ]
+                    }
+                )
+
+            if quantity < 1:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            "Quantity must be at least 1."
+                        ]
+                    }
+                )
+
+            product = get_object_or_404(
+                Product,
+                id=product_id,
+                is_active=True,
+            )
+
+            inventory = getattr(
+                product,
+                "inventory",
+                None,
+            )
+
+            if inventory is None:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            f"{product.name} has no inventory record."
+                        ]
+                    }
+                )
+
+            if quantity > inventory.quantity:
+                raise serializers.ValidationError(
+                    {
+                        "items": [
+                            f"Only {inventory.quantity} units "
+                            f"of {product.name} are available."
+                        ]
+                    }
+                )
+
+            validated_items.append(
+                (product, quantity)
+            )
+
+        subscription = serializer.save(
+            customer=request.user,
+            status=Subscription.Status.PENDING_PAYMENT,
+        )
+
+        for product, quantity in validated_items:
+            SubscriptionItem.objects.create(
+                subscription=subscription,
+                product=product,
+                quantity=quantity,
+            )
+
+        product_total = sum(
+            product.price * quantity
+            for product, quantity in validated_items
+        )
+
+        delivery_fee = subscription.delivery_zone.delivery_fee
+
+        total_amount = (
+            product_total + delivery_fee
+        )
+
+        order = Order.objects.create(
+            customer=request.user,
+            subscription=subscription,
+            total_amount=total_amount,
+            delivery_address=subscription.delivery_address,
+            delivery_instructions=(
+                subscription.delivery_instructions
+            ),
+            latitude=subscription.latitude,
+            longitude=subscription.longitude,
+            delivery_zone=subscription.delivery_zone,
+            status=Order.Status.PENDING_PAYMENT,
+        )
+
+        for product, quantity in validated_items:
+            unit_price = product.price
+            subtotal = unit_price * quantity
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=quantity,
+                unit_price=unit_price,
+                subtotal=subtotal,
+            )
+
+        return Response(
+            {
+                "subscription": SubscriptionSerializer(
+                    subscription
+                ).data,
+                "order": {
+                    "id": order.id,
+                    "customer": order.customer.id,
+                    "total": str(order.total_amount),
+                    "total_amount": str(
+                        order.total_amount
+                    ),
+                    "status": order.status,
+                    "delivery_address": (
+                        order.delivery_address
+                    ),
+                    "delivery_instructions": (
+                        order.delivery_instructions
+                    ),
+                    "delivery_zone": (
+                        order.delivery_zone.id
+                    ),
+                    "items": [
+                        {
+                            "id": item.id,
+                            "product": item.product.id,
+                            "product_name": (
+                                item.product.name
+                            ),
+                            "quantity": item.quantity,
+                            "unit_price": str(
+                                item.unit_price
+                            ),
+                            "subtotal": str(
+                                item.subtotal
+                            ),
+                        }
+                        for item in order.items.select_related(
+                            "product"
+                        ).all()
+                    ],
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CustomerSubscriptionActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        subscription = get_object_or_404(
+            Subscription,
+            id=pk,
+            customer=request.user,
+        )
+
+        action = request.data.get("action")
+
+        if subscription.status == (
+            Subscription.Status.PENDING_PAYMENT
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "This subscription must be paid "
+                        "before it can be managed."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if action == "pause":
+            subscription.status = (
+                Subscription.Status.PAUSED
+            )
+
+        elif action == "resume":
+            subscription.status = (
+                Subscription.Status.ACTIVE
+            )
+
+        elif action == "cancel":
+            subscription.status = (
+                Subscription.Status.CANCELLED
+            )
+
+        else:
+            return Response(
+                {
+                    "detail": (
+                        "Invalid action. Use pause, "
+                        "resume, or cancel."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subscription.save()
+
+        return Response(
+            SubscriptionSerializer(subscription).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ManagementSubscriptionListView(generics.ListAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, "profile"):
+            return Subscription.objects.none()
+
+        if (
+            self.request.user.profile.role
+            != UserProfile.Role.MANAGEMENT
+        ):
+            return Subscription.objects.none()
+
+        return (
+            Subscription.objects
+            .select_related("customer")
+            .prefetch_related("items__product")
+            .order_by("-created_at")
+        )
+
+
+class ManagementSubscriptionActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not hasattr(request.user, "profile"):
+            return Response(
+                {
+                    "detail": (
+                        "Management access required."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if (
+            request.user.profile.role
+            != UserProfile.Role.MANAGEMENT
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "Management access required."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        subscription = get_object_or_404(
+            Subscription,
+            id=pk,
+        )
+
+        action = request.data.get("action")
+
+        if action == "pause":
+            subscription.status = (
+                Subscription.Status.PAUSED
+            )
+
+        elif action == "resume":
+            subscription.status = (
+                Subscription.Status.ACTIVE
+            )
+
+        elif action == "cancel":
+            subscription.status = (
+                Subscription.Status.CANCELLED
+            )
+
+        else:
+            return Response(
+                {
+                    "detail": (
+                        "Invalid action. Use pause, "
+                        "resume, or cancel."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subscription.save()
+
+        return Response(
+            SubscriptionSerializer(subscription).data,
+            status=status.HTTP_200_OK,
+        )

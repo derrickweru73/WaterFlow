@@ -22,6 +22,7 @@ import ManagementCustomers from "./pages/ManagementCustomers";
 import ManagementNotifications from "./pages/ManagementNotifications";
 import ManagementReports from "./pages/ManagementReports";
 import ManagementSubscriptions from "./pages/ManagementSubscriptions";
+import ManagementDeliveryZones from "./pages/ManagementDeliveryZones";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/management/delivery-zones" element={<ManagementDeliveryZones />}/>
         <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/login" element={<Login />} />

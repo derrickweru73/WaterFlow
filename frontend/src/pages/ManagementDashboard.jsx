@@ -12,6 +12,7 @@ import {
   Bell,
   BarChart3,
   Repeat,
+  MapPin,
   LogOut,
   Menu,
   X,
@@ -275,6 +276,12 @@ function ManagementDashboard() {
       label: "Products",
       icon: Package,
       path: "/management/products",
+    },
+
+    {
+      label: "Delivery Zones",
+      icon: MapPin,
+      path: "/management/delivery-zones",
     },
     {
       label: "Orders",

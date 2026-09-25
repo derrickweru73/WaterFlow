@@ -1,0 +1,371 @@
+]633;E;{   echo "================ MANAGEMENT FRONTEND FILES ================"\x3b   find frontend/src -type f \\( -iname 'Management*.jsx' -o -iname 'Management*.css' \\) -print\x3b    echo\x3b   echo "================ MANAGEMENT BACKEND FILES ================"\x3b   find backend -type f \\( -iname '*management*.py' -o -path '*/management/*' \\) -print\x3b    echo\x3b   echo "================ MANAGEMENT ROUTES ================"\x3b   grep -RniE 'management|subscriptions/management' backend     --include="urls.py" --include="views.py" 2>/dev/null\x3b    echo\x3b   echo "================ FRONTEND MANAGEMENT ROUTES ================"\x3b   grep -RniE 'management/' frontend/src     --include="*.jsx" --include="*.js" 2>/dev/null\x3b } > management-report.txt;5000e979-668f-47af-9a2a-844f3a158f4d]633;C================ MANAGEMENT FRONTEND FILES ================
+frontend/src/pages/ManagementCustomers.jsx
+frontend/src/pages/ManagementDashboard.css
+frontend/src/pages/ManagementDashboard.jsx
+frontend/src/pages/ManagementDeliveries.jsx
+frontend/src/pages/ManagementDrivers.jsx
+frontend/src/pages/ManagementInventory.jsx
+frontend/src/pages/ManagementNotifications.jsx
+frontend/src/pages/ManagementOrders.jsx
+frontend/src/pages/ManagementPayments.jsx
+frontend/src/pages/ManagementProducts.jsx
+frontend/src/pages/ManagementReports.jsx
+frontend/src/pages/ManagementSubscriptions.jsx
+
+================ MANAGEMENT BACKEND FILES ================
+backend/accounts/management/commands/create_production_admin.py
+backend/accounts/management/commands/__init__.py
+backend/accounts/management/__init__.py
+backend/accounts/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/changepassword.py
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/createsuperuser.py
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/__pycache__/changepassword.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/__pycache__/createsuperuser.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/auth/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/auth/management/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/auth/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/commands/remove_stale_contenttypes.py
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/commands/__pycache__/remove_stale_contenttypes.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/contenttypes/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/inspectdb.py
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/ogrinspect.py
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/__pycache__/inspectdb.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/__pycache__/ogrinspect.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/gis/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/gis/management/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/gis/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/commands/clearsessions.py
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/commands/__pycache__/clearsessions.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/sessions/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/sites/management.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/collectstatic.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/findstatic.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/runserver.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/__pycache__/collectstatic.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/__pycache__/findstatic.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/__pycache__/runserver.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/__init__.py
+backend/my_env/Lib/site-packages/django/contrib/staticfiles/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/base.py
+backend/my_env/Lib/site-packages/django/core/management/color.py
+backend/my_env/Lib/site-packages/django/core/management/commands/check.py
+backend/my_env/Lib/site-packages/django/core/management/commands/compilemessages.py
+backend/my_env/Lib/site-packages/django/core/management/commands/createcachetable.py
+backend/my_env/Lib/site-packages/django/core/management/commands/dbshell.py
+backend/my_env/Lib/site-packages/django/core/management/commands/diffsettings.py
+backend/my_env/Lib/site-packages/django/core/management/commands/dumpdata.py
+backend/my_env/Lib/site-packages/django/core/management/commands/flush.py
+backend/my_env/Lib/site-packages/django/core/management/commands/inspectdb.py
+backend/my_env/Lib/site-packages/django/core/management/commands/loaddata.py
+backend/my_env/Lib/site-packages/django/core/management/commands/makemessages.py
+backend/my_env/Lib/site-packages/django/core/management/commands/makemigrations.py
+backend/my_env/Lib/site-packages/django/core/management/commands/migrate.py
+backend/my_env/Lib/site-packages/django/core/management/commands/optimizemigration.py
+backend/my_env/Lib/site-packages/django/core/management/commands/runserver.py
+backend/my_env/Lib/site-packages/django/core/management/commands/sendtestemail.py
+backend/my_env/Lib/site-packages/django/core/management/commands/shell.py
+backend/my_env/Lib/site-packages/django/core/management/commands/showmigrations.py
+backend/my_env/Lib/site-packages/django/core/management/commands/sqlflush.py
+backend/my_env/Lib/site-packages/django/core/management/commands/sqlmigrate.py
+backend/my_env/Lib/site-packages/django/core/management/commands/sqlsequencereset.py
+backend/my_env/Lib/site-packages/django/core/management/commands/squashmigrations.py
+backend/my_env/Lib/site-packages/django/core/management/commands/startapp.py
+backend/my_env/Lib/site-packages/django/core/management/commands/startproject.py
+backend/my_env/Lib/site-packages/django/core/management/commands/test.py
+backend/my_env/Lib/site-packages/django/core/management/commands/testserver.py
+backend/my_env/Lib/site-packages/django/core/management/commands/__init__.py
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/check.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/compilemessages.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/createcachetable.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/dbshell.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/diffsettings.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/dumpdata.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/flush.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/inspectdb.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/loaddata.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/makemessages.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/makemigrations.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/migrate.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/optimizemigration.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/runserver.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/sendtestemail.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/shell.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/showmigrations.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/sqlflush.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/sqlmigrate.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/sqlsequencereset.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/squashmigrations.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/startapp.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/startproject.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/test.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/testserver.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/sql.py
+backend/my_env/Lib/site-packages/django/core/management/templates.py
+backend/my_env/Lib/site-packages/django/core/management/utils.py
+backend/my_env/Lib/site-packages/django/core/management/__init__.py
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/base.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/color.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/sql.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/templates.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/utils.cpython-314.pyc
+backend/my_env/Lib/site-packages/django/core/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/commands/drf_create_token.py
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/commands/__init__.py
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/commands/__pycache__/drf_create_token.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/__init__.py
+backend/my_env/Lib/site-packages/rest_framework/authtoken/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/management/commands/generateschema.py
+backend/my_env/Lib/site-packages/rest_framework/management/commands/__init__.py
+backend/my_env/Lib/site-packages/rest_framework/management/commands/__pycache__/generateschema.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework/management/__init__.py
+backend/my_env/Lib/site-packages/rest_framework/management/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/commands/flushexpiredtokens.py
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/commands/__init__.py
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/commands/__pycache__/flushexpiredtokens.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/__init__.py
+backend/my_env/Lib/site-packages/rest_framework_simplejwt/token_blacklist/management/__pycache__/__init__.cpython-314.pyc
+backend/subscriptions/management/commands/generate_subscription_orders.py
+backend/subscriptions/management/commands/__init__.py
+backend/subscriptions/management/commands/__pycache__/generate_subscription_orders.cpython-314.pyc
+backend/subscriptions/management/commands/__pycache__/__init__.cpython-314.pyc
+backend/subscriptions/management/__init__.py
+backend/subscriptions/management/__pycache__/__init__.cpython-314.pyc
+
+================ MANAGEMENT ROUTES ================
+backend/deliveries/urls.py:4:    ManagementDeliveryListView,
+backend/deliveries/urls.py:5:    ManagementDeliveryAssignView,
+backend/deliveries/urls.py:8:    ManagementDriverListView,
+backend/deliveries/urls.py:10:    ManagementDriverCreateView,
+backend/deliveries/urls.py:17:        "management/deliveries/",
+backend/deliveries/urls.py:18:        ManagementDeliveryListView.as_view(),
+backend/deliveries/urls.py:19:        name="management-delivery-list",
+backend/deliveries/urls.py:22:        "management/deliveries/<int:pk>/assign/",
+backend/deliveries/urls.py:23:        ManagementDeliveryAssignView.as_view(),
+backend/deliveries/urls.py:24:        name="management-delivery-assign",
+backend/deliveries/urls.py:37:    "management/drivers/",
+backend/deliveries/urls.py:38:    ManagementDriverListView.as_view(),
+backend/deliveries/urls.py:39:    name="management-driver-list",
+backend/deliveries/urls.py:44:    "management/drivers/create/",
+backend/deliveries/urls.py:45:    ManagementDriverCreateView.as_view(),
+backend/deliveries/urls.py:46:    name="management-driver-create",
+backend/deliveries/views.py:18:class ManagementDeliveryListView(generics.ListAPIView):
+backend/deliveries/views.py:34:        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+backend/deliveries/views.py:40:class ManagementDeliveryAssignView(APIView):
+backend/deliveries/views.py:46:                {"detail": "Management access required."},
+backend/deliveries/views.py:50:        if request.user.profile.role != UserProfile.Role.MANAGEMENT:
+backend/deliveries/views.py:52:                {"detail": "Management access required."},
+backend/deliveries/views.py:226:class ManagementDriverListView(generics.ListAPIView):
+backend/deliveries/views.py:234:        if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
+backend/deliveries/views.py:282:from products.permissions import IsManagement
+backend/deliveries/views.py:284:class ManagementDriverCreateView(APIView):
+backend/deliveries/views.py:285:    permission_classes = [IsManagement]
+backend/products/urls.py:17:    ManagementDeliveryZoneListCreateView,
+backend/products/urls.py:25:    ManagementOrderListView,
+backend/products/urls.py:26:    ManagementOrderDetailView,
+backend/products/urls.py:27:    ManagementOrderStatusUpdateView,
+backend/products/urls.py:42:        "management/products/",
+backend/products/urls.py:47:        "management/products/<int:pk>/",
+backend/products/urls.py:52:        "management/products/<int:pk>/delete/",
+backend/products/urls.py:69:        "management/inventory/",
+backend/products/urls.py:74:        "management/inventory/<int:pk>/",
+backend/products/urls.py:79:        "management/inventory/<int:pk>/delete/",
+backend/products/urls.py:90:        "management/delivery-zones/",
+backend/products/urls.py:91:        ManagementDeliveryZoneListCreateView.as_view(),
+backend/products/urls.py:92:        name="management-delivery-zone-list-create",
+backend/products/urls.py:131:        "management/orders/",
+backend/products/urls.py:132:        ManagementOrderListView.as_view(),
+backend/products/urls.py:133:        name="management-order-list",
+backend/products/urls.py:136:        "management/orders/<int:pk>/",
+backend/products/urls.py:137:        ManagementOrderDetailView.as_view(),
+backend/products/urls.py:138:        name="management-order-detail",
+backend/products/urls.py:141:        "management/orders/<int:pk>/status/",
+backend/products/urls.py:142:        ManagementOrderStatusUpdateView.as_view(),
+backend/products/urls.py:143:        name="management-order-status",
+backend/products/views.py:27:from .permissions import IsManagement
+backend/products/views.py:87:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:93:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:99:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:117:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:123:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:129:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:138:class ManagementDeliveryZoneListCreateView(generics.ListCreateAPIView):
+backend/products/views.py:141:    permission_classes = [IsAuthenticated, IsManagement]
+backend/products/views.py:543:class ManagementOrderListView(generics.ListAPIView):
+backend/products/views.py:555:        IsManagement,
+backend/products/views.py:559:class ManagementOrderDetailView(generics.RetrieveAPIView):
+backend/products/views.py:569:        IsManagement,
+backend/products/views.py:573:class ManagementOrderStatusUpdateView(APIView):
+backend/products/views.py:576:        IsManagement,
+backend/subscriptions/urls.py:6:    ManagementSubscriptionListView,
+backend/subscriptions/urls.py:7:    ManagementSubscriptionActionView,
+backend/subscriptions/urls.py:22:        "management/",
+backend/subscriptions/urls.py:23:        ManagementSubscriptionListView.as_view(),
+backend/subscriptions/urls.py:24:        name="management-subscription-list",
+backend/subscriptions/urls.py:27:        "management/<int:pk>/action/",
+backend/subscriptions/urls.py:28:        ManagementSubscriptionActionView.as_view(),
+backend/subscriptions/urls.py:29:        name="management-subscription-action",
+backend/subscriptions/views.py:274:class ManagementSubscriptionListView(generics.ListAPIView):
+backend/subscriptions/views.py:284:            != UserProfile.Role.MANAGEMENT
+backend/subscriptions/views.py:296:class ManagementSubscriptionActionView(APIView):
+backend/subscriptions/views.py:304:                        "Management access required."
+backend/subscriptions/views.py:312:            != UserProfile.Role.MANAGEMENT
+backend/subscriptions/views.py:317:                        "Management access required."
+
+================ FRONTEND MANAGEMENT ROUTES ================
+frontend/src/App.jsx:46:        <Route path="/management/dashboard" element={<ManagementDashboard />} />
+frontend/src/App.jsx:48:        <Route path="/management/products" element={<ManagementProducts />} />
+frontend/src/App.jsx:50:        <Route path="/management/orders" element={<ManagementOrders />} />
+frontend/src/App.jsx:52:        <Route path="/management/inventory" element={<ManagementInventory />} />
+frontend/src/App.jsx:55:          path="/management/deliveries"
+frontend/src/App.jsx:59:        <Route path="/management/drivers" element={<ManagementDrivers />} />
+frontend/src/App.jsx:61:        <Route path="/management/payments" element={<ManagementPayments />} />
+frontend/src/App.jsx:63:        <Route path="/management/customers" element={<ManagementCustomers />} />
+frontend/src/App.jsx:66:          path="/management/notifications"
+frontend/src/App.jsx:70:        <Route path="/management/reports" element={<ManagementReports />} />
+frontend/src/App.jsx:73:          path="/management/subscriptions"
+frontend/src/pages/ManagementCustomers.jsx:75:      const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementCustomers.jsx:100:        const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementCustomers.jsx:144:          <a href="/management/dashboard" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:148:          <a href="/management/products" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:152:          <a href="/management/orders" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:156:          <a href="/management/inventory" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:160:          <a href="/management/deliveries" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:164:          <a href="/management/drivers" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:168:          <a href="/management/payments" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:173:            href="/management/customers"
+frontend/src/pages/ManagementCustomers.jsx:179:          <a href="/management/notifications" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:183:          <a href="/management/reports" className="management-nav-item">
+frontend/src/pages/ManagementCustomers.jsx:187:          <a href="/management/subscriptions" className="management-nav-item">
+frontend/src/pages/ManagementDashboard.jsx:43:            returnTo: "/management/dashboard",
+frontend/src/pages/ManagementDashboard.jsx:64:          api.get("/management/orders/"),
+frontend/src/pages/ManagementDashboard.jsx:65:          api.get("/management/deliveries/"),
+frontend/src/pages/ManagementDashboard.jsx:85:              returnTo: "/management/dashboard",
+frontend/src/pages/ManagementDashboard.jsx:272:      path: "/management/dashboard",
+frontend/src/pages/ManagementDashboard.jsx:277:      path: "/management/products",
+frontend/src/pages/ManagementDashboard.jsx:282:      path: "/management/orders",
+frontend/src/pages/ManagementDashboard.jsx:287:      path: "/management/payments",
+frontend/src/pages/ManagementDashboard.jsx:292:      path: "/management/inventory",
+frontend/src/pages/ManagementDashboard.jsx:297:      path: "/management/deliveries",
+frontend/src/pages/ManagementDashboard.jsx:302:      path: "/management/customers",
+frontend/src/pages/ManagementDashboard.jsx:307:      path: "/management/drivers",
+frontend/src/pages/ManagementDashboard.jsx:312:      path: "/management/notifications",
+frontend/src/pages/ManagementDashboard.jsx:317:      path: "/management/reports",
+frontend/src/pages/ManagementDashboard.jsx:322:      path: "/management/subscriptions",
+frontend/src/pages/ManagementDashboard.jsx:367:              (item.path === "/management/dashboard" &&
+frontend/src/pages/ManagementDashboard.jsx:368:                location.pathname === "/management/dashboard/");
+frontend/src/pages/ManagementDashboard.jsx:428:              onClick={() => handleNavigation("/management/notifications")}
+frontend/src/pages/ManagementDashboard.jsx:648:                  onClick={() => navigate("/management/orders")}
+frontend/src/pages/ManagementDeliveries.jsx:37:    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+frontend/src/pages/ManagementDeliveries.jsx:38:    ["Products", Package, "/management/products"],
+frontend/src/pages/ManagementDeliveries.jsx:39:    ["Orders", ShoppingCart, "/management/orders"],
+frontend/src/pages/ManagementDeliveries.jsx:40:    ["Payments", CreditCard, "/management/payments"],
+frontend/src/pages/ManagementDeliveries.jsx:41:    ["Inventory", Boxes, "/management/inventory"],
+frontend/src/pages/ManagementDeliveries.jsx:42:    ["Deliveries", Truck, "/management/deliveries"],
+frontend/src/pages/ManagementDeliveries.jsx:43:    ["Customers", Users, "/management/customers"],
+frontend/src/pages/ManagementDeliveries.jsx:44:    ["Drivers", UserRoundCog, "/management/drivers"],
+frontend/src/pages/ManagementDeliveries.jsx:45:    ["Notifications", Bell, "/management/notifications"],
+frontend/src/pages/ManagementDeliveries.jsx:46:    ["Reports", BarChart3, "/management/reports"],
+frontend/src/pages/ManagementDeliveries.jsx:47:    ["Subscriptions", Repeat, "/management/subscriptions"],
+frontend/src/pages/ManagementDeliveries.jsx:55:      const response = await api.get("/management/deliveries/");
+frontend/src/pages/ManagementDeliveries.jsx:68:      const response = await api.get("/management/drivers/");
+frontend/src/pages/ManagementDeliveries.jsx:141:      await api.patch(`/management/deliveries/${delivery.id}/assign/`, {
+frontend/src/pages/ManagementDrivers.jsx:33:    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+frontend/src/pages/ManagementDrivers.jsx:34:    ["Products", Package, "/management/products"],
+frontend/src/pages/ManagementDrivers.jsx:35:    ["Orders", ShoppingCart, "/management/orders"],
+frontend/src/pages/ManagementDrivers.jsx:36:    ["Payments", CreditCard, "/management/payments"],
+frontend/src/pages/ManagementDrivers.jsx:37:    ["Inventory", Boxes, "/management/inventory"],
+frontend/src/pages/ManagementDrivers.jsx:38:    ["Deliveries", Truck, "/management/deliveries"],
+frontend/src/pages/ManagementDrivers.jsx:39:    ["Customers", Users, "/management/customers"],
+frontend/src/pages/ManagementDrivers.jsx:40:    ["Drivers", UserRoundCog, "/management/drivers"],
+frontend/src/pages/ManagementDrivers.jsx:41:    ["Notifications", Bell, "/management/notifications"],
+frontend/src/pages/ManagementDrivers.jsx:42:    ["Reports", BarChart3, "/management/reports"],
+frontend/src/pages/ManagementDrivers.jsx:43:    ["Subscriptions", Repeat, "/management/subscriptions"],
+frontend/src/pages/ManagementDrivers.jsx:51:      const response = await api.get("/management/drivers/");
+frontend/src/pages/ManagementInventory.jsx:33:    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+frontend/src/pages/ManagementInventory.jsx:34:    ["Products", Package, "/management/products"],
+frontend/src/pages/ManagementInventory.jsx:35:    ["Orders", ShoppingCart, "/management/orders"],
+frontend/src/pages/ManagementInventory.jsx:36:    ["Payments", CreditCard, "/management/payments"],
+frontend/src/pages/ManagementInventory.jsx:37:    ["Inventory", Boxes, "/management/inventory"],
+frontend/src/pages/ManagementInventory.jsx:38:    ["Deliveries", Truck, "/management/deliveries"],
+frontend/src/pages/ManagementInventory.jsx:39:    ["Customers", Users, "/management/customers"],
+frontend/src/pages/ManagementInventory.jsx:40:    ["Drivers", UserRoundCog, "/management/drivers"],
+frontend/src/pages/ManagementInventory.jsx:41:    ["Notifications", Bell, "/management/notifications"],
+frontend/src/pages/ManagementInventory.jsx:42:    ["Reports", BarChart3, "/management/reports"],
+frontend/src/pages/ManagementInventory.jsx:43:    ["Subscriptions", Repeat, "/management/subscriptions"],
+frontend/src/pages/ManagementNotifications.jsx:24:        response = await api.get("/management/notifications/");
+frontend/src/pages/ManagementNotifications.jsx:51:          response = await api.get("/management/notifications/");
+frontend/src/pages/ManagementNotifications.jsx:108:          <a href="/management/dashboard" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:112:          <a href="/management/products" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:116:          <a href="/management/orders" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:120:          <a href="/management/inventory" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:124:          <a href="/management/deliveries" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:128:          <a href="/management/drivers" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:132:          <a href="/management/payments" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:136:          <a href="/management/customers" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:141:            href="/management/notifications"
+frontend/src/pages/ManagementNotifications.jsx:147:          <a href="/management/reports" className="management-nav-item">
+frontend/src/pages/ManagementNotifications.jsx:151:          <a href="/management/subscriptions" className="management-nav-item">
+frontend/src/pages/ManagementOrders.jsx:33:    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+frontend/src/pages/ManagementOrders.jsx:34:    ["Products", Package, "/management/products"],
+frontend/src/pages/ManagementOrders.jsx:35:    ["Orders", ShoppingCart, "/management/orders"],
+frontend/src/pages/ManagementOrders.jsx:36:    ["Payments", CreditCard, "/management/payments"],
+frontend/src/pages/ManagementOrders.jsx:37:    ["Inventory", Boxes, "/management/inventory"],
+frontend/src/pages/ManagementOrders.jsx:38:    ["Deliveries", Truck, "/management/deliveries"],
+frontend/src/pages/ManagementOrders.jsx:39:    ["Customers", Users, "/management/customers"],
+frontend/src/pages/ManagementOrders.jsx:40:    ["Drivers", UserRoundCog, "/management/drivers"],
+frontend/src/pages/ManagementOrders.jsx:41:    ["Notifications", Bell, "/management/notifications"],
+frontend/src/pages/ManagementOrders.jsx:42:    ["Reports", BarChart3, "/management/reports"],
+frontend/src/pages/ManagementOrders.jsx:43:    ["Subscriptions", Repeat, "/management/subscriptions"],
+frontend/src/pages/ManagementOrders.jsx:51:      const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementOrders.jsx:86:          const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementPayments.jsx:16:      const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementPayments.jsx:40:        const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementPayments.jsx:98:          <a href="/management/dashboard" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:102:          <a href="/management/products" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:106:          <a href="/management/orders" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:111:            href="/management/payments"
+frontend/src/pages/ManagementPayments.jsx:117:          <a href="/management/inventory" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:121:          <a href="/management/deliveries" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:125:          <a href="/management/customers" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:129:          <a href="/management/drivers" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:133:          <a href="/management/notifications" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:137:          <a href="/management/reports" className="management-nav-item">
+frontend/src/pages/ManagementPayments.jsx:141:          <a href="/management/subscriptions" className="management-nav-item">
+frontend/src/pages/ManagementProducts.jsx:36:    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+frontend/src/pages/ManagementProducts.jsx:37:    ["Products", Package, "/management/products"],
+frontend/src/pages/ManagementProducts.jsx:38:    ["Orders", ShoppingCart, "/management/orders"],
+frontend/src/pages/ManagementProducts.jsx:39:    ["Payments", CreditCard, "/management/payments"],
+frontend/src/pages/ManagementProducts.jsx:40:    ["Inventory", Boxes, "/management/inventory"],
+frontend/src/pages/ManagementProducts.jsx:41:    ["Deliveries", Truck, "/management/deliveries"],
+frontend/src/pages/ManagementProducts.jsx:42:    ["Customers", Users, "/management/customers"],
+frontend/src/pages/ManagementProducts.jsx:43:    ["Drivers", UserRoundCog, "/management/drivers"],
+frontend/src/pages/ManagementProducts.jsx:44:    ["Notifications", Bell, "/management/notifications"],
+frontend/src/pages/ManagementProducts.jsx:45:    ["Reports", BarChart3, "/management/reports"],
+frontend/src/pages/ManagementProducts.jsx:46:    ["Subscriptions", Repeat, "/management/subscriptions"],
+frontend/src/pages/ManagementReports.jsx:23:      const response = await api.get("/management/orders/");
+frontend/src/pages/ManagementSubscriptions.jsx:26:      const response = await api.get("/subscriptions/management/");
+frontend/src/pages/ManagementSubscriptions.jsx:186:            href="/management/dashboard"
+frontend/src/pages/ManagementSubscriptions.jsx:193:            href="/management/products"
+frontend/src/pages/ManagementSubscriptions.jsx:200:            href="/management/orders"
+frontend/src/pages/ManagementSubscriptions.jsx:207:            href="/management/inventory"
+frontend/src/pages/ManagementSubscriptions.jsx:214:            href="/management/deliveries"
+frontend/src/pages/ManagementSubscriptions.jsx:221:            href="/management/drivers"
+frontend/src/pages/ManagementSubscriptions.jsx:228:            href="/management/payments"
+frontend/src/pages/ManagementSubscriptions.jsx:235:            href="/management/customers"
+frontend/src/pages/ManagementSubscriptions.jsx:242:            href="/management/notifications"
+frontend/src/pages/ManagementSubscriptions.jsx:249:            href="/management/reports"
+frontend/src/pages/ManagementSubscriptions.jsx:256:            href="/management/subscriptions"

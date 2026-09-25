@@ -9,24 +9,11 @@ function ManagementSubscriptions() {
   const [error, setError] = useState("");
 
   const getSubscriptions = (data) => {
-    if (Array.isArray(data)) return data;
-    return data?.results || [];
-  };
-
-  const fetchSubscriptionData = async () => {
-    try {
-      let response;
-
-      try {
-        response = await api.get("/management/subscriptions/");
-      } catch {
-        response = await api.get("/subscriptions/");
-      }
-
-      return getSubscriptions(response.data);
-    } catch (err) {
-      throw err;
+    if (Array.isArray(data)) {
+      return data;
     }
+
+    return data?.results || [];
   };
 
   const loadSubscriptions = async () => {
@@ -34,41 +21,41 @@ function ManagementSubscriptions() {
       setLoading(true);
       setError("");
 
-      const data = await fetchSubscriptionData();
+      // IMPORTANT:
+      // This is the management endpoint from subscriptions/urls.py
+      const response = await api.get("/subscriptions/management/");
+
+      const data = getSubscriptions(response.data);
+
       setSubscriptions(data);
     } catch (err) {
       console.error("Failed to load subscriptions:", err);
 
-      setError(
-        err.response?.data?.detail ||
-          "Failed to load subscriptions. Please try again.",
-      );
+      if (err.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+
+        window.location.href = "/login";
+        return;
+      }
+
+      if (err.response?.status === 403) {
+        setError("You do not have management access.");
+      } else {
+        setError(
+          err.response?.data?.detail ||
+            "Failed to load subscriptions. Please try again.",
+        );
+      }
+
+      setSubscriptions([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchSubscriptions = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const data = await fetchSubscriptionData();
-        setSubscriptions(data);
-      } catch (err) {
-        console.error("Failed to load subscriptions:", err);
-
-        setError(
-          err.response?.data?.detail ||
-            "Failed to load subscriptions. Please try again.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubscriptions();
+    loadSubscriptions();
   }, []);
 
   const getCustomer = (subscription) => {
@@ -88,10 +75,21 @@ function ManagementSubscriptions() {
       return subscription.customer.email;
     }
 
-    return "—";
+    return `User #${subscription.customer || "—"}`;
   };
 
   const getProduct = (subscription) => {
+    // Your backend serializer returns items[],
+    // and each item has product_name.
+    if (subscription.items?.length > 0) {
+      return subscription.items
+        .map((item) => {
+          const quantity = item.quantity || 1;
+          return `${item.product_name} × ${quantity}`;
+        })
+        .join(", ");
+    }
+
     if (subscription.product_name) {
       return subscription.product_name;
     }
@@ -108,9 +106,13 @@ function ManagementSubscriptions() {
   };
 
   const getFrequency = (subscription) =>
-    subscription.frequency || subscription.interval || subscription.plan || "—";
+    subscription.frequency ||
+    subscription.interval ||
+    subscription.plan ||
+    "—";
 
-  const getStatus = (subscription) => subscription.status || "ACTIVE";
+  const getStatus = (subscription) =>
+    subscription.status || "ACTIVE";
 
   const getNextDelivery = (subscription) =>
     subscription.next_delivery ||
@@ -119,7 +121,9 @@ function ManagementSubscriptions() {
     "—";
 
   const formatDate = (date) => {
-    if (!date || date === "—") return "—";
+    if (!date || date === "—") {
+      return "—";
+    }
 
     const parsedDate = new Date(date);
 
@@ -141,16 +145,33 @@ function ManagementSubscriptions() {
       return "status-success";
     }
 
-    if (normalized === "PAUSED" || normalized === "PENDING") {
+    if (
+      normalized === "PAUSED" ||
+      normalized === "PENDING" ||
+      normalized === "PENDING_PAYMENT"
+    ) {
       return "status-pending";
     }
 
-    if (normalized === "CANCELLED" || normalized === "CANCELED") {
+    if (
+      normalized === "CANCELLED" ||
+      normalized === "CANCELED"
+    ) {
       return "status-danger";
     }
 
     return "status-warning";
   };
+
+  const activeCount = subscriptions.filter(
+    (subscription) =>
+      String(getStatus(subscription)).toUpperCase() === "ACTIVE",
+  ).length;
+
+  const pausedCount = subscriptions.filter(
+    (subscription) =>
+      String(getStatus(subscription)).toUpperCase() === "PAUSED",
+  ).length;
 
   return (
     <div className="management-layout">
@@ -161,43 +182,73 @@ function ManagementSubscriptions() {
         </div>
 
         <nav className="management-nav">
-          <a href="/management/dashboard" className="management-nav-item">
+          <a
+            href="/management/dashboard"
+            className="management-nav-item"
+          >
             Dashboard
           </a>
 
-          <a href="/management/products" className="management-nav-item">
+          <a
+            href="/management/products"
+            className="management-nav-item"
+          >
             Products
           </a>
 
-          <a href="/management/orders" className="management-nav-item">
+          <a
+            href="/management/orders"
+            className="management-nav-item"
+          >
             Orders
           </a>
 
-          <a href="/management/inventory" className="management-nav-item">
+          <a
+            href="/management/inventory"
+            className="management-nav-item"
+          >
             Inventory
           </a>
 
-          <a href="/management/deliveries" className="management-nav-item">
+          <a
+            href="/management/deliveries"
+            className="management-nav-item"
+          >
             Deliveries
           </a>
 
-          <a href="/management/drivers" className="management-nav-item">
+          <a
+            href="/management/drivers"
+            className="management-nav-item"
+          >
             Drivers
           </a>
 
-          <a href="/management/payments" className="management-nav-item">
+          <a
+            href="/management/payments"
+            className="management-nav-item"
+          >
             Payments
           </a>
 
-          <a href="/management/customers" className="management-nav-item">
+          <a
+            href="/management/customers"
+            className="management-nav-item"
+          >
             Customers
           </a>
 
-          <a href="/management/notifications" className="management-nav-item">
+          <a
+            href="/management/notifications"
+            className="management-nav-item"
+          >
             Notifications
           </a>
 
-          <a href="/management/reports" className="management-nav-item">
+          <a
+            href="/management/reports"
+            className="management-nav-item"
+          >
             Reports
           </a>
 
@@ -214,7 +265,9 @@ function ManagementSubscriptions() {
         <header className="management-topbar">
           <div>
             <h1>Subscriptions</h1>
-            <p>Monitor recurring WaterFlow customer deliveries.</p>
+            <p>
+              Monitor recurring WaterFlow customer deliveries.
+            </p>
           </div>
 
           <button
@@ -224,7 +277,7 @@ function ManagementSubscriptions() {
             disabled={loading}
           >
             <RefreshCw size={17} />
-            Refresh
+            {loading ? "Loading..." : "Refresh"}
           </button>
         </header>
 
@@ -248,15 +301,7 @@ function ManagementSubscriptions() {
 
               <div>
                 <span>Active</span>
-                <strong>
-                  {
-                    subscriptions.filter(
-                      (subscription) =>
-                        String(getStatus(subscription)).toUpperCase() ===
-                        "ACTIVE",
-                    ).length
-                  }
-                </strong>
+                <strong>{activeCount}</strong>
               </div>
             </div>
 
@@ -267,15 +312,7 @@ function ManagementSubscriptions() {
 
               <div>
                 <span>Paused</span>
-                <strong>
-                  {
-                    subscriptions.filter(
-                      (subscription) =>
-                        String(getStatus(subscription)).toUpperCase() ===
-                        "PAUSED",
-                    ).length
-                  }
-                </strong>
+                <strong>{pausedCount}</strong>
               </div>
             </div>
           </div>
@@ -284,6 +321,7 @@ function ManagementSubscriptions() {
             <div className="management-panel-header">
               <div>
                 <h2>Subscription List</h2>
+
                 <p>
                   {subscriptions.length} subscription
                   {subscriptions.length === 1 ? "" : "s"}
@@ -294,9 +332,13 @@ function ManagementSubscriptions() {
             </div>
 
             {loading ? (
-              <div className="management-loading">Loading subscriptions...</div>
+              <div className="management-loading">
+                Loading subscriptions...
+              </div>
             ) : error ? (
-              <div className="management-empty-table">{error}</div>
+              <div className="management-empty-table">
+                {error}
+              </div>
             ) : subscriptions.length === 0 ? (
               <div className="management-empty-table">
                 No subscriptions found.
@@ -324,12 +366,18 @@ function ManagementSubscriptions() {
                           <td>#{subscription.id}</td>
 
                           <td>
-                            <strong>{getCustomer(subscription)}</strong>
+                            <strong>
+                              {getCustomer(subscription)}
+                            </strong>
                           </td>
 
-                          <td>{getProduct(subscription)}</td>
+                          <td>
+                            {getProduct(subscription)}
+                          </td>
 
-                          <td>{getFrequency(subscription)}</td>
+                          <td>
+                            {getFrequency(subscription)}
+                          </td>
 
                           <td>
                             <span
@@ -337,11 +385,17 @@ function ManagementSubscriptions() {
                                 status,
                               )}`}
                             >
-                              {status}
+                              {status === "PENDING_PAYMENT"
+                                ? "AWAITING PAYMENT"
+                                : status}
                             </span>
                           </td>
 
-                          <td>{formatDate(getNextDelivery(subscription))}</td>
+                          <td>
+                            {formatDate(
+                              getNextDelivery(subscription),
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -357,3 +411,4 @@ function ManagementSubscriptions() {
 }
 
 export default ManagementSubscriptions;
+ 

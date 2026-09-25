@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
-  Minus,
+   Minus,
   Plus,
   ShoppingCart,
   Trash2,
@@ -260,11 +259,7 @@ function Cart() {
           </div>
         </section>
 
-        {message && (
-          <div className="cart-message">
-            {message}
-          </div>
-        )}
+        {message && <div className="cart-message">{message}</div>}
 
         {cart.items.length === 0 ? (
           <section className="cart-empty">
@@ -274,14 +269,9 @@ function Cart() {
 
             <h2>Your cart is empty</h2>
 
-            <p>
-              You have not added any water products to your cart yet.
-            </p>
+            <p>You have not added any water products to your cart yet.</p>
 
-            <Link
-              to="/products"
-              className="cart-primary-button"
-            >
+            <Link to="/products" className="cart-primary-button">
               Browse Products
             </Link>
           </section>
@@ -345,17 +335,13 @@ function Cart() {
                                     Number(item.quantity) - 1,
                                   )
                                 }
-                                disabled={
-                                  Number(item.quantity) <= 1
-                                }
+                                disabled={Number(item.quantity) <= 1}
                                 aria-label="Decrease quantity"
                               >
                                 <Minus size={15} />
                               </button>
 
-                              <strong>
-                                {item.quantity}
-                              </strong>
+                              <strong>{item.quantity}</strong>
 
                               <button
                                 type="button"
@@ -408,25 +394,19 @@ function Cart() {
 
                 <div>
                   <span>Subtotal</span>
-                  <strong>
-                    KSh {total.toFixed(2)}
-                  </strong>
+                  <strong>KSh {total.toFixed(2)}</strong>
                 </div>
 
                 <div>
                   <span>Delivery</span>
-                  <strong>
-                    Calculated at checkout
-                  </strong>
+                  <strong>Calculated at checkout</strong>
                 </div>
               </div>
 
               <div className="cart-total">
                 <span>Total</span>
 
-                <strong>
-                  KSh {total.toFixed(2)}
-                </strong>
+                <strong>KSh {total.toFixed(2)}</strong>
               </div>
 
               <button
@@ -437,13 +417,10 @@ function Cart() {
                 Proceed to Checkout
               </button>
 
-              <Link
-                to="/products"
-                className="cart-continue-button"
-              >
-                <ArrowLeft size={16} />
+              <Link to="/products" className="cart-continue-button">
                 Continue Shopping
               </Link>
+
             </aside>
           </div>
         )}

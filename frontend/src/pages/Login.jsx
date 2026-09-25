@@ -118,7 +118,6 @@ function Login() {
             className="header-return-button"
             onClick={() => navigate("/products")}
           >
-            <ArrowLeft size={18} />
             <span>Return to Home</span>
           </button>
 

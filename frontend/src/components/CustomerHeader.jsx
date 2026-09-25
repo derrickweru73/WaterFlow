@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ShoppingCart,
-  ArrowLeft,
   LogOut,
   Bell,
   Droplets,
@@ -12,12 +11,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
-function CustomerHeader({
-  showLogout = false,
-  returnTo = "/products",
-  returnLabel = "Return",
-  minimal = false,
-}) {
+function CustomerHeader({ showLogout = false }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -118,7 +112,10 @@ function CustomerHeader({
     };
 
     window.addEventListener("cartUpdated", handleCartUpdated);
-    window.addEventListener("notificationsUpdated", handleNotificationsUpdated);
+    window.addEventListener(
+      "notificationsUpdated",
+      handleNotificationsUpdated,
+    );
 
     return () => {
       window.removeEventListener("cartUpdated", handleCartUpdated);
@@ -131,10 +128,6 @@ function CustomerHeader({
 
   const handleCartClick = () => {
     navigate("/cart");
-  };
-
-  const handleReturn = () => {
-    navigate(returnTo);
   };
 
   const handleLogout = () => {
@@ -167,128 +160,114 @@ function CustomerHeader({
           </div>
         </Link>
 
-        {minimal ? (
-          <div className="customer-header-actions">
+        <nav className="customer-nav">
+          <Link
+            to="/products"
+            className={`customer-nav-link ${
+              isActive("/products") ? "active" : ""
+            }`}
+          >
+            <Home size={16} />
+            <span>Home</span>
+          </Link>
+
+          <Link
+            to="/products"
+            className={`customer-nav-link ${
+              isActive("/products") ? "active" : ""
+            }`}
+          >
+            <Droplets size={16} />
+            <span>Products</span>
+          </Link>
+
+          <Link
+            to="/orders"
+            className={`customer-nav-link ${
+              isActive("/orders") ? "active" : ""
+            }`}
+          >
+            <Package size={16} />
+            <span>My Orders</span>
+          </Link>
+
+          <Link
+            to="/subscriptions"
+            className={`customer-nav-link ${
+              isActive("/subscriptions") ? "active" : ""
+            }`}
+          >
+            <Repeat size={16} />
+            <span>Subscriptions</span>
+          </Link>
+
+          <Link
+            to="/notifications"
+            className={`customer-nav-link ${
+              isActive("/notifications") ? "active" : ""
+            }`}
+          >
+            <span className="nav-icon-with-badge">
+              <Bell size={16} />
+
+              {notificationCount > 0 && (
+                <span className="nav-notification-badge">
+                  {notificationCount}
+                </span>
+              )}
+            </span>
+
+            <span>Notifications</span>
+          </Link>
+
+          <button
+            type="button"
+            className={`customer-nav-link customer-cart-nav ${
+              isActive("/cart") ? "active" : ""
+            }`}
+            onClick={handleCartClick}
+          >
+            <span className="nav-icon-with-badge">
+              <ShoppingCart size={17} />
+
+              {cartCount > 0 && (
+                <span className="nav-cart-badge">{cartCount}</span>
+              )}
+            </span>
+
+            <span>Cart</span>
+          </button>
+        </nav>
+
+        <div className="customer-header-right">
+          {customerName && (
+            <div className="customer-profile">
+              <div className="customer-avatar">
+                {customerName.charAt(0).toUpperCase()}
+              </div>
+
+              <div className="customer-profile-name">
+                <span>Welcome</span>
+                <strong>{customerName}</strong>
+              </div>
+            </div>
+          )}
+
+          {showLogout && (
             <button
               type="button"
-              className="header-return-button"
-              onClick={handleReturn}
+              className="logout-button"
+              onClick={handleLogout}
             >
-              <ArrowLeft size={18} />
-              <span>{returnLabel}</span>
+              <LogOut size={16} />
+              <span>Logout</span>
             </button>
-          </div>
-        ) : (
-          <>
-            <nav className="customer-nav">
-              <Link
-                to="/products"
-                className={`customer-nav-link ${
-                  isActive("/products") ? "active" : ""
-                }`}
-              >
-                <Home size={16} />
-                <span>Home</span>
-              </Link>
-
-              <Link
-                to="/products"
-                className={`customer-nav-link ${
-                  isActive("/products") ? "active" : ""
-                }`}
-              >
-                <Droplets size={16} />
-                <span>Products</span>
-              </Link>
-
-              <Link
-                to="/orders"
-                className={`customer-nav-link ${
-                  isActive("/orders") ? "active" : ""
-                }`}
-              >
-                <Package size={16} />
-                <span>My Orders</span>
-              </Link>
-
-              <Link
-                to="/subscriptions"
-                className={`customer-nav-link ${
-                  isActive("/subscriptions") ? "active" : ""
-                }`}
-              >
-                <Repeat size={16} />
-                <span>Subscriptions</span>
-              </Link>
-
-              <Link
-                to="/notifications"
-                className={`customer-nav-link ${
-                  isActive("/notifications") ? "active" : ""
-                }`}
-              >
-                <span className="nav-icon-with-badge">
-                  <Bell size={16} />
-
-                  {notificationCount > 0 && (
-                    <span className="nav-notification-badge">
-                      {notificationCount}
-                    </span>
-                  )}
-                </span>
-
-                <span>Notifications</span>
-              </Link>
-
-              <button
-                type="button"
-                className={`customer-nav-link customer-cart-nav ${
-                  isActive("/cart") ? "active" : ""
-                }`}
-                onClick={handleCartClick}
-              >
-                <span className="nav-icon-with-badge">
-                  <ShoppingCart size={17} />
-
-                  {cartCount > 0 && (
-                    <span className="nav-cart-badge">{cartCount}</span>
-                  )}
-                </span>
-
-                <span>Cart</span>
-              </button>
-            </nav>
-
-            <div className="customer-header-right">
-              {customerName && (
-                <div className="customer-profile">
-                  <div className="customer-avatar">
-                    {customerName.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="customer-profile-name">
-                    <span>Welcome</span>
-                    <strong>{customerName}</strong>
-                  </div>
-                </div>
-              )}
-
-              {showLogout && (
-                <button
-                  type="button"
-                  className="logout-button"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} />
-                  <span>Logout</span>
-                </button>
-              )}
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );
 }
 
 export default CustomerHeader;
+ 

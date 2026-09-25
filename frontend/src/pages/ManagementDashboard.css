@@ -1,17 +1,19 @@
 .management-layout {
     min-height: 100vh;
     display: flex;
-    background: #f6f5f9;
-    color: #252233;
+    background: #f7f9fc;
+    color: #172033;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         sans-serif;
 }
+
+/* SIDEBAR */
 
 .management-sidebar {
     width: 250px;
     min-height: 100vh;
     background: #ffffff;
-    border-right: 1px solid #ece9f1;
+    border-right: 1px solid #e4e9f0;
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -27,31 +29,36 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid #f0edf3;
+    border-bottom: 1px solid #edf1f5;
 }
 
 .management-brand-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    background: #7c3aed;
-    color: #ffffff;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #e8f7fb;
+    color: #087ea4;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 19px;
+    font-size: 18px;
 }
 
 .management-brand h1 {
     margin: 0;
     font-size: 19px;
-    color: #252233;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #073b66;
 }
 
 .management-brand span {
+    display: block;
+    margin-top: 2px;
     font-size: 11px;
-    color: #96909f;
+    color: #8a96a5;
+    font-weight: 600;
 }
 
 .management-mobile-close {
@@ -60,8 +67,10 @@
     border: 0;
     background: transparent;
     cursor: pointer;
-    color: #777080;
+    color: #687587;
 }
+
+/* NAVIGATION */
 
 .management-nav {
     padding: 25px 14px;
@@ -72,9 +81,9 @@
 .management-nav-title {
     margin: 0 12px 12px;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 750;
     letter-spacing: 0.08em;
-    color: #aaa3b1;
+    color: #9aa5b4;
 }
 
 .management-nav-item {
@@ -85,30 +94,44 @@
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: #716b78;
+    color: #687587;
     display: flex;
     align-items: center;
     gap: 13px;
+    font-family: inherit;
     font-size: 13px;
+    font-weight: 550;
     text-align: left;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.management-nav-item svg {
+    flex-shrink: 0;
 }
 
 .management-nav-item:hover {
-    background: #f5efff;
-    color: #7c3aed;
+    background: #eef8fb;
+    color: #075985;
 }
 
 .management-nav-active {
-    background: #f0e7ff;
-    color: #7c3aed;
-    font-weight: 600;
+    background: #e8f7fb;
+    color: #075985;
+    font-weight: 700;
 }
+
+.management-nav-active svg {
+    color: #087ea4;
+}
+
+/* SIDEBAR BOTTOM */
 
 .management-sidebar-bottom {
     padding: 18px 14px;
-    border-top: 1px solid #f0edf3;
+    border-top: 1px solid #edf1f5;
 }
 
 .management-logout-button {
@@ -118,18 +141,23 @@
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: #716b78;
+    color: #687587;
     display: flex;
     align-items: center;
     gap: 13px;
+    font-family: inherit;
     font-size: 13px;
     cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .management-logout-button:hover {
-    background: #fff1f2;
+    background: #fff3f3;
     color: #dc2626;
 }
+
 
 .management-main {
     width: calc(100% - 250px);
@@ -137,11 +165,13 @@
     min-height: 100vh;
 }
 
+/*TOP BAR */
+
 .management-topbar {
     height: 82px;
     padding: 0 32px;
     background: #ffffff;
-    border-bottom: 1px solid #ece9f1;
+    border-bottom: 1px solid #e4e9f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -156,13 +186,16 @@
 .management-page-label {
     margin: 0 0 2px;
     font-size: 11px;
-    color: #96909f;
+    color: #8a96a5;
+    font-weight: 600;
 }
 
 .management-topbar h2 {
     margin: 0;
     font-size: 20px;
-    color: #252233;
+    font-weight: 750;
+    color: #073b66;
+    letter-spacing: -0.02em;
 }
 
 .management-topbar-right {
@@ -174,15 +207,25 @@
 .management-topbar-icon {
     width: 38px;
     height: 38px;
-    border: 1px solid #eeeaf2;
+    border: 1px solid #e1e7ed;
     border-radius: 9px;
     background: #ffffff;
-    color: #716b78;
+    color: #687587;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     position: relative;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.management-topbar-icon:hover {
+    border-color: #b9dce7;
+    background: #f4fbfd;
+    color: #075985;
 }
 
 .management-topbar-icon::after {
@@ -192,9 +235,11 @@
     right: 7px;
     width: 6px;
     height: 6px;
-    background: #7c3aed;
+    background: #0784a8;
     border-radius: 50%;
 }
+
+/* USER */
 
 .management-user {
     display: flex;
@@ -206,12 +251,13 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #eadcff;
-    color: #7c3aed;
+    background: #e8f7fb;
+    color: #087ea4;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: 750;
+    border: 1px solid #d8eef4;
 }
 
 .management-user-info {
@@ -222,13 +268,15 @@
 
 .management-user-info strong {
     font-size: 13px;
-    color: #332e3d;
+    color: #253146;
 }
 
 .management-user-info span {
     font-size: 11px;
-    color: #99929f;
+    color: #8a96a5;
 }
+
+/* CONTENT */
 
 .management-content {
     padding: 30px 32px 45px;
@@ -245,12 +293,14 @@
 .management-welcome h1 {
     margin: 0 0 6px;
     font-size: 24px;
-    color: #252233;
+    font-weight: 750;
+    color: #073b66;
+    letter-spacing: -0.025em;
 }
 
 .management-welcome p {
     margin: 0;
-    color: #8c8594;
+    color: #7a8797;
     font-size: 13px;
 }
 
@@ -259,7 +309,7 @@
     padding: 10px 14px;
     border-radius: 10px;
     background: #ffffff;
-    border: 1px solid #ece9f1;
+    border: 1px solid #e4e9f0;
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -268,13 +318,15 @@
 
 .management-date span {
     font-size: 10px;
-    color: #9d96a4;
+    color: #9aa5b4;
 }
 
 .management-date strong {
     font-size: 12px;
-    color: #514b5a;
+    color: #315066;
 }
+
+/*  STAT CARDS */
 
 .management-stat-grid {
     display: grid;
@@ -287,12 +339,20 @@
     min-height: 120px;
     padding: 20px;
     background: #ffffff;
-    border: 1px solid #ece9f1;
+    border: 1px solid #e4e9f0;
     border-radius: 12px;
     display: flex;
     align-items: flex-start;
     gap: 15px;
-    box-shadow: 0 3px 12px rgba(49, 40, 61, 0.025);
+    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.035);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.management-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(23, 32, 51, 0.06);
 }
 
 .management-stat-icon {
@@ -307,52 +367,57 @@
     font-weight: 800;
 }
 
+/* WaterFlow blue/teal based icons */
+
 .management-stat-icon.sales {
-    background: #f0e7ff;
-    color: #7c3aed;
+    background: #e8f7fb;
+    color: #087ea4;
 }
 
 .management-stat-icon.orders {
-    background: #e6f1ff;
-    color: #3182ce;
+    background: #e8f7fb;
+    color: #075985;
 }
 
 .management-stat-icon.pending {
-    background: #fff4dc;
+    background: #fff7e6;
     color: #d97706;
 }
 
 .management-stat-icon.deliveries {
-    background: #e4f8f0;
+    background: #e8f7f1;
     color: #0f9f6e;
 }
 
 .management-stat-icon.stock {
-    background: #ffe9ed;
+    background: #fff0f2;
     color: #db3d62;
 }
 
 .management-stat-icon.customers {
-    background: #e8eaff;
-    color: #5b5bd6;
+    background: #edf4ff;
+    color: #356fc5;
 }
 
 .management-stat-card p {
     margin: 0 0 5px;
     font-size: 12px;
-    color: #8c8594;
+    color: #7a8797;
 }
 
 .management-stat-card h3 {
     margin: 0 0 5px;
     font-size: 21px;
-    color: #292433;
+    color: #172033;
+    font-weight: 750;
 }
 
 .management-stat-card span {
     font-size: 10px;
-    color: #a39ca9;
+    color: #9aa5b4;
 }
+
+/* MAIN PANELS  */
 
 .management-main-grid {
     display: grid;
@@ -369,10 +434,10 @@
 
 .management-panel-card {
     background: #ffffff;
-    border: 1px solid #ece9f1;
+    border: 1px solid #e4e9f0;
     border-radius: 12px;
     padding: 22px;
-    box-shadow: 0 3px 12px rgba(49, 40, 61, 0.025);
+    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.035);
 }
 
 .management-panel-header {
@@ -386,33 +451,47 @@
 .management-panel-header h3 {
     margin: 0 0 4px;
     font-size: 15px;
-    color: #2b2635;
+    font-weight: 750;
+    color: #253146;
 }
 
 .management-panel-header p {
     margin: 0;
     font-size: 11px;
-    color: #99929f;
+    color: #8a96a5;
 }
 
 .management-panel-header select {
     padding: 8px 11px;
-    border: 1px solid #e9e5ed;
+    border: 1px solid #dce3eb;
     border-radius: 7px;
     background: #ffffff;
-    color: #716b78;
+    color: #687587;
+    font-family: inherit;
     font-size: 11px;
     outline: none;
+}
+
+.management-panel-header select:focus {
+    border-color: #0784a8;
 }
 
 .management-panel-header button {
     border: 0;
     background: transparent;
-    color: #7c3aed;
+    color: #0784a8;
+    font-family: inherit;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
 }
+
+.management-panel-header button:hover {
+    color: #075985;
+    text-decoration: underline;
+}
+
+/* SALES CHART */
 
 .management-chart {
     height: 260px;
@@ -430,7 +509,7 @@
 
 .chart-y-labels span {
     font-size: 9px;
-    color: #aaa3b1;
+    color: #9aa5b4;
 }
 
 .chart-area {
@@ -443,7 +522,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    border-top: 1px dashed #eeeaf2;
+    border-top: 1px dashed #e8edf2;
 }
 
 .line-1 {
@@ -489,13 +568,28 @@
     width: min(34px, 70%);
     min-height: 4px;
     border-radius: 6px 6px 2px 2px;
-    background: #9b5cff;
+    background: #0784a8;
+    transition:
+        height 0.3s ease,
+        opacity 0.2s ease;
+}
+
+.chart-bar:hover {
+    opacity: 0.82;
 }
 
 .chart-bar-group span {
     font-size: 9px;
-    color: #9e97a5;
+    color: #8a96a5;
 }
+
+.management-sales-total {
+    color: #075985;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+/* ORDER STATUS */
 
 .order-status-chart {
     min-height: 260px;
@@ -509,10 +603,10 @@
     width: 155px;
     height: 155px;
     border-radius: 50%;
-    background: conic-gradient(#9b5cff 0deg 90deg,
+    background: conic-gradient(#0784a8 0deg 90deg,
             #f4b740 90deg 180deg,
             #40b98a 180deg 260deg,
-            #e6e1eb 260deg 360deg);
+            #e4e9f0 260deg 360deg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -531,12 +625,12 @@
 
 .status-donut-inner strong {
     font-size: 23px;
-    color: #302a3a;
+    color: #172033;
 }
 
 .status-donut-inner span {
     font-size: 10px;
-    color: #9a939f;
+    color: #8a96a5;
 }
 
 .status-legend {
@@ -556,12 +650,12 @@
 .status-legend p {
     margin: 0;
     font-size: 11px;
-    color: #777080;
+    color: #687587;
 }
 
 .status-legend strong {
     font-size: 11px;
-    color: #443d4e;
+    color: #253146;
 }
 
 .legend-dot {
@@ -571,7 +665,7 @@
 }
 
 .pending-dot {
-    background: #9b5cff;
+    background: #0784a8;
 }
 
 .processing-dot {
@@ -583,23 +677,28 @@
 }
 
 .delivered-dot {
-    background: #d9d3df;
+    background: #cbd5df;
 }
 
+ 
 .management-empty-table {
     min-height: 190px;
-    border: 1px dashed #e6e1e9;
+    border: 1px dashed #dfe6ed;
     border-radius: 9px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #aaa3b1;
+    color: #9aa5b4;
+}
+
+.management-empty-table svg {
+    color: #9acbd8;
 }
 
 .management-empty-table h4 {
     margin: 10px 0 4px;
-    color: #67616f;
+    color: #536276;
     font-size: 13px;
 }
 
@@ -607,6 +706,78 @@
     margin: 0;
     font-size: 11px;
 }
+
+/*  RECENT ORDERS */
+
+.management-orders-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.management-order-row {
+    min-height: 62px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1f5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.management-order-row:last-child {
+    border-bottom: 0;
+}
+
+.management-order-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 9px;
+    background: #e8f7fb;
+    color: #087ea4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.management-order-info {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.management-order-info strong {
+    font-size: 12px;
+    color: #253146;
+}
+
+.management-order-info span {
+    font-size: 10px;
+    color: #8a96a5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.management-order-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.management-order-total strong {
+    font-size: 12px;
+    color: #075985;
+}
+
+.management-order-total span {
+    font-size: 9px;
+    color: #8a96a5;
+}
+
+/*   DELIVERY SUMMARY*/
 
 .delivery-summary {
     display: grid;
@@ -616,19 +787,27 @@
 
 .delivery-summary-item {
     padding: 14px;
-    border: 1px solid #eeeaf2;
+    border: 1px solid #e7edf2;
     border-radius: 9px;
     display: flex;
     align-items: center;
     gap: 11px;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.delivery-summary-item:hover {
+    border-color: #cfe6ed;
+    background: #fbfeff;
 }
 
 .delivery-summary-icon {
     width: 34px;
     height: 34px;
     border-radius: 8px;
-    background: #f2ebff;
-    color: #7c3aed;
+    background: #e8f7fb;
+    color: #087ea4;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -642,30 +821,32 @@
 
 .delivery-summary-item strong {
     font-size: 18px;
-    color: #302a3a;
+    color: #172033;
 }
 
 .delivery-summary-item span {
     font-size: 10px;
-    color: #9b94a2;
+    color: #8a96a5;
 }
+
+/*  LOADING */
 
 .management-loading {
     min-height: 100vh;
-    background: #f6f5f9;
+    background: #f7f9fc;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #777080;
+    color: #687587;
     gap: 12px;
 }
 
 .management-spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid #e6dafa;
-    border-top-color: #7c3aed;
+    border: 3px solid #d9eef4;
+    border-top-color: #0784a8;
     border-radius: 50%;
     animation: management-spin 0.8s linear infinite;
 }
@@ -681,11 +862,15 @@
     }
 }
 
+/*  
+   MOBILE
+     */
+
 .management-mobile-menu {
     display: none;
     border: 0;
     background: transparent;
-    color: #514b5a;
+    color: #315066;
     cursor: pointer;
 }
 
@@ -722,7 +907,7 @@
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(25, 20, 31, 0.35);
+        background: rgba(23, 32, 51, 0.35);
         z-index: 90;
     }
 
@@ -801,6 +986,8 @@
     .delivery-summary {
         grid-template-columns: 1fr;
     }
-}
 
- 
+    .management-order-total strong {
+        font-size: 11px;
+    }
+}

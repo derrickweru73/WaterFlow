@@ -1,0 +1,350 @@
+.login-page {
+    min-height: 100vh;
+    background: #f7f9fc;
+    color: #172033;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+}
+
+/* =========================================================
+   WATERFLOW BRAND
+   ========================================================= */
+
+.login-brand {
+    text-align: center;
+    margin-bottom: 26px;
+}
+
+.login-brand-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+
+    background: #e8f7fb;
+    color: #087ea4;
+}
+
+.login-brand h1 {
+    margin: 0;
+
+    color: #073b66;
+
+    font-size: 28px;
+    font-weight: 800;
+
+    letter-spacing: -0.03em;
+}
+
+.login-brand p {
+    margin: 5px 0 0;
+
+    color: #8a96a5;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* =========================================================
+   LOGIN CARD
+   ========================================================= */
+
+.login-card {
+    width: 100%;
+
+    padding: 32px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 18px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(23, 32, 51, 0.06);
+}
+
+/* =========================================================
+   LOGIN HEADER
+   ========================================================= */
+
+.login-card-header {
+    margin-bottom: 25px;
+}
+
+.login-card-header h2 {
+    margin: 0;
+
+    color: #162033;
+
+    font-size: 25px;
+    font-weight: 750;
+
+    letter-spacing: -0.025em;
+}
+
+.login-card-header p {
+    margin: 7px 0 0;
+
+    color: #7a8797;
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* =========================================================
+   ERROR / SESSION MESSAGE
+   ========================================================= */
+
+.login-error {
+    margin-bottom: 20px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #cce8dc;
+    border-radius: 10px;
+
+    background: #f0faf5;
+
+    color: #18794e;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.login-field {
+    margin-bottom: 19px;
+}
+
+.login-field label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #253146;
+
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.login-field input {
+    width: 100%;
+    height: 45px;
+
+    padding: 0 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce3eb;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #172033;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.login-field input::placeholder {
+    color: #9aa5b4;
+}
+
+.login-field input:hover {
+    border-color: #b8c8d4;
+}
+
+.login-field input:focus {
+    border-color: #0784a8;
+
+    background: #fbfeff;
+
+    box-shadow:
+        0 0 0 3px rgba(7, 132, 168, 0.09);
+}
+
+/* =========================================================
+   SIGN IN BUTTON
+   ========================================================= */
+
+.login-submit {
+    width: 100%;
+    min-height: 45px;
+
+    margin-top: 3px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #075985;
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 750;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+    background: #064b70;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 18px rgba(7, 89, 133, 0.16);
+}
+
+.login-submit:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* =========================================================
+   REGISTER
+   ========================================================= */
+
+.login-register {
+    margin-top: 21px;
+
+    text-align: center;
+
+    color: #7a8797;
+
+    font-size: 12px;
+}
+
+.login-register a {
+    color: #0784a8;
+
+    font-weight: 750;
+
+    text-decoration: none;
+}
+
+.login-register a:hover {
+    color: #075985;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   RETURN TO HOME
+   ========================================================= */
+
+.login-home {
+    margin-top: 22px;
+    padding-top: 19px;
+
+    border-top: 1px solid #e3e8ef;
+
+    text-align: center;
+}
+
+.login-home a {
+    color: #687587;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.login-home a:hover {
+    color: #075985;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    margin-top: 20px;
+
+    color: #9aa5b4;
+
+    font-size: 10px;
+}
+
+.login-footer strong {
+    color: #315066;
+    font-size: 11px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+    .login-page {
+        padding: 30px 16px;
+    }
+
+    .login-card {
+        padding: 26px 21px;
+        border-radius: 16px;
+    }
+
+    .login-brand {
+        margin-bottom: 21px;
+    }
+
+    .login-brand-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+    }
+
+    .login-brand h1 {
+        font-size: 25px;
+    }
+}

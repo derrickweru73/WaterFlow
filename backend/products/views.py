@@ -140,6 +140,33 @@ class ManagementDeliveryZoneListCreateView(generics.ListCreateAPIView):
     serializer_class = DeliveryZoneSerializer
     permission_classes = [IsAuthenticated, IsManagement]
 
+class ManagementDeliveryZoneDetailView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    queryset = DeliveryZone.objects.all()
+    serializer_class = DeliveryZoneSerializer
+    permission_classes = [IsAuthenticated, IsManagement]
+
+    def destroy(self, request, *args, **kwargs):
+        zone = self.get_object()
+
+        if zone.orders.exists():
+            return Response(
+                {
+                    "detail": (
+                        "This delivery zone cannot be deleted "
+                        "because it is already assigned to an order."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        zone.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
+
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated]

@@ -1,17 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  Boxes,
+  Truck,
+  Users,
+  UserRoundCog,
+  Bell,
   BarChart3,
+  Repeat,
+  LogOut,
+  Menu,
+  X,
+  RefreshCw,
+  DollarSign,
   CheckCircle2,
   Clock3,
-  DollarSign,
-  FileText,
-  PackageCheck,
-  RefreshCw,
-  ShoppingBag,
-  Users,
   XCircle,
+  PackageCheck,
+  FileText,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./ManagementDashboard.css";
 import "./ManagementReports.css";
@@ -19,10 +30,25 @@ import "./ManagementReports.css";
 function ManagementReports() {
   const navigate = useNavigate();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
 
   const loadReports = async () => {
     try {
@@ -38,15 +64,59 @@ function ManagementReports() {
       setOrders(data);
     } catch (err) {
       console.error("Reports error:", err);
-      setError(err.response?.data?.detail || "Failed to load report data.");
+
+      setError(
+        err.response?.data?.detail || "Failed to load report data.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadReports();
-  }, []);
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const profile = await api.get("/auth/protected/");
+
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
+
+        setUsername(profile.data.username || "");
+
+        await loadReports();
+      } catch (err) {
+        console.error(err);
+        navigate("/login");
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    navigate("/products");
+  };
+
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
 
   const report = useMemo(() => {
     const completedPaymentStatuses = ["COMPLETED"];
@@ -87,10 +157,14 @@ function ManagementReports() {
       (order) => order.status === "CANCELLED",
     );
 
-    const activeOrders = orders.filter((order) =>
-      ["PAID", "PROCESSING", "ASSIGNED", "OUT_FOR_DELIVERY"].includes(
-        order.status,
-      ),
+    const activeOrders = orders.filter(
+      (order) =>
+        [
+          "PAID",
+          "PROCESSING",
+          "ASSIGNED",
+          "OUT_FOR_DELIVERY",
+        ].includes(order.status),
     );
 
     const totalRevenue = completedOrders.reduce(
@@ -117,8 +191,23 @@ function ManagementReports() {
 
     orders.forEach((order) => {
       const status = order.status || "UNKNOWN";
+
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
+
+    const recentOrders = [...orders]
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.created_at || a.date_created || a.created || 0,
+        ).getTime();
+
+        const dateB = new Date(
+          b.created_at || b.date_created || b.created || 0,
+        ).getTime();
+
+        return dateB - dateA;
+      })
+      .slice(0, 8);
 
     return {
       totalOrders: orders.length,
@@ -134,154 +223,92 @@ function ManagementReports() {
       failedAmount,
       refundedAmount,
       statusCounts,
+      recentOrders,
     };
   }, [orders]);
 
-  const recentOrders = useMemo(() => {
-    return [...orders]
-      .sort((a, b) => {
-        const dateA = new Date(a.created_at || a.date_created || 0);
-        const dateB = new Date(b.created_at || b.date_created || 0);
-        return dateB - dateA;
-      })
-      .slice(0, 6);
-  }, [orders]);
-
   const formatCurrency = (amount) =>
-    `KES ${Number(amount || 0).toLocaleString("en-KE", {
+    `KSh ${Number(amount || 0).toLocaleString("en-KE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
 
-  const formatStatus = (status = "UNKNOWN") =>
-    status
+  const formatStatus = (status) =>
+    String(status || "UNKNOWN")
       .replaceAll("_", " ")
       .toLowerCase()
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-  const formatDate = (date) => {
-    if (!date) {
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "DELIVERED":
+      case "PAID":
+      case "COMPLETED":
+        return "reports-status-success";
+
+      case "CANCELLED":
+      case "FAILED":
+      case "REFUNDED":
+        return "reports-status-danger";
+
+      case "PENDING_PAYMENT":
+      case "PENDING":
+        return "reports-status-warning";
+
+      case "PROCESSING":
+      case "ASSIGNED":
+      case "OUT_FOR_DELIVERY":
+        return "reports-status-info";
+
+      default:
+        return "reports-status-default";
+    }
+  };
+
+  const getOrderCustomer = (order) =>
+    order.customer_username ||
+    order.customer_name ||
+    order.username ||
+    order.customer?.username ||
+    "Customer";
+
+  const getOrderDate = (order) => {
+    const value =
+      order.created_at ||
+      order.date_created ||
+      order.created ||
+      null;
+
+    if (!value) {
       return "—";
     }
 
-    const parsedDate = new Date(date);
+    const date = new Date(value);
 
-    if (Number.isNaN(parsedDate.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return "—";
     }
 
-    return parsedDate.toLocaleDateString("en-KE", {
+    return date.toLocaleDateString("en-KE", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "DELIVERED":
-        return "reports-status reports-status-success";
-      case "CANCELLED":
-        return "reports-status reports-status-danger";
-      case "PENDING_PAYMENT":
-        return "reports-status reports-status-warning";
-      case "PAID":
-      case "PROCESSING":
-      case "ASSIGNED":
-      case "OUT_FOR_DELIVERY":
-        return "reports-status reports-status-info";
-      default:
-        return "reports-status";
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("username");
-    navigate("/login");
-  };
-
-  const menuItems = [
-    {
-      label: "Dashboard",
-      path: "/management/dashboard",
-      icon: BarChart3,
-    },
-    {
-      label: "Products",
-      path: "/management/products",
-      icon: PackageCheck,
-    },
-    {
-      label: "Orders",
-      path: "/management/orders",
-      icon: ShoppingBag,
-    },
-    {
-      label: "Payments",
-      path: "/management/payments",
-      icon: DollarSign,
-    },
-    {
-      label: "Inventory",
-      path: "/management/inventory",
-      icon: PackageCheck,
-    },
-    {
-      label: "Deliveries",
-      path: "/management/deliveries",
-      icon: PackageCheck,
-    },
-    {
-      label: "Drivers",
-      path: "/management/drivers",
-      icon: Users,
-    },
-    {
-      label: "Customers",
-      path: "/management/customers",
-      icon: Users,
-    },
-    {
-      label: "Notifications",
-      path: "/management/notifications",
-      icon: FileText,
-    },
-    {
-      label: "Reports",
-      path: "/management/reports",
-      icon: BarChart3,
-    },
-    {
-      label: "Subscriptions",
-      path: "/management/subscriptions",
-      icon: RefreshCw,
-    },
-  ];
-
   return (
     <div className="management-layout">
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       <aside
         className={`management-sidebar ${
           sidebarOpen ? "management-sidebar-open" : ""
         }`}
       >
         <div className="management-brand">
-          <div className="management-brand-mark">
-            <span>W</span>
-          </div>
+          <div className="management-brand-icon">W</div>
 
           <div>
-            <h2>WaterFlow</h2>
-            <p>Management</p>
+            <h1>WaterFlow</h1>
+            <span>Management</span>
           </div>
 
           <button
@@ -289,44 +316,46 @@ function ManagementReports() {
             className="management-mobile-close"
             onClick={() => setSidebarOpen(false)}
           >
-            ×
+            <X size={20} />
           </button>
         </div>
 
         <nav className="management-nav">
           <p className="management-nav-title">MAIN MENU</p>
 
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = item.label === "Reports";
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`management-nav-item ${
-                  active ? "management-nav-active" : ""
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              type="button"
+              className={`management-nav-item ${
+                label === "Reports" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
         </nav>
 
         <div className="management-sidebar-bottom">
           <button
             type="button"
             className="management-logout-button"
-            onClick={logout}
+            onClick={handleLogout}
           >
-            <XCircle size={18} />
+            <LogOut size={19} />
             <span>Logout</span>
           </button>
         </div>
       </aside>
+
+      {sidebarOpen && (
+        <div
+          className="management-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       <main className="management-main">
         <header className="management-topbar">
@@ -336,208 +365,220 @@ function ManagementReports() {
               className="management-mobile-menu"
               onClick={() => setSidebarOpen(true)}
             >
-              ☰
+              <Menu size={22} />
             </button>
 
             <div>
-              <span className="management-page-label">Management Panel</span>
-              <h1>Reports</h1>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Reports</h2>
             </div>
           </div>
 
           <div className="management-topbar-right">
             <div className="management-user">
-              <div className="management-avatar">A</div>
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
 
               <div className="management-user-info">
-                <strong>{localStorage.getItem("username") || "Admin"}</strong>
-                <span>Management</span>
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
               </div>
             </div>
           </div>
         </header>
 
-        <section className="management-content">
-          <div className="management-page-header">
+        <div className="management-content">
+          <div className="management-welcome reports-page-header">
             <div>
               <h1>Reports</h1>
               <p>
-                Monitor WaterFlow orders, payments, revenue, and delivery
-                performance.
+                Review WaterFlow orders, payments and business activity.
               </p>
             </div>
 
-            <button
-              type="button"
-              className="management-refresh-button"
-              onClick={loadReports}
-              disabled={loading}
-            >
-              <RefreshCw size={16} className={loading ? "reports-spin" : ""} />
-              Refresh
-            </button>
+            <div className="reports-header-actions">
+              <button
+                type="button"
+                className="reports-refresh-button"
+                onClick={loadReports}
+                disabled={loading}
+              >
+                <RefreshCw size={15} />
+                Refresh
+              </button>
+            </div>
           </div>
 
-          {loading && (
-            <div className="management-loading">Loading reports...</div>
-          )}
+          {error && <div className="reports-error">{error}</div>}
 
-          {error && <div className="management-error">{error}</div>}
-
-          {!loading && !error && (
+          {loading ? (
+            <section className="management-panel-card">
+              <div className="reports-loading">
+                <RefreshCw size={24} />
+                <p>Loading reports...</p>
+              </div>
+            </section>
+          ) : (
             <>
-              <div className="management-stat-grid reports-stat-grid">
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <ShoppingBag size={20} />
+              <div className="reports-stat-grid">
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <FileText size={18} />
                   </div>
 
-                  <div>
+                  <div className="reports-stat-content">
                     <span>Total Orders</span>
                     <strong>{report.totalOrders}</strong>
                   </div>
                 </div>
 
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <DollarSign size={20} />
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <DollarSign size={18} />
                   </div>
 
-                  <div>
+                  <div className="reports-stat-content">
                     <span>Total Revenue</span>
                     <strong>{formatCurrency(report.totalRevenue)}</strong>
                   </div>
                 </div>
 
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <CheckCircle2 size={20} />
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <CheckCircle2 size={18} />
                   </div>
 
-                  <div>
+                  <div className="reports-stat-content">
                     <span>Completed Payments</span>
                     <strong>{report.completedOrders}</strong>
                   </div>
                 </div>
 
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <PackageCheck size={20} />
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <Clock3 size={18} />
                   </div>
 
-                  <div>
-                    <span>Delivered Orders</span>
-                    <strong>{report.deliveredOrders}</strong>
-                  </div>
-                </div>
-
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <Clock3 size={20} />
-                  </div>
-
-                  <div>
+                  <div className="reports-stat-content">
                     <span>Pending Payments</span>
                     <strong>{report.pendingPayments}</strong>
                   </div>
                 </div>
 
-                <div className="management-stat-card">
-                  <div className="management-stat-icon">
-                    <XCircle size={20} />
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <XCircle size={18} />
                   </div>
 
-                  <div>
+                  <div className="reports-stat-content">
                     <span>Failed Payments</span>
                     <strong>{report.failedPayments}</strong>
                   </div>
                 </div>
-              </div>
 
-              <div className="reports-summary-grid">
-                <div className="management-panel-card">
-                  <div className="management-panel-header">
-                    <div>
-                      <h2>Payment Summary</h2>
-                      <p>Financial summary calculated from customer orders.</p>
-                    </div>
-
-                    <DollarSign size={20} />
+                <div className="reports-stat-card">
+                  <div className="reports-stat-icon">
+                    <PackageCheck size={18} />
                   </div>
 
-                  <div className="management-report-grid">
-                    <div className="management-report-item">
+                  <div className="reports-stat-content">
+                    <span>Delivered Orders</span>
+                    <strong>{report.deliveredOrders}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="reports-grid">
+                <section className="management-panel-card reports-panel">
+                  <div className="reports-section-header">
+                    <div>
+                      <h3>Payment Summary</h3>
+                      <p>Overview of current payment amounts.</p>
+                    </div>
+
+                    <div className="reports-section-icon">
+                      <DollarSign size={18} />
+                    </div>
+                  </div>
+
+                  <div className="reports-summary-grid">
+                    <div className="reports-summary-item">
                       <span>Completed Revenue</span>
                       <strong>{formatCurrency(report.totalRevenue)}</strong>
                     </div>
 
-                    <div className="management-report-item">
+                    <div className="reports-summary-item">
                       <span>Pending Amount</span>
                       <strong>{formatCurrency(report.pendingAmount)}</strong>
                     </div>
 
-                    <div className="management-report-item">
+                    <div className="reports-summary-item">
                       <span>Failed Amount</span>
                       <strong>{formatCurrency(report.failedAmount)}</strong>
                     </div>
 
-                    <div className="management-report-item">
+                    <div className="reports-summary-item">
                       <span>Refunded Amount</span>
                       <strong>{formatCurrency(report.refundedAmount)}</strong>
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <div className="management-panel-card">
-                  <div className="management-panel-header">
+                <section className="management-panel-card reports-panel">
+                  <div className="reports-section-header">
                     <div>
-                      <h2>Order Overview</h2>
+                      <h3>Order Overview</h3>
                       <p>Current WaterFlow order activity.</p>
                     </div>
 
-                    <ShoppingBag size={20} />
+                    <div className="reports-section-icon">
+                      <BarChart3 size={18} />
+                    </div>
                   </div>
 
                   <div className="reports-overview-list">
-                    <div>
+                    <div className="reports-overview-item">
+                      <span>Total Orders</span>
+                      <strong>{report.totalOrders}</strong>
+                    </div>
+
+                    <div className="reports-overview-item">
                       <span>Active Orders</span>
                       <strong>{report.activeOrders}</strong>
                     </div>
 
-                    <div>
-                      <span>Delivered Orders</span>
+                    <div className="reports-overview-item">
+                      <span>Delivered</span>
                       <strong>{report.deliveredOrders}</strong>
                     </div>
 
-                    <div>
-                      <span>Cancelled Orders</span>
+                    <div className="reports-overview-item">
+                      <span>Cancelled</span>
                       <strong>{report.cancelledOrders}</strong>
                     </div>
-
-                    <div>
-                      <span>Refunded Payments</span>
-                      <strong>{report.refundedPayments}</strong>
-                    </div>
                   </div>
-                </div>
+                </section>
               </div>
 
-              <div className="management-panel-card">
-                <div className="management-panel-header">
+              <section className="management-panel-card reports-panel">
+                <div className="reports-section-header">
                   <div>
-                    <h2>Order Status Summary</h2>
+                    <h3>Order Status Summary</h3>
                     <p>Current status of all WaterFlow orders.</p>
                   </div>
 
-                  <BarChart3 size={20} />
+                  <div className="reports-section-icon">
+                    <BarChart3 size={18} />
+                  </div>
                 </div>
 
                 {Object.keys(report.statusCounts).length === 0 ? (
                   <div className="management-empty-table">
-                    No order data available.
+                    <p>No order data available.</p>
                   </div>
                 ) : (
-                  <div className="reports-status-bars">
+                  <div className="reports-status-list">
                     {Object.entries(report.statusCounts).map(
                       ([status, count]) => {
                         const percentage =
@@ -546,9 +587,15 @@ function ManagementReports() {
                             : 0;
 
                         return (
-                          <div className="reports-status-row" key={status}>
+                          <div
+                            className="reports-status-row"
+                            key={status}
+                          >
                             <div className="reports-status-heading">
-                              <span>{formatStatus(status)}</span>
+                              <span>
+                                {formatStatus(status)}
+                              </span>
+
                               <strong>{count}</strong>
                             </div>
 
@@ -566,63 +613,60 @@ function ManagementReports() {
                     )}
                   </div>
                 )}
-              </div>
+              </section>
 
-              <div className="management-panel-card">
-                <div className="management-panel-header">
+              <section className="management-panel-card reports-panel">
+                <div className="reports-section-header">
                   <div>
-                    <h2>Recent Orders</h2>
-                    <p>Latest customer order activity.</p>
+                    <h3>Recent Orders</h3>
+                    <p>Latest orders recorded by WaterFlow.</p>
                   </div>
-
-                  <Link to="/management/orders" className="reports-view-all">
-                    View all
-                  </Link>
                 </div>
 
-                {recentOrders.length === 0 ? (
+                {report.recentOrders.length === 0 ? (
                   <div className="management-empty-table">
-                    No recent orders available.
+                    <p>No recent orders available.</p>
                   </div>
                 ) : (
-                  <div className="management-table-wrapper">
-                    <table className="management-table reports-table">
+                  <div className="reports-table-wrapper">
+                    <table className="reports-table">
                       <thead>
                         <tr>
                           <th>Order</th>
                           <th>Customer</th>
+                          <th>Date</th>
                           <th>Amount</th>
                           <th>Status</th>
-                          <th>Date</th>
                         </tr>
                       </thead>
 
                       <tbody>
-                        {recentOrders.map((order) => (
+                        {report.recentOrders.map((order) => (
                           <tr key={order.id}>
                             <td>
                               <strong>#{order.id}</strong>
                             </td>
 
                             <td>
-                              {order.customer_username ||
-                                order.customer?.username ||
-                                order.customer_name ||
-                                "Customer"}
+                              {getOrderCustomer(order)}
                             </td>
 
-                            <td>{formatCurrency(order.total_amount)}</td>
+                            <td>
+                              {getOrderDate(order)}
+                            </td>
+
+                            <td className="reports-amount">
+                              {formatCurrency(order.total_amount)}
+                            </td>
 
                             <td>
-                              <span className={getStatusClass(order.status)}>
+                              <span
+                                className={`reports-status ${getStatusClass(
+                                  order.status,
+                                )}`}
+                              >
                                 {formatStatus(order.status)}
                               </span>
-                            </td>
-
-                            <td>
-                              {formatDate(
-                                order.created_at || order.date_created,
-                              )}
                             </td>
                           </tr>
                         ))}
@@ -630,13 +674,14 @@ function ManagementReports() {
                     </table>
                   </div>
                 )}
-              </div>
+              </section>
             </>
           )}
-        </section>
+        </div>
       </main>
     </div>
   );
 }
 
 export default ManagementReports;
+ 

@@ -45,6 +45,7 @@ function ManagementOrders() {
     ["Deliveries", Truck, "/management/deliveries"],
     ["Customers", Users, "/management/customers"],
     ["Drivers", UserRoundCog, "/management/drivers"],
+    ["User Profiles", Users, "/management/user-profiles"],
     ["Notifications", Bell, "/management/notifications"],
     ["Reports", BarChart3, "/management/reports"],
     ["Subscriptions", Repeat, "/management/subscriptions"],
@@ -382,7 +383,6 @@ function ManagementOrders() {
         <div className="management-content">
           <div className="management-welcome orders-management-header">
             <div>
-              <h1>Orders Management</h1>
               <p>
                 Manage customer orders, review order details, and update
                 delivery progress.
@@ -729,4 +729,3 @@ function ManagementOrders() {
 }
 
 export default ManagementOrders;
- 

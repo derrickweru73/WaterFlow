@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   Plus,
   Search,
   UserPlus,
@@ -201,12 +200,6 @@ function ManagementCustomers() {
     navigate(path);
   };
 
-  const handleRefresh = async () => {
-    setMessage("");
-    setError("");
-    await loadCustomers();
-  };
-
   const handleFormChange = (event) => {
     const { name, value } = event.target;
 
@@ -226,6 +219,7 @@ function ManagementCustomers() {
       password: "",
       confirmPassword: "",
     });
+
     setFormError("");
     setShowModal(true);
   };
@@ -460,20 +454,10 @@ function ManagementCustomers() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Customers</h1>
               <p>Manage customer accounts and view their order activity.</p>
             </div>
 
             <div className="customer-header-actions">
-              <button
-                className="customer-refresh-button"
-                onClick={handleRefresh}
-                disabled={loading}
-              >
-                <RefreshCw />
-                Refresh
-              </button>
-
               <button className="customer-add-button" onClick={openCreateModal}>
                 <Plus />
                 Add Customer
@@ -588,7 +572,6 @@ function ManagementCustomers() {
 
                             <div>
                               <strong>{customer.username}</strong>
-
                               <span>ID #{customer.id}</span>
                             </div>
                           </div>

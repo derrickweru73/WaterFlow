@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   Search,
   Check,
   BellRing,
@@ -118,12 +117,6 @@ function ManagementNotifications() {
   const handleNavigation = (path) => {
     setSidebarOpen(false);
     navigate(path);
-  };
-
-  const handleRefresh = async () => {
-    setMessage("");
-    setError("");
-    await loadNotifications();
   };
 
   const markAsRead = async (notification) => {
@@ -375,19 +368,7 @@ function ManagementNotifications() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Notifications</h1>
               <p>Monitor system notifications and customer activity.</p>
-            </div>
-
-            <div className="notification-header-actions">
-              <button
-                className="notification-refresh-button"
-                onClick={handleRefresh}
-                disabled={loading}
-              >
-                <RefreshCw />
-                Refresh
-              </button>
             </div>
           </div>
 
@@ -504,9 +485,7 @@ function ManagementNotifications() {
                   <tbody>
                     {filteredNotifications.map((notification) => {
                       const isRead = getNotificationReadState(notification);
-
                       const Icon = getNotificationIcon(notification);
-
                       const type = getNotificationType(notification);
 
                       return (
@@ -560,6 +539,7 @@ function ManagementNotifications() {
                                 disabled={markingId === notification.id}
                               >
                                 <Check />
+
                                 {markingId === notification.id
                                   ? "Saving..."
                                   : "Mark Read"}

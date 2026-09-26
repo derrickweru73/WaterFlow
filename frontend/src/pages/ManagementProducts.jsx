@@ -16,7 +16,6 @@ import {
   Menu,
   MapPin,
   X,
-  RefreshCw,
   Plus,
   Pencil,
   Trash2,
@@ -425,23 +424,12 @@ function ManagementProducts() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Product Management</h1>
               <p>
                 Manage WaterFlow products, pricing, categories and availability.
               </p>
             </div>
 
             <div className="products-header-actions">
-              <button
-                type="button"
-                className="products-refresh-button"
-                onClick={loadData}
-                disabled={loading}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-
               <button
                 type="button"
                 className="products-add-button"

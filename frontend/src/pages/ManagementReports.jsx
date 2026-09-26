@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   DollarSign,
   CheckCircle2,
   Clock3,
@@ -65,9 +64,7 @@ function ManagementReports() {
     } catch (err) {
       console.error("Reports error:", err);
 
-      setError(
-        err.response?.data?.detail || "Failed to load report data.",
-      );
+      setError(err.response?.data?.detail || "Failed to load report data.");
     } finally {
       setLoading(false);
     }
@@ -157,14 +154,10 @@ function ManagementReports() {
       (order) => order.status === "CANCELLED",
     );
 
-    const activeOrders = orders.filter(
-      (order) =>
-        [
-          "PAID",
-          "PROCESSING",
-          "ASSIGNED",
-          "OUT_FOR_DELIVERY",
-        ].includes(order.status),
+    const activeOrders = orders.filter((order) =>
+      ["PAID", "PROCESSING", "ASSIGNED", "OUT_FOR_DELIVERY"].includes(
+        order.status,
+      ),
     );
 
     const totalRevenue = completedOrders.reduce(
@@ -274,10 +267,7 @@ function ManagementReports() {
 
   const getOrderDate = (order) => {
     const value =
-      order.created_at ||
-      order.date_created ||
-      order.created ||
-      null;
+      order.created_at || order.date_created || order.created || null;
 
     if (!value) {
       return "—";
@@ -391,22 +381,7 @@ function ManagementReports() {
         <div className="management-content">
           <div className="management-welcome reports-page-header">
             <div>
-              <h1>Reports</h1>
-              <p>
-                Review WaterFlow orders, payments and business activity.
-              </p>
-            </div>
-
-            <div className="reports-header-actions">
-              <button
-                type="button"
-                className="reports-refresh-button"
-                onClick={loadReports}
-                disabled={loading}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
+              <p>Review WaterFlow orders, payments and business activity.</p>
             </div>
           </div>
 
@@ -587,15 +562,9 @@ function ManagementReports() {
                             : 0;
 
                         return (
-                          <div
-                            className="reports-status-row"
-                            key={status}
-                          >
+                          <div className="reports-status-row" key={status}>
                             <div className="reports-status-heading">
-                              <span>
-                                {formatStatus(status)}
-                              </span>
-
+                              <span>{formatStatus(status)}</span>
                               <strong>{count}</strong>
                             </div>
 
@@ -647,13 +616,9 @@ function ManagementReports() {
                               <strong>#{order.id}</strong>
                             </td>
 
-                            <td>
-                              {getOrderCustomer(order)}
-                            </td>
+                            <td>{getOrderCustomer(order)}</td>
 
-                            <td>
-                              {getOrderDate(order)}
-                            </td>
+                            <td>{getOrderDate(order)}</td>
 
                             <td className="reports-amount">
                               {formatCurrency(order.total_amount)}
@@ -684,4 +649,3 @@ function ManagementReports() {
 }
 
 export default ManagementReports;
- 

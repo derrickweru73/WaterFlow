@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   Search,
   Pause,
   Play,
@@ -116,12 +115,6 @@ function ManagementSubscriptions() {
   const handleNavigation = (path) => {
     setSidebarOpen(false);
     navigate(path);
-  };
-
-  const handleRefresh = async () => {
-    setMessage("");
-    setError("");
-    await loadSubscriptions();
   };
 
   const getCustomerName = (subscription) => {
@@ -248,13 +241,9 @@ function ManagementSubscriptions() {
 
     return subscriptions.filter((subscription) => {
       const customer = getCustomerName(subscription).toLowerCase();
-
       const product = getProductName(subscription).toLowerCase();
-
       const id = String(subscription.id || "").toLowerCase();
-
       const frequency = getFrequency(subscription).toLowerCase();
-
       const status = getStatus(subscription).toLowerCase();
 
       const matchesSearch =
@@ -387,22 +376,10 @@ function ManagementSubscriptions() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Subscriptions</h1>
               <p>
                 Manage recurring water delivery subscriptions and customer
                 schedules.
               </p>
-            </div>
-
-            <div className="subscription-header-actions">
-              <button
-                className="subscription-refresh-button"
-                onClick={handleRefresh}
-                disabled={loading}
-              >
-                <RefreshCw />
-                Refresh
-              </button>
             </div>
           </div>
 
@@ -536,7 +513,6 @@ function ManagementSubscriptions() {
                   <tbody>
                     {filteredSubscriptions.map((subscription) => {
                       const status = getStatus(subscription);
-
                       const isActionLoading = actionId === subscription.id;
 
                       return (

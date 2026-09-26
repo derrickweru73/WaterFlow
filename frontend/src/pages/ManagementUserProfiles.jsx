@@ -301,7 +301,6 @@ function ManagementUserProfiles() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>User Profiles</h1>
               <p>Manage WaterFlow users and assign their system roles.</p>
             </div>
 
@@ -497,4 +496,3 @@ function ManagementUserProfiles() {
 }
 
 export default ManagementUserProfiles;
- 

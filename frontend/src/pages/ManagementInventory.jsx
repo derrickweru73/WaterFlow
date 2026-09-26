@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   Plus,
   Pencil,
   Trash2,
@@ -139,14 +138,10 @@ function ManagementInventory() {
     }
 
     const product = products.find(
-      (productItem) => productItem.id === item.product
+      (productItem) => productItem.id === item.product,
     );
 
-    return (
-      product?.name ||
-      product?.product_name ||
-      `Product #${item.product}`
-    );
+    return product?.name || product?.product_name || `Product #${item.product}`;
   };
 
   const openAddModal = () => {
@@ -197,12 +192,9 @@ function ManagementInventory() {
       setSaving(true);
 
       if (editingItem) {
-        await api.patch(
-          `/management/inventory/${editingItem.id}/`,
-          {
-            quantity: Number(quantity),
-          }
-        );
+        await api.patch(`/management/inventory/${editingItem.id}/`, {
+          quantity: Number(quantity),
+        });
 
         setMessage("Inventory updated successfully.");
       } else {
@@ -229,7 +221,7 @@ function ManagementInventory() {
         responseData?.detail ||
           responseData?.product?.[0] ||
           responseData?.quantity?.[0] ||
-          "Unable to save inventory."
+          "Unable to save inventory.",
       );
     } finally {
       setSaving(false);
@@ -240,7 +232,7 @@ function ManagementInventory() {
     const productName = getProductName(item);
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete the inventory record for "${productName}"?`
+      `Are you sure you want to delete the inventory record for "${productName}"?`,
     );
 
     if (!confirmed) {
@@ -260,8 +252,7 @@ function ManagementInventory() {
       console.error("Inventory delete error:", error);
 
       setError(
-        error.response?.data?.detail ||
-          "Unable to delete inventory record."
+        error.response?.data?.detail || "Unable to delete inventory record.",
       );
     }
   };
@@ -361,21 +352,10 @@ function ManagementInventory() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Inventory Management</h1>
               <p>Monitor and manage available WaterFlow stock.</p>
             </div>
 
             <div className="inventory-header-actions">
-              <button
-                type="button"
-                className="inventory-refresh-button"
-                onClick={loadInventory}
-                disabled={loading}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-
               <button
                 type="button"
                 className="inventory-add-button"
@@ -388,15 +368,11 @@ function ManagementInventory() {
           </div>
 
           {message && (
-            <div className="inventory-message inventory-success">
-              {message}
-            </div>
+            <div className="inventory-message inventory-success">{message}</div>
           )}
 
           {error && !showModal && (
-            <div className="inventory-message inventory-error">
-              {error}
-            </div>
+            <div className="inventory-message inventory-error">{error}</div>
           )}
 
           <section className="management-panel-card">
@@ -453,23 +429,17 @@ function ManagementInventory() {
                             <strong>{getProductName(item)}</strong>
                           </td>
 
-                          <td className="inventory-quantity">
-                            {quantity}
-                          </td>
+                          <td className="inventory-quantity">{quantity}</td>
 
                           <td>
-                            <span
-                              className={`inventory-status ${statusClass}`}
-                            >
+                            <span className={`inventory-status ${statusClass}`}>
                               {statusText}
                             </span>
                           </td>
 
                           <td>
                             {item.updated_at
-                              ? new Date(
-                                  item.updated_at
-                                ).toLocaleString()
+                              ? new Date(item.updated_at).toLocaleString()
                               : "—"}
                           </td>
 
@@ -510,9 +480,7 @@ function ManagementInventory() {
           <div className="inventory-modal">
             <div className="inventory-modal-header">
               <div>
-                <h2>
-                  {editingItem ? "Edit Inventory" : "Add Inventory"}
-                </h2>
+                <h2>{editingItem ? "Edit Inventory" : "Add Inventory"}</h2>
 
                 <p>
                   {editingItem
@@ -534,16 +502,12 @@ function ManagementInventory() {
             <form onSubmit={handleSave}>
               {!editingItem ? (
                 <div className="inventory-form-group">
-                  <label htmlFor="inventory-product">
-                    Product
-                  </label>
+                  <label htmlFor="inventory-product">Product</label>
 
                   <select
                     id="inventory-product"
                     value={productId}
-                    onChange={(event) =>
-                      setProductId(event.target.value)
-                    }
+                    onChange={(event) => setProductId(event.target.value)}
                     disabled={saving}
                   >
                     <option value="">Select a product</option>
@@ -565,28 +529,20 @@ function ManagementInventory() {
               )}
 
               <div className="inventory-form-group">
-                <label htmlFor="inventory-quantity">
-                  Quantity
-                </label>
+                <label htmlFor="inventory-quantity">Quantity</label>
 
                 <input
                   id="inventory-quantity"
                   type="number"
                   min="0"
                   value={quantity}
-                  onChange={(event) =>
-                    setQuantity(event.target.value)
-                  }
+                  onChange={(event) => setQuantity(event.target.value)}
                   placeholder="Enter quantity"
                   disabled={saving}
                 />
               </div>
 
-              {error && (
-                <div className="inventory-modal-error">
-                  {error}
-                </div>
-              )}
+              {error && <div className="inventory-modal-error">{error}</div>}
 
               <div className="inventory-modal-actions">
                 <button
@@ -606,8 +562,8 @@ function ManagementInventory() {
                   {saving
                     ? "Saving..."
                     : editingItem
-                    ? "Update Inventory"
-                    : "Add Inventory"}
+                      ? "Update Inventory"
+                      : "Add Inventory"}
                 </button>
               </div>
             </form>
@@ -619,4 +575,3 @@ function ManagementInventory() {
 }
 
 export default ManagementInventory;
- 

@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDashboard.css";
@@ -197,14 +196,8 @@ function ManagementDrivers() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Driver Management</h1>
               <p>View WaterFlow delivery drivers.</p>
             </div>
-
-            <button type="button" onClick={loadDrivers} style={refreshButton}>
-              <RefreshCw size={15} />
-              Refresh
-            </button>
           </div>
 
           {message && <div style={messageStyle}>{message}</div>}
@@ -280,17 +273,6 @@ const tdStyle = {
   padding: "15px 10px",
   borderBottom: "1px solid #f0edf3",
   color: "#514b5a",
-};
-
-const refreshButton = {
-  border: "1px solid #e5e1ea",
-  background: "#fff",
-  borderRadius: "9px",
-  padding: "10px 14px",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  gap: "7px",
 };
 
 const messageStyle = {

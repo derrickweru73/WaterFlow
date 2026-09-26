@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  RefreshCw,
   UserPlus,
 } from "lucide-react";
 import api from "../services/api";
@@ -294,21 +293,8 @@ function ManagementDeliveries() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Delivery Management</h1>
               <p>Monitor deliveries and assign them to drivers.</p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                loadDeliveries();
-                loadDrivers();
-              }}
-              style={refreshButton}
-            >
-              <RefreshCw size={15} />
-              Refresh
-            </button>
           </div>
 
           {message && <div style={messageStyle}>{message}</div>}
@@ -471,17 +457,6 @@ const statusStyle = {
   borderRadius: "999px",
   fontSize: "11px",
   fontWeight: 600,
-};
-
-const refreshButton = {
-  border: "1px solid #e5e1ea",
-  background: "#fff",
-  borderRadius: "9px",
-  padding: "10px 14px",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  gap: "7px",
 };
 
 const assignContainer = {

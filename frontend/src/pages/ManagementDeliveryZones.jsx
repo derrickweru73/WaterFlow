@@ -19,7 +19,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDeliveryZones.css";
@@ -361,20 +360,10 @@ function ManagementDeliveryZones() {
         <div className="management-content">
           <div className="management-welcome">
             <div>
-              <h1>Delivery Zones</h1>
               <p>Manage delivery areas and delivery fees for customers.</p>
             </div>
 
             <div className="delivery-zone-header-actions">
-              <button
-                type="button"
-                className="delivery-zone-refresh-button"
-                onClick={loadZones}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-
               <button
                 type="button"
                 className="delivery-zone-add-button"

@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  RefreshCw,
-  CreditCard,
-  X,
-  ExternalLink,
-  Package,
-} from "lucide-react";
+import { CreditCard, X, ExternalLink, Package } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDashboard.css";
 import "./ManagementPayments.css";
@@ -201,22 +195,18 @@ function ManagementPayments() {
       <main className="management-main">
         <header className="management-topbar">
           <div>
-            <h1>Payments Management</h1>
-            <p>View and monitor WaterFlow customer payments.</p>
+            <p className="management-page-label">Management Panel</p>
+            <h2>Payments</h2>
           </div>
-
-          <button
-            type="button"
-            onClick={loadPayments}
-            className="management-refresh-button"
-            disabled={loading}
-          >
-            <RefreshCw size={17} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </header>
 
         <section className="management-content">
+          <div className="management-welcome">
+            <div>
+              <p>View and monitor WaterFlow customer payments.</p>
+            </div>
+          </div>
+
           <div className="management-panel-card">
             <div className="management-panel-header">
               <div>
@@ -228,15 +218,11 @@ function ManagementPayments() {
             </div>
 
             {loading ? (
-              <div className="management-loading">
-                Loading payments...
-              </div>
+              <div className="management-loading">Loading payments...</div>
             ) : error ? (
               <div className="management-empty-table">{error}</div>
             ) : orders.length === 0 ? (
-              <div className="management-empty-table">
-                No payments found.
-              </div>
+              <div className="management-empty-table">No payments found.</div>
             ) : (
               <div className="management-table-wrapper">
                 <table className="management-table">
@@ -265,14 +251,10 @@ function ManagementPayments() {
                           </button>
                         </td>
 
-                        <td>
-                          {order.customer_username || "—"}
-                        </td>
+                        <td>{order.customer_username || "—"}</td>
 
                         <td>
-                          <strong>
-                            {formatAmount(order.total_amount)}
-                          </strong>
+                          <strong>{formatAmount(order.total_amount)}</strong>
                         </td>
 
                         <td>
@@ -281,9 +263,7 @@ function ManagementPayments() {
                               order.payment_status,
                             )}`}
                           >
-                            {formatStatus(
-                              order.payment_status || "PENDING",
-                            )}
+                            {formatStatus(order.payment_status || "PENDING")}
                           </span>
                         </td>
 
@@ -336,16 +316,12 @@ function ManagementPayments() {
               <div className="management-payment-summary">
                 <div>
                   <span>Customer</span>
-                  <strong>
-                    {selectedPayment.customer_username || "—"}
-                  </strong>
+                  <strong>{selectedPayment.customer_username || "—"}</strong>
                 </div>
 
                 <div>
                   <span>Amount</span>
-                  <strong>
-                    {formatAmount(selectedPayment.total_amount)}
-                  </strong>
+                  <strong>{formatAmount(selectedPayment.total_amount)}</strong>
                 </div>
 
                 <div>
@@ -355,9 +331,7 @@ function ManagementPayments() {
                       selectedPayment.payment_status,
                     )}`}
                   >
-                    {formatStatus(
-                      selectedPayment.payment_status || "PENDING",
-                    )}
+                    {formatStatus(selectedPayment.payment_status || "PENDING")}
                   </span>
                 </div>
 
@@ -382,16 +356,12 @@ function ManagementPayments() {
                 <div className="management-payment-info-grid">
                   <div>
                     <span>Payment Reference</span>
-                    <strong>
-                      {getPaymentReference(selectedPayment)}
-                    </strong>
+                    <strong>{getPaymentReference(selectedPayment)}</strong>
                   </div>
 
                   <div>
                     <span>Payment Date</span>
-                    <strong>
-                      {formatDate(selectedPayment.created_at)}
-                    </strong>
+                    <strong>{formatDate(selectedPayment.created_at)}</strong>
                   </div>
                 </div>
               </div>
@@ -423,9 +393,7 @@ function ManagementPayments() {
 
                   <div className="management-payment-full-width">
                     <span>Directions</span>
-                    <strong>
-                      {selectedPayment.directions || "—"}
-                    </strong>
+                    <strong>{selectedPayment.directions || "—"}</strong>
                   </div>
                 </div>
               </div>
@@ -451,9 +419,7 @@ function ManagementPayments() {
                               "Product"}
                           </strong>
 
-                          <span>
-                            Quantity: {Number(item.quantity || 0)}
-                          </span>
+                          <span>Quantity: {Number(item.quantity || 0)}</span>
                         </div>
 
                         <strong>

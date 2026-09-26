@@ -314,6 +314,11 @@ function ManagementDashboard() {
       path: "/management/drivers",
     },
     {
+      label: "User Profiles",
+      icon: UserRoundCog,
+      path: "/management/user-profiles",
+    },
+    {
       label: "Notifications",
       icon: Bell,
       path: "/management/notifications",

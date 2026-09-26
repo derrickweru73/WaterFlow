@@ -1,0 +1,357 @@
+.user-profiles-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.user-profiles-refresh-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border: 1px solid #e5e1ea;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #075985;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.user-profiles-refresh-button:hover {
+    background: #f0f7fa;
+}
+
+.user-profiles-refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.user-profiles-message {
+    margin-bottom: 18px;
+    padding: 12px 15px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.user-profiles-success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.user-profiles-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.user-profiles-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.user-profiles-table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.user-profiles-table th {
+    padding: 13px 10px;
+    border-bottom: 1px solid #ece9f1;
+    color: #777080;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.user-profiles-table td {
+    padding: 15px 10px;
+    border-bottom: 1px solid #f0edf3;
+    color: #514b5a;
+}
+
+.user-profiles-table tbody tr:hover {
+    background: #fafcff;
+}
+
+.user-profile-username {
+    color: #172033 !important;
+}
+
+.user-profile-role,
+.user-profile-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.user-profile-role-customer {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.user-profile-role-driver {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.user-profile-role-management {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.user-profile-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.user-profile-inactive {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.user-profiles-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.user-profile-edit-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 10px;
+    border: 1px solid #bae6fd;
+    border-radius: 7px;
+    background: #e8f7fb;
+    color: #075985;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.user-profile-edit-button:hover {
+    background: #d7f0f7;
+}
+
+.user-profile-edit-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.user-profiles-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55);
+    overflow-y: auto;
+}
+
+.user-profiles-modal {
+    width: 100%;
+    max-width: 500px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+}
+
+.user-profiles-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-profiles-modal-header h2 {
+    margin: 0 0 5px;
+    color: #172033;
+    font-size: 20px;
+}
+
+.user-profiles-modal-header p {
+    margin: 0;
+    color: #7a8797;
+    font-size: 13px;
+}
+
+.user-profiles-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.user-profiles-modal-close:hover {
+    background: #e2e8f0;
+}
+
+.user-profiles-modal form {
+    padding: 24px;
+}
+
+.user-profiles-selected-user {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.user-profiles-selected-user span {
+    color: #7a8797;
+    font-size: 12px;
+}
+
+.user-profiles-selected-user strong {
+    color: #172033;
+    font-size: 14px;
+}
+
+.user-profiles-form-group {
+    margin-bottom: 20px;
+}
+
+.user-profiles-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.user-profiles-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d5dde5;
+    border-radius: 8px;
+    outline: none;
+    background: #ffffff;
+    color: #172033;
+    font-size: 14px;
+}
+
+.user-profiles-form-group select:focus {
+    border-color: #075985;
+    box-shadow: 0 0 0 3px rgba(7, 89, 133, 0.1);
+}
+
+.user-profiles-modal-error {
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.user-profiles-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 5px;
+}
+
+.user-profiles-cancel-button,
+.user-profiles-save-button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.user-profiles-cancel-button {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.user-profiles-cancel-button:hover {
+    background: #e2e8f0;
+}
+
+.user-profiles-save-button {
+    background: #075985;
+    color: #ffffff;
+}
+
+.user-profiles-save-button:hover {
+    background: #0369a1;
+}
+
+.user-profiles-cancel-button:disabled,
+.user-profiles-save-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .user-profiles-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .user-profiles-refresh-button {
+        flex: 1;
+    }
+
+    .user-profiles-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-profiles-modal-overlay {
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .user-profiles-modal {
+        max-height: calc(100vh - 30px);
+    }
+
+    .user-profiles-modal-header {
+        padding: 18px;
+    }
+
+    .user-profiles-modal form {
+        padding: 18px;
+    }
+
+    .user-profiles-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .user-profiles-cancel-button,
+    .user-profiles-save-button {
+        width: 100%;
+    }
+}
+
+ 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -11,37 +12,48 @@ import {
   Bell,
   BarChart3,
   Repeat,
+  MapPin,
   LogOut,
   Menu,
   X,
   RefreshCw,
-  Play,
-  Pause,
-  XCircle,
   Search,
-  CheckCircle2,
+  Pause,
+  Play,
+  Ban,
 } from "lucide-react";
 import api from "../services/api";
 import "./ManagementDashboard.css";
 import "./ManagementSubscriptions.css";
 
 function ManagementSubscriptions() {
+  const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [frequencyFilter, setFrequencyFilter] = useState("ALL");
-  const [search, setSearch] = useState("");
+  const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [frequencyFilter, setFrequencyFilter] = useState("all");
   const [actionId, setActionId] = useState(null);
 
-  const getSubscriptions = (data) => {
-    if (Array.isArray(data)) {
-      return data;
-    }
-
-    return data?.results || [];
-  };
+  const menuItems = [
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Delivery Zones", MapPin, "/management/delivery-zones"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
+  ];
 
   const loadSubscriptions = async () => {
     try {
@@ -50,262 +62,240 @@ function ManagementSubscriptions() {
 
       const response = await api.get("/subscriptions/management/");
 
-      setSubscriptions(getSubscriptions(response.data));
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      setSubscriptions(data);
     } catch (err) {
-      console.error("Failed to load subscriptions:", err);
-
-      if (err.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-        return;
-      }
-
-      if (err.response?.status === 403) {
-        setError("You do not have management access.");
-      } else {
-        setError(
-          err.response?.data?.detail ||
-            "Failed to load subscriptions. Please try again.",
-        );
-      }
-
-      setSubscriptions([]);
+      console.error(err);
+      setError("Unable to load subscriptions.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadSubscriptions();
-  }, []);
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
 
-  const getCustomer = (subscription) => {
-    if (subscription.customer_username) {
-      return subscription.customer_username;
-    }
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-    if (typeof subscription.customer === "string") {
-      return subscription.customer;
-    }
+      try {
+        const profile = await api.get("/auth/protected/");
 
-    if (subscription.customer?.username) {
-      return subscription.customer.username;
-    }
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
 
-    if (subscription.customer?.email) {
-      return subscription.customer.email;
-    }
+        setUsername(profile.data.username || "");
+        await loadSubscriptions();
+      } catch (err) {
+        console.error(err);
+        navigate("/login");
+      }
+    };
 
-    return `User #${subscription.customer || "—"}`;
+    loadPage();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
   };
 
-  const getProduct = (subscription) => {
-    if (subscription.items?.length > 0) {
-      return subscription.items
-        .map((item) => {
-          const quantity = item.quantity || 1;
-          return `${item.product_name} × ${quantity}`;
-        })
-        .join(", ");
-    }
-
-    return "—";
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
   };
 
-  const getFrequency = (subscription) => subscription.frequency || "—";
+  const handleRefresh = async () => {
+    setMessage("");
+    setError("");
+    await loadSubscriptions();
+  };
 
-  const getStatus = (subscription) => subscription.status || "ACTIVE";
+  const getCustomerName = (subscription) => {
+    return (
+      subscription.customer_username ||
+      subscription.customer_name ||
+      subscription.customer?.username ||
+      subscription.customer?.name ||
+      (typeof subscription.customer === "string"
+        ? subscription.customer
+        : "Customer")
+    );
+  };
 
-  const getNextDelivery = (subscription) =>
-    subscription.next_delivery_date || "—";
+  const getProductName = (subscription) => {
+    return (
+      subscription.product_name ||
+      subscription.product?.name ||
+      subscription.product?.title ||
+      "Water Refill"
+    );
+  };
+
+  const getFrequency = (subscription) => {
+    return String(
+      subscription.frequency ||
+        subscription.interval ||
+        subscription.billing_frequency ||
+        "—",
+    );
+  };
+
+  const getStatus = (subscription) => {
+    return String(subscription.status || "UNKNOWN").toUpperCase();
+  };
+
+  const getQuantity = (subscription) => {
+    return (
+      subscription.quantity ||
+      subscription.items?.reduce(
+        (total, item) => total + Number(item.quantity || 0),
+        0,
+      ) ||
+      0
+    );
+  };
+
+  const getAmount = (subscription) => {
+    return Number(
+      subscription.total_amount ||
+        subscription.amount ||
+        subscription.price ||
+        0,
+    );
+  };
+
+  const getNextDeliveryDate = (subscription) => {
+    return (
+      subscription.next_delivery_date ||
+      subscription.next_delivery ||
+      subscription.next_delivery_at ||
+      null
+    );
+  };
 
   const formatDate = (date) => {
-    if (!date || date === "—") {
+    if (!date) {
       return "—";
     }
 
-    const parsedDate = new Date(date);
+    const parsed = new Date(date);
 
-    if (Number.isNaN(parsedDate.getTime())) {
-      return String(date);
+    if (Number.isNaN(parsed.getTime())) {
+      return "—";
     }
 
-    return parsedDate.toLocaleDateString("en-KE", {
-      year: "numeric",
+    return parsed.toLocaleDateString("en-KE", {
+      day: "2-digit",
       month: "short",
-      day: "numeric",
+      year: "numeric",
     });
   };
 
-  const getStatusClass = (status) => {
-    const normalized = String(status).toUpperCase();
-
-    if (normalized === "ACTIVE") {
-      return "subscription-status-active";
-    }
-
-    if (normalized === "PAUSED") {
-      return "subscription-status-paused";
-    }
-
-    if (normalized === "PENDING_PAYMENT") {
-      return "subscription-status-pending";
-    }
-
-    if (normalized === "CANCELLED") {
-      return "subscription-status-cancelled";
-    }
-
-    return "subscription-status-pending";
+  const formatAmount = (amount) => {
+    return `KES ${Number(amount || 0).toLocaleString()}`;
   };
 
-  const performAction = async (subscription, action) => {
-    const actionText = {
-      pause: "pause",
-      resume: "resume",
-      cancel: "cancel",
-    };
-
-    if (action === "cancel") {
-      const confirmed = window.confirm(
-        `Are you sure you want to cancel subscription #${subscription.id}?`,
-      );
-
-      if (!confirmed) {
-        return;
-      }
-    }
+  const handleAction = async (subscription, action) => {
+    const subscriptionId = subscription.id;
 
     try {
-      setActionId(subscription.id);
+      setActionId(subscriptionId);
       setError("");
+      setMessage("");
 
-      const response = await api.patch(
-        `/subscriptions/management/${subscription.id}/action/`,
-        {
-          action,
-        },
-      );
+      await api.patch(`/subscriptions/management/${subscriptionId}/action/`, {
+        action,
+      });
 
-      setSubscriptions((current) =>
-        current.map((item) =>
-          item.id === subscription.id ? response.data : item,
-        ),
-      );
+      if (action === "pause") {
+        setMessage("Subscription paused successfully.");
+      } else if (action === "resume") {
+        setMessage("Subscription resumed successfully.");
+      } else if (action === "cancel") {
+        setMessage("Subscription cancelled successfully.");
+      } else {
+        setMessage("Subscription updated successfully.");
+      }
+
+      await loadSubscriptions();
     } catch (err) {
-      console.error(`Failed to ${actionText[action]} subscription:`, err);
+      console.error(err);
 
-      setError(
-        err.response?.data?.detail ||
-          `Failed to ${actionText[action]} subscription.`,
-      );
+      const detail = err.response?.data?.detail || err.response?.data?.message;
+
+      setError(detail || "Unable to update the subscription.");
     } finally {
       setActionId(null);
     }
   };
 
   const filteredSubscriptions = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
     return subscriptions.filter((subscription) => {
-      const status = String(getStatus(subscription)).toUpperCase();
-      const frequency = String(getFrequency(subscription)).toUpperCase();
-      const customer = getCustomer(subscription).toLowerCase();
-      const product = getProduct(subscription).toLowerCase();
-      const query = search.trim().toLowerCase();
+      const customer = getCustomerName(subscription).toLowerCase();
 
-      if (statusFilter !== "ALL" && status !== statusFilter) {
-        return false;
-      }
+      const product = getProductName(subscription).toLowerCase();
 
-      if (frequencyFilter !== "ALL" && frequency !== frequencyFilter) {
-        return false;
-      }
+      const id = String(subscription.id || "").toLowerCase();
 
-      if (
-        query &&
-        !customer.includes(query) &&
-        !product.includes(query) &&
-        !String(subscription.id).includes(query)
-      ) {
-        return false;
-      }
+      const frequency = getFrequency(subscription).toLowerCase();
 
-      return true;
+      const status = getStatus(subscription).toLowerCase();
+
+      const matchesSearch =
+        !term ||
+        customer.includes(term) ||
+        product.includes(term) ||
+        id.includes(term);
+
+      const matchesStatus =
+        statusFilter === "all" || status === statusFilter.toLowerCase();
+
+      const matchesFrequency =
+        frequencyFilter === "all" || frequency === frequencyFilter;
+
+      return matchesSearch && matchesStatus && matchesFrequency;
     });
-  }, [subscriptions, statusFilter, frequencyFilter, search]);
+  }, [subscriptions, searchTerm, statusFilter, frequencyFilter]);
 
-  const totalCount = subscriptions.length;
+  const totalSubscriptions = subscriptions.length;
 
-  const activeCount = subscriptions.filter(
-    (subscription) => getStatus(subscription).toUpperCase() === "ACTIVE",
+  const activeSubscriptions = subscriptions.filter(
+    (subscription) => getStatus(subscription) === "ACTIVE",
   ).length;
 
-  const pausedCount = subscriptions.filter(
-    (subscription) => getStatus(subscription).toUpperCase() === "PAUSED",
+  const pausedSubscriptions = subscriptions.filter(
+    (subscription) => getStatus(subscription) === "PAUSED",
   ).length;
 
-  const pendingCount = subscriptions.filter(
-    (subscription) =>
-      getStatus(subscription).toUpperCase() === "PENDING_PAYMENT",
+  const cancelledSubscriptions = subscriptions.filter(
+    (subscription) => getStatus(subscription) === "CANCELLED",
   ).length;
 
-  const menuItems = [
-    {
-      label: "Dashboard",
-      path: "/management/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Products",
-      path: "/management/products",
-      icon: Package,
-    },
-    {
-      label: "Orders",
-      path: "/management/orders",
-      icon: ShoppingCart,
-    },
-    {
-      label: "Payments",
-      path: "/management/payments",
-      icon: CreditCard,
-    },
-    {
-      label: "Inventory",
-      path: "/management/inventory",
-      icon: Boxes,
-    },
-    {
-      label: "Deliveries",
-      path: "/management/deliveries",
-      icon: Truck,
-    },
-    {
-      label: "Drivers",
-      path: "/management/drivers",
-      icon: UserRoundCog,
-    },
-    {
-      label: "Customers",
-      path: "/management/customers",
-      icon: Users,
-    },
-    {
-      label: "Notifications",
-      path: "/management/notifications",
-      icon: Bell,
-    },
-    {
-      label: "Reports",
-      path: "/management/reports",
-      icon: BarChart3,
-    },
-    {
-      label: "Subscriptions",
-      path: "/management/subscriptions",
-      icon: Repeat,
-    },
-  ];
+  const frequencies = useMemo(() => {
+    return [
+      ...new Set(
+        subscriptions
+          .map((subscription) => getFrequency(subscription))
+          .filter((frequency) => frequency !== "—"),
+      ),
+    ];
+  }, [subscriptions]);
 
   return (
     <div className="management-layout">
@@ -315,60 +305,45 @@ function ManagementSubscriptions() {
         }`}
       >
         <div className="management-brand">
-          <div className="management-brand-mark">W</div>
+          <div className="management-brand-icon">W</div>
 
           <div>
-            <h2>WaterFlow</h2>
+            <h1>WaterFlow</h1>
             <span>Management</span>
           </div>
-        </div>
 
-        <div className="management-nav-title">MAIN MENU</div>
-
-        <nav className="management-nav">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <a
-                key={item.label}
-                href={item.path}
-                className={`management-nav-item ${
-                  item.label === "Subscriptions" ? "management-nav-active" : ""
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
-
-        <div className="management-sidebar-bottom">
           <button
-            type="button"
-            className="management-logout-button"
-            onClick={() => {
-              localStorage.removeItem("access_token");
-              localStorage.removeItem("refresh_token");
-              localStorage.removeItem("username");
-              window.location.href = "/login";
-            }}
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
           >
-            <LogOut size={18} />
-            <span>Logout</span>
+            <X />
           </button>
         </div>
 
-        <button
-          type="button"
-          className="management-mobile-close"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close menu"
-        >
-          <X size={22} />
-        </button>
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              className={`management-nav-item ${
+                label === "Subscriptions" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button className="management-logout-button" onClick={handleLogout}>
+            <LogOut />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
 
       {sidebarOpen && (
@@ -382,271 +357,302 @@ function ManagementSubscriptions() {
         <header className="management-topbar">
           <div className="management-topbar-left">
             <button
-              type="button"
               className="management-mobile-menu"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
-              <Menu size={22} />
+              <Menu />
             </button>
 
             <div>
-              <span className="management-page-label">Management Panel</span>
-
-              <h1>Subscriptions</h1>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Subscriptions</h2>
             </div>
           </div>
 
           <div className="management-topbar-right">
             <div className="management-user">
-              <div className="management-avatar">A</div>
+              <div className="management-avatar">
+                {username ? username.charAt(0).toUpperCase() : "A"}
+              </div>
 
               <div className="management-user-info">
-                <strong>admin</strong>
-                <span>Management</span>
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
               </div>
             </div>
           </div>
         </header>
 
-        <section className="management-content">
-          <div className="subscriptions-page-header">
+        <div className="management-content">
+          <div className="management-welcome">
             <div>
-              <h2>Subscription Management</h2>
-
-              <p>Monitor and manage recurring customer deliveries.</p>
+              <h1>Subscriptions</h1>
+              <p>
+                Manage recurring water delivery subscriptions and customer
+                schedules.
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={loadSubscriptions}
-              className="subscriptions-refresh-button"
-              disabled={loading}
-            >
-              <RefreshCw size={17} />
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
+            <div className="subscription-header-actions">
+              <button
+                className="subscription-refresh-button"
+                onClick={handleRefresh}
+                disabled={loading}
+              >
+                <RefreshCw />
+                Refresh
+              </button>
+            </div>
           </div>
 
-          <div className="subscriptions-summary-grid">
-            <div className="subscriptions-summary-card">
-              <div className="subscriptions-summary-icon">
-                <Repeat size={21} />
+          {message && <div className="subscription-success">{message}</div>}
+
+          {error && <div className="subscription-error">{error}</div>}
+
+          <div className="subscription-stats">
+            <div className="subscription-stat-card">
+              <div className="subscription-stat-icon">
+                <Repeat />
               </div>
 
               <div>
                 <span>Total Subscriptions</span>
-                <strong>{totalCount}</strong>
+                <strong>{totalSubscriptions}</strong>
               </div>
             </div>
 
-            <div className="subscriptions-summary-card">
-              <div className="subscriptions-summary-icon">
-                <CheckCircle2 size={21} />
+            <div className="subscription-stat-card">
+              <div className="subscription-stat-icon active">
+                <Play />
               </div>
 
               <div>
                 <span>Active</span>
-                <strong>{activeCount}</strong>
+                <strong>{activeSubscriptions}</strong>
               </div>
             </div>
 
-            <div className="subscriptions-summary-card">
-              <div className="subscriptions-summary-icon">
-                <Pause size={21} />
+            <div className="subscription-stat-card">
+              <div className="subscription-stat-icon paused">
+                <Pause />
               </div>
 
               <div>
                 <span>Paused</span>
-                <strong>{pausedCount}</strong>
+                <strong>{pausedSubscriptions}</strong>
               </div>
             </div>
 
-            <div className="subscriptions-summary-card">
-              <div className="subscriptions-summary-icon">
-                <RefreshCw size={21} />
+            <div className="subscription-stat-card">
+              <div className="subscription-stat-icon cancelled">
+                <Ban />
               </div>
 
               <div>
-                <span>Awaiting Payment</span>
-                <strong>{pendingCount}</strong>
+                <span>Cancelled</span>
+                <strong>{cancelledSubscriptions}</strong>
               </div>
             </div>
           </div>
 
-          <div className="management-panel-card subscriptions-panel">
-            <div className="subscriptions-panel-header">
+          <section className="management-panel-card">
+            <div className="subscription-section-header">
               <div>
-                <h2>Customer Subscriptions</h2>
-
-                <p>
-                  {filteredSubscriptions.length} subscription
-                  {filteredSubscriptions.length === 1 ? "" : "s"} displayed
-                </p>
-              </div>
-            </div>
-
-            <div className="subscriptions-controls">
-              <div className="subscriptions-search">
-                <Search size={17} />
-
-                <input
-                  type="text"
-                  placeholder="Search customer, product or ID..."
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
+                <h3>Subscription List</h3>
+                <p>{filteredSubscriptions.length} subscriptions displayed</p>
               </div>
 
-              <select
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
-                className="subscriptions-filter"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="PAUSED">Paused</option>
-                <option value="PENDING_PAYMENT">Awaiting Payment</option>
-                <option value="CANCELLED">Cancelled</option>
-              </select>
+              <div className="subscription-filter-row">
+                <div className="subscription-search">
+                  <Search />
+                  <input
+                    type="text"
+                    placeholder="Search subscriptions..."
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                  />
+                </div>
 
-              <select
-                value={frequencyFilter}
-                onChange={(event) => setFrequencyFilter(event.target.value)}
-                className="subscriptions-filter"
-              >
-                <option value="ALL">All Frequencies</option>
-                <option value="WEEKLY">Weekly</option>
-                <option value="BIWEEKLY">Biweekly</option>
-                <option value="MONTHLY">Monthly</option>
-              </select>
+                <select
+                  className="subscription-filter"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                <select
+                  className="subscription-filter"
+                  value={frequencyFilter}
+                  onChange={(event) => setFrequencyFilter(event.target.value)}
+                >
+                  <option value="all">All Frequencies</option>
+
+                  {frequencies.map((frequency) => (
+                    <option key={frequency} value={frequency}>
+                      {frequency}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-            {error && <div className="subscriptions-error">{error}</div>}
 
             {loading ? (
-              <div className="subscriptions-state">
-                <RefreshCw size={24} className="subscriptions-spinner" />
-                <span>Loading subscriptions...</span>
+              <div className="subscription-loading">
+                Loading subscriptions...
               </div>
             ) : filteredSubscriptions.length === 0 ? (
-              <div className="subscriptions-state">
-                <Repeat size={28} />
-                <strong>No subscriptions found.</strong>
-                <span>Try changing your search or filters.</span>
+              <div className="subscription-empty">
+                <Repeat />
+                <h3>No subscriptions found</h3>
+                <p>
+                  {searchTerm ||
+                  statusFilter !== "all" ||
+                  frequencyFilter !== "all"
+                    ? "Try changing your filters."
+                    : "There are no subscriptions yet."}
+                </p>
               </div>
             ) : (
-              <div className="subscriptions-list">
-                {filteredSubscriptions.map((subscription) => {
-                  const status = getStatus(subscription);
-                  const normalizedStatus = status.toUpperCase();
+              <div className="subscription-table-wrapper">
+                <table className="subscription-table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Product</th>
+                      <th>Frequency</th>
+                      <th>Quantity</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Next Delivery</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
 
-                  return (
-                    <div key={subscription.id} className="subscription-card">
-                      <div className="subscription-card-main">
-                        <div className="subscription-card-heading">
-                          <div className="subscription-id">
-                            #{subscription.id}
-                          </div>
+                  <tbody>
+                    {filteredSubscriptions.map((subscription) => {
+                      const status = getStatus(subscription);
 
-                          <span
-                            className={`subscription-status ${getStatusClass(
-                              status,
-                            )}`}
-                          >
-                            {normalizedStatus === "PENDING_PAYMENT"
-                              ? "AWAITING PAYMENT"
-                              : status}
-                          </span>
-                        </div>
+                      const isActionLoading = actionId === subscription.id;
 
-                        <div className="subscription-details">
-                          <div>
-                            <span>Customer</span>
-                            <strong>{getCustomer(subscription)}</strong>
-                          </div>
+                      return (
+                        <tr key={subscription.id}>
+                          <td>
+                            <div className="subscription-customer">
+                              <div className="subscription-avatar">
+                                {getCustomerName(subscription)
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
 
-                          <div>
-                            <span>Product</span>
-                            <strong>{getProduct(subscription)}</strong>
-                          </div>
+                              <div>
+                                <strong>{getCustomerName(subscription)}</strong>
 
-                          <div>
-                            <span>Frequency</span>
-                            <strong>{getFrequency(subscription)}</strong>
-                          </div>
+                                <span>#{subscription.id}</span>
+                              </div>
+                            </div>
+                          </td>
 
-                          <div>
-                            <span>Next Delivery</span>
-                            <strong>
-                              {formatDate(getNextDelivery(subscription))}
-                            </strong>
-                          </div>
-                        </div>
+                          <td>{getProductName(subscription)}</td>
 
-                        <div className="subscription-address">
-                          <span>Delivery Address</span>
-                          <strong>
-                            {subscription.delivery_address || "—"}
-                          </strong>
-                        </div>
-                      </div>
+                          <td>
+                            <span className="subscription-frequency">
+                              {getFrequency(subscription)}
+                            </span>
+                          </td>
 
-                      {normalizedStatus !== "PENDING_PAYMENT" &&
-                        normalizedStatus !== "CANCELLED" && (
-                          <div className="subscription-actions">
-                            {normalizedStatus === "ACTIVE" && (
-                              <button
-                                type="button"
-                                className="subscription-action-button pause"
-                                disabled={actionId === subscription.id}
-                                onClick={() =>
-                                  performAction(subscription, "pause")
-                                }
-                              >
-                                <Pause size={15} />
-                                {actionId === subscription.id
-                                  ? "Saving..."
-                                  : "Pause"}
-                              </button>
-                            )}
+                          <td>{getQuantity(subscription)}</td>
 
-                            {normalizedStatus === "PAUSED" && (
-                              <button
-                                type="button"
-                                className="subscription-action-button resume"
-                                disabled={actionId === subscription.id}
-                                onClick={() =>
-                                  performAction(subscription, "resume")
-                                }
-                              >
-                                <Play size={15} />
-                                {actionId === subscription.id
-                                  ? "Saving..."
-                                  : "Resume"}
-                              </button>
-                            )}
+                          <td className="subscription-amount">
+                            {formatAmount(getAmount(subscription))}
+                          </td>
 
-                            <button
-                              type="button"
-                              className="subscription-action-button cancel"
-                              disabled={actionId === subscription.id}
-                              onClick={() =>
-                                performAction(subscription, "cancel")
-                              }
+                          <td>
+                            <span
+                              className={`subscription-status ${status.toLowerCase()}`}
                             >
-                              <XCircle size={15} />
-                              Cancel
-                            </button>
-                          </div>
-                        )}
-                    </div>
-                  );
-                })}
+                              {status}
+                            </span>
+                          </td>
+
+                          <td>
+                            {formatDate(getNextDeliveryDate(subscription))}
+                          </td>
+
+                          <td>
+                            <div className="subscription-actions">
+                              {status === "ACTIVE" && (
+                                <>
+                                  <button
+                                    className="subscription-action pause"
+                                    onClick={() =>
+                                      handleAction(subscription, "pause")
+                                    }
+                                    disabled={isActionLoading}
+                                    title="Pause subscription"
+                                  >
+                                    <Pause />
+                                  </button>
+
+                                  <button
+                                    className="subscription-action cancel"
+                                    onClick={() =>
+                                      handleAction(subscription, "cancel")
+                                    }
+                                    disabled={isActionLoading}
+                                    title="Cancel subscription"
+                                  >
+                                    <Ban />
+                                  </button>
+                                </>
+                              )}
+
+                              {status === "PAUSED" && (
+                                <>
+                                  <button
+                                    className="subscription-action resume"
+                                    onClick={() =>
+                                      handleAction(subscription, "resume")
+                                    }
+                                    disabled={isActionLoading}
+                                    title="Resume subscription"
+                                  >
+                                    <Play />
+                                  </button>
+
+                                  <button
+                                    className="subscription-action cancel"
+                                    onClick={() =>
+                                      handleAction(subscription, "cancel")
+                                    }
+                                    disabled={isActionLoading}
+                                    title="Cancel subscription"
+                                  >
+                                    <Ban />
+                                  </button>
+                                </>
+                              )}
+
+                              {status === "CANCELLED" && (
+                                <span className="subscription-no-action">
+                                  —
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
     </div>
   );

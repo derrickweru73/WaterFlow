@@ -1,21 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
   Bell,
-  BarChart3,
-  Repeat,
-  MapPin,
-  LogOut,
-  Menu,
-  X,
   Search,
   Check,
   BellRing,
@@ -24,14 +10,12 @@ import {
   CheckCircle,
 } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementNotifications.css";
 
 function ManagementNotifications() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,21 +24,6 @@ function ManagementNotifications() {
   const [readFilter, setReadFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [markingId, setMarkingId] = useState(null);
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Delivery Zones", MapPin, "/management/delivery-zones"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const loadNotifications = async () => {
     try {
@@ -97,7 +66,6 @@ function ManagementNotifications() {
           return;
         }
 
-        setUsername(profile.data.username || "");
         await loadNotifications();
       } catch (err) {
         console.error(err);
@@ -107,17 +75,6 @@ function ManagementNotifications() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const markAsRead = async (notification) => {
     if (notification.is_read || notification.read) {
@@ -279,291 +236,197 @@ function ManagementNotifications() {
   ).length;
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
+    <ManagementLayout title="Notifications">
+      <div className="management-welcome">
+        <div>
+          <p>Monitor system notifications and customer activity.</p>
+        </div>
+      </div>
+
+      {message && <div className="notification-success">{message}</div>}
+
+      {error && <div className="notification-error">{error}</div>}
+
+      <div className="notification-stats">
+        <div className="notification-stat-card">
+          <div className="notification-stat-icon">
+            <Bell />
+          </div>
 
           <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
+            <span>Total Notifications</span>
+            <strong>{notifications.length}</strong>
           </div>
-
-          <button
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
-          >
-            <X />
-          </button>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
+        <div className="notification-stat-card">
+          <div className="notification-stat-icon unread">
+            <BellRing />
+          </div>
 
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              className={`management-nav-item ${
-                label === "Notifications" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
-          <button className="management-logout-button" onClick={handleLogout}>
-            <LogOut />
-            <span>Logout</span>
-          </button>
+          <div>
+            <span>Unread</span>
+            <strong>{unreadCount}</strong>
+          </div>
         </div>
-      </aside>
 
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+        <div className="notification-stat-card">
+          <div className="notification-stat-icon read">
+            <CheckCircle />
+          </div>
 
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
+          <div>
+            <span>Read</span>
+            <strong>{readCount}</strong>
+          </div>
+        </div>
+      </div>
+
+      <section className="management-panel-card">
+        <div className="notification-section-header">
+          <div>
+            <h3>Notification List</h3>
+            <p>{filteredNotifications.length} notifications displayed</p>
+          </div>
+
+          <div className="notification-filter-row">
+            <div className="notification-search">
+              <Search />
+              <input
+                type="text"
+                placeholder="Search notifications..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+
+            <select
+              value={readFilter}
+              onChange={(event) => setReadFilter(event.target.value)}
+              className="notification-filter"
             >
-              <Menu />
-            </button>
+              <option value="all">All Status</option>
+              <option value="unread">Unread</option>
+              <option value="read">Read</option>
+            </select>
 
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Notifications</h2>
-            </div>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value)}
+              className="notification-filter"
+            >
+              <option value="all">All Types</option>
+
+              {notificationTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
 
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+        {loading ? (
+          <div className="notification-loading">Loading notifications...</div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="notification-empty">
+            <Bell />
+            <h3>No notifications found</h3>
+            <p>
+              {searchTerm || readFilter !== "all" || typeFilter !== "all"
+                ? "Try changing your filters."
+                : "There are no management notifications yet."}
+            </p>
           </div>
-        </header>
+        ) : (
+          <div className="notification-table-wrapper">
+            <table className="notification-table">
+              <thead>
+                <tr>
+                  <th>Notification</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>Monitor system notifications and customer activity.</p>
-            </div>
-          </div>
+              <tbody>
+                {filteredNotifications.map((notification) => {
+                  const isRead = getNotificationReadState(notification);
+                  const Icon = getNotificationIcon(notification);
+                  const type = getNotificationType(notification);
 
-          {message && <div className="notification-success">{message}</div>}
+                  return (
+                    <tr
+                      key={notification.id}
+                      className={isRead ? "" : "notification-row-unread"}
+                    >
+                      <td>
+                        <div className="notification-name">
+                          <div className="notification-icon">
+                            <Icon />
+                          </div>
 
-          {error && <div className="notification-error">{error}</div>}
+                          <div>
+                            <strong>
+                              {getNotificationTitle(notification)}
+                            </strong>
 
-          <div className="notification-stats">
-            <div className="notification-stat-card">
-              <div className="notification-stat-icon">
-                <Bell />
-              </div>
+                            <span>{getNotificationMessage(notification)}</span>
+                          </div>
+                        </div>
+                      </td>
 
-              <div>
-                <span>Total Notifications</span>
-                <strong>{notifications.length}</strong>
-              </div>
-            </div>
+                      <td>
+                        <span className="notification-type">
+                          {type.replace(/_/g, " ")}
+                        </span>
+                      </td>
 
-            <div className="notification-stat-card">
-              <div className="notification-stat-icon unread">
-                <BellRing />
-              </div>
-
-              <div>
-                <span>Unread</span>
-                <strong>{unreadCount}</strong>
-              </div>
-            </div>
-
-            <div className="notification-stat-card">
-              <div className="notification-stat-icon read">
-                <CheckCircle />
-              </div>
-
-              <div>
-                <span>Read</span>
-                <strong>{readCount}</strong>
-              </div>
-            </div>
-          </div>
-
-          <section className="management-panel-card">
-            <div className="notification-section-header">
-              <div>
-                <h3>Notification List</h3>
-                <p>{filteredNotifications.length} notifications displayed</p>
-              </div>
-
-              <div className="notification-filter-row">
-                <div className="notification-search">
-                  <Search />
-                  <input
-                    type="text"
-                    placeholder="Search notifications..."
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                  />
-                </div>
-
-                <select
-                  value={readFilter}
-                  onChange={(event) => setReadFilter(event.target.value)}
-                  className="notification-filter"
-                >
-                  <option value="all">All Status</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                </select>
-
-                <select
-                  value={typeFilter}
-                  onChange={(event) => setTypeFilter(event.target.value)}
-                  className="notification-filter"
-                >
-                  <option value="all">All Types</option>
-
-                  {notificationTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="notification-loading">
-                Loading notifications...
-              </div>
-            ) : filteredNotifications.length === 0 ? (
-              <div className="notification-empty">
-                <Bell />
-                <h3>No notifications found</h3>
-                <p>
-                  {searchTerm || readFilter !== "all" || typeFilter !== "all"
-                    ? "Try changing your filters."
-                    : "There are no management notifications yet."}
-                </p>
-              </div>
-            ) : (
-              <div className="notification-table-wrapper">
-                <table className="notification-table">
-                  <thead>
-                    <tr>
-                      <th>Notification</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredNotifications.map((notification) => {
-                      const isRead = getNotificationReadState(notification);
-                      const Icon = getNotificationIcon(notification);
-                      const type = getNotificationType(notification);
-
-                      return (
-                        <tr
-                          key={notification.id}
-                          className={isRead ? "" : "notification-row-unread"}
+                      <td>
+                        <span
+                          className={`notification-status ${
+                            isRead ? "read" : "unread"
+                          }`}
                         >
-                          <td>
-                            <div className="notification-name">
-                              <div className="notification-icon">
-                                <Icon />
-                              </div>
+                          {isRead ? "Read" : "Unread"}
+                        </span>
+                      </td>
 
-                              <div>
-                                <strong>
-                                  {getNotificationTitle(notification)}
-                                </strong>
+                      <td>{formatDate(getNotificationDate(notification))}</td>
 
-                                <span>
-                                  {getNotificationMessage(notification)}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
+                      <td>
+                        {!isRead && (
+                          <button
+                            className="notification-read-button"
+                            onClick={() => markAsRead(notification)}
+                            disabled={markingId === notification.id}
+                          >
+                            <Check />
 
-                          <td>
-                            <span className="notification-type">
-                              {type.replace(/_/g, " ")}
-                            </span>
-                          </td>
+                            {markingId === notification.id
+                              ? "Saving..."
+                              : "Mark Read"}
+                          </button>
+                        )}
 
-                          <td>
-                            <span
-                              className={`notification-status ${
-                                isRead ? "read" : "unread"
-                              }`}
-                            >
-                              {isRead ? "Read" : "Unread"}
-                            </span>
-                          </td>
-
-                          <td>
-                            {formatDate(getNotificationDate(notification))}
-                          </td>
-
-                          <td>
-                            {!isRead && (
-                              <button
-                                className="notification-read-button"
-                                onClick={() => markAsRead(notification)}
-                                disabled={markingId === notification.id}
-                              >
-                                <Check />
-
-                                {markingId === notification.id
-                                  ? "Saving..."
-                                  : "Mark Read"}
-                              </button>
-                            )}
-
-                            {isRead && (
-                              <span className="notification-read-label">
-                                <Check />
-                                Read
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
-    </div>
+                        {isRead && (
+                          <span className="notification-read-label">
+                            <Check />
+                            Read
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </ManagementLayout>
   );
 }
 

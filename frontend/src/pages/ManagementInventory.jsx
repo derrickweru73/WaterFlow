@@ -1,33 +1,13 @@
 import { useEffect, useState } from "react";
+import { Boxes, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  LogOut,
-  Menu,
-  X,
-  Plus,
-  Pencil,
-  Trash2,
-} from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementInventory.css";
 
 function ManagementInventory() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [inventory, setInventory] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,20 +19,6 @@ function ManagementInventory() {
   const [editingItem, setEditingItem] = useState(null);
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const loadInventory = async () => {
     try {
@@ -101,8 +67,6 @@ function ManagementInventory() {
           return;
         }
 
-        setUsername(profile.data.username || "");
-
         await Promise.all([loadInventory(), loadProducts()]);
       } catch (error) {
         console.error(error);
@@ -112,17 +76,6 @@ function ManagementInventory() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const getProductName = (item) => {
     if (item.product_name) {
@@ -258,222 +211,129 @@ function ManagementInventory() {
   };
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
-
-          <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
-          </div>
-
-          <button
-            type="button"
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
+    <ManagementLayout title="Inventory">
+      <div className="management-welcome">
+        <div>
+          <p>Monitor and manage available WaterFlow stock.</p>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
-
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              type="button"
-              className={`management-nav-item ${
-                label === "Inventory" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon size={19} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
+        <div className="inventory-header-actions">
           <button
             type="button"
-            className="management-logout-button"
-            onClick={handleLogout}
+            className="inventory-add-button"
+            onClick={openAddModal}
           >
-            <LogOut size={19} />
-            <span>Logout</span>
+            <Plus size={16} />
+            Add Inventory
           </button>
         </div>
-      </aside>
+      </div>
 
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
+      {message && (
+        <div className="inventory-message inventory-success">{message}</div>
       )}
 
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              type="button"
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
+      {error && !showModal && (
+        <div className="inventory-message inventory-error">{error}</div>
+      )}
 
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Inventory</h2>
-            </div>
+      <section className="management-panel-card">
+        {loading ? (
+          <div className="management-empty-table">
+            <p>Loading inventory...</p>
           </div>
-
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+        ) : inventory.length === 0 ? (
+          <div className="management-empty-table">
+            <Boxes size={32} />
+            <h4>No inventory found</h4>
+            <p>Click "Add Inventory" to add your first stock record.</p>
           </div>
-        </header>
+        ) : (
+          <div className="inventory-table-wrapper">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>Monitor and manage available WaterFlow stock.</p>
-            </div>
+              <tbody>
+                {inventory.map((item) => {
+                  const quantity =
+                    item.quantity ??
+                    item.stock_quantity ??
+                    item.available_quantity ??
+                    0;
 
-            <div className="inventory-header-actions">
-              <button
-                type="button"
-                className="inventory-add-button"
-                onClick={openAddModal}
-              >
-                <Plus size={16} />
-                Add Inventory
-              </button>
-            </div>
-          </div>
+                  const numericQuantity = Number(quantity);
 
-          {message && (
-            <div className="inventory-message inventory-success">{message}</div>
-          )}
+                  let statusText = "In Stock";
+                  let statusClass = "inventory-stock";
 
-          {error && !showModal && (
-            <div className="inventory-message inventory-error">{error}</div>
-          )}
+                  if (numericQuantity === 0) {
+                    statusText = "Out of Stock";
+                    statusClass = "inventory-out";
+                  } else if (numericQuantity <= 10) {
+                    statusText = "Low Stock";
+                    statusClass = "inventory-low";
+                  }
 
-          <section className="management-panel-card">
-            {loading ? (
-              <div className="management-empty-table">
-                <p>Loading inventory...</p>
-              </div>
-            ) : inventory.length === 0 ? (
-              <div className="management-empty-table">
-                <Boxes size={32} />
-                <h4>No inventory found</h4>
-                <p>Click "Add Inventory" to add your first stock record.</p>
-              </div>
-            ) : (
-              <div className="inventory-table-wrapper">
-                <table className="inventory-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Product</th>
-                      <th>Quantity</th>
-                      <th>Status</th>
-                      <th>Last Updated</th>
-                      <th>Actions</th>
+                  return (
+                    <tr key={item.id}>
+                      <td>#{item.id}</td>
+
+                      <td className="inventory-product-name">
+                        <strong>{getProductName(item)}</strong>
+                      </td>
+
+                      <td className="inventory-quantity">{quantity}</td>
+
+                      <td>
+                        <span className={`inventory-status ${statusClass}`}>
+                          {statusText}
+                        </span>
+                      </td>
+
+                      <td>
+                        {item.updated_at
+                          ? new Date(item.updated_at).toLocaleString()
+                          : "—"}
+                      </td>
+
+                      <td>
+                        <div className="inventory-actions">
+                          <button
+                            type="button"
+                            className="inventory-edit-button"
+                            onClick={() => openEditModal(item)}
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="inventory-delete-button"
+                            onClick={() => handleDelete(item)}
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-
-                  <tbody>
-                    {inventory.map((item) => {
-                      const quantity =
-                        item.quantity ??
-                        item.stock_quantity ??
-                        item.available_quantity ??
-                        0;
-
-                      const numericQuantity = Number(quantity);
-
-                      let statusText = "In Stock";
-                      let statusClass = "inventory-stock";
-
-                      if (numericQuantity === 0) {
-                        statusText = "Out of Stock";
-                        statusClass = "inventory-out";
-                      } else if (numericQuantity <= 10) {
-                        statusText = "Low Stock";
-                        statusClass = "inventory-low";
-                      }
-
-                      return (
-                        <tr key={item.id}>
-                          <td>#{item.id}</td>
-
-                          <td className="inventory-product-name">
-                            <strong>{getProductName(item)}</strong>
-                          </td>
-
-                          <td className="inventory-quantity">{quantity}</td>
-
-                          <td>
-                            <span className={`inventory-status ${statusClass}`}>
-                              {statusText}
-                            </span>
-                          </td>
-
-                          <td>
-                            {item.updated_at
-                              ? new Date(item.updated_at).toLocaleString()
-                              : "—"}
-                          </td>
-
-                          <td>
-                            <div className="inventory-actions">
-                              <button
-                                type="button"
-                                className="inventory-edit-button"
-                                onClick={() => openEditModal(item)}
-                              >
-                                <Pencil size={14} />
-                                Edit
-                              </button>
-
-                              <button
-                                type="button"
-                                className="inventory-delete-button"
-                                onClick={() => handleDelete(item)}
-                              >
-                                <Trash2 size={14} />
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {showModal && (
         <div className="inventory-modal-overlay">
@@ -570,7 +430,7 @@ function ManagementInventory() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

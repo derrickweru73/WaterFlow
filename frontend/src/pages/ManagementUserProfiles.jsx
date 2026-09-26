@@ -1,31 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  LogOut,
-  Menu,
-  X,
-  RefreshCw,
-  Pencil,
-} from "lucide-react";
+import { Users, X, RefreshCw, Pencil } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementUserProfiles.css";
 
 function ManagementUserProfiles() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,21 +18,6 @@ function ManagementUserProfiles() {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState("");
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["User Profiles", Users, "/management/user-profiles"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const loadUsers = async () => {
     try {
@@ -105,17 +72,6 @@ function ManagementUserProfiles() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const openEditModal = (user) => {
     if (
@@ -207,222 +163,127 @@ function ManagementUserProfiles() {
   };
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
-
-          <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
-          </div>
-
-          <button
-            type="button"
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
+    <ManagementLayout title="User Profiles">
+      <div className="management-welcome">
+        <div>
+          <p>Manage WaterFlow users and assign their system roles.</p>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
-
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              type="button"
-              className={`management-nav-item ${
-                label === "User Profiles" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon size={19} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
+        <div className="user-profiles-header-actions">
           <button
             type="button"
-            className="management-logout-button"
-            onClick={handleLogout}
+            className="user-profiles-refresh-button"
+            onClick={loadUsers}
+            disabled={loading}
           >
-            <LogOut size={19} />
-            <span>Logout</span>
+            <RefreshCw size={15} />
+            Refresh
           </button>
         </div>
-      </aside>
+      </div>
 
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
+      {message && (
+        <div className="user-profiles-message user-profiles-success">
+          {message}
+        </div>
       )}
 
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              type="button"
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
+      {error && !showModal && (
+        <div className="user-profiles-message user-profiles-error">{error}</div>
+      )}
 
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>User Profiles</h2>
-            </div>
+      <section className="management-panel-card">
+        {loading ? (
+          <div className="management-empty-table">
+            <p>Loading user profiles...</p>
           </div>
-
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+        ) : users.length === 0 ? (
+          <div className="management-empty-table">
+            <Users size={32} />
+            <h4>No user profiles found</h4>
+            <p>Registered WaterFlow users will appear here.</p>
           </div>
-        </header>
+        ) : (
+          <div className="user-profiles-table-wrapper">
+            <table className="user-profiles-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>Manage WaterFlow users and assign their system roles.</p>
-            </div>
+              <tbody>
+                {users.map((user) => {
+                  const isCurrentUser =
+                    String(user.username).toLowerCase() ===
+                    String(username).toLowerCase();
 
-            <div className="user-profiles-header-actions">
-              <button
-                type="button"
-                className="user-profiles-refresh-button"
-                onClick={loadUsers}
-                disabled={loading}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
-            </div>
-          </div>
+                  return (
+                    <tr key={user.id}>
+                      <td>#{user.id}</td>
 
-          {message && (
-            <div className="user-profiles-message user-profiles-success">
-              {message}
-            </div>
-          )}
+                      <td className="user-profile-username">
+                        <strong>{user.username}</strong>
+                      </td>
 
-          {error && !showModal && (
-            <div className="user-profiles-message user-profiles-error">
-              {error}
-            </div>
-          )}
+                      <td>{user.email || "—"}</td>
 
-          <section className="management-panel-card">
-            {loading ? (
-              <div className="management-empty-table">
-                <p>Loading user profiles...</p>
-              </div>
-            ) : users.length === 0 ? (
-              <div className="management-empty-table">
-                <Users size={32} />
-                <h4>No user profiles found</h4>
-                <p>Registered WaterFlow users will appear here.</p>
-              </div>
-            ) : (
-              <div className="user-profiles-table-wrapper">
-                <table className="user-profiles-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                      <td>{user.phone_number || "—"}</td>
+
+                      <td>
+                        <span
+                          className={`user-profile-role ${getRoleClass(
+                            user.role,
+                          )}`}
+                        >
+                          {getRoleLabel(user.role)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`user-profile-status ${
+                            user.is_active
+                              ? "user-profile-active"
+                              : "user-profile-inactive"
+                          }`}
+                        >
+                          {user.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="user-profiles-actions">
+                          <button
+                            type="button"
+                            className="user-profile-edit-button"
+                            onClick={() => openEditModal(user)}
+                            disabled={isCurrentUser}
+                            title={
+                              isCurrentUser
+                                ? "You cannot change your own role."
+                                : "Change user role"
+                            }
+                          >
+                            <Pencil size={14} />
+                            Change Role
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-
-                  <tbody>
-                    {users.map((user) => {
-                      const isCurrentUser =
-                        String(user.username).toLowerCase() ===
-                        String(username).toLowerCase();
-
-                      return (
-                        <tr key={user.id}>
-                          <td>#{user.id}</td>
-
-                          <td className="user-profile-username">
-                            <strong>{user.username}</strong>
-                          </td>
-
-                          <td>{user.email || "—"}</td>
-
-                          <td>{user.phone_number || "—"}</td>
-
-                          <td>
-                            <span
-                              className={`user-profile-role ${getRoleClass(
-                                user.role,
-                              )}`}
-                            >
-                              {getRoleLabel(user.role)}
-                            </span>
-                          </td>
-
-                          <td>
-                            <span
-                              className={`user-profile-status ${
-                                user.is_active
-                                  ? "user-profile-active"
-                                  : "user-profile-inactive"
-                              }`}
-                            >
-                              {user.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-
-                          <td>
-                            <div className="user-profiles-actions">
-                              <button
-                                type="button"
-                                className="user-profile-edit-button"
-                                onClick={() => openEditModal(user)}
-                                disabled={isCurrentUser}
-                                title={
-                                  isCurrentUser
-                                    ? "You cannot change your own role."
-                                    : "Change user role"
-                                }
-                              >
-                                <Pencil size={14} />
-                                Change Role
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {showModal && (
         <div className="user-profiles-modal-overlay">
@@ -430,7 +291,6 @@ function ManagementUserProfiles() {
             <div className="user-profiles-modal-header">
               <div>
                 <h2>Change User Role</h2>
-
                 <p>Update the system role assigned to this user.</p>
               </div>
 
@@ -491,7 +351,7 @@ function ManagementUserProfiles() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

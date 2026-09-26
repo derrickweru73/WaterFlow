@@ -1,50 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  LogOut,
-  Menu,
-  X,
-  UserPlus,
-} from "lucide-react";
+import { Truck, UserPlus } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 
 function ManagementDeliveries() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [deliveries, setDeliveries] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [selectedDrivers, setSelectedDrivers] = useState({});
   const [assigningDelivery, setAssigningDelivery] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const loadDeliveries = async () => {
     try {
@@ -95,8 +63,6 @@ function ManagementDeliveries() {
           return;
         }
 
-        setUsername(profile.data.username || "");
-
         await Promise.all([loadDeliveries(), loadDrivers()]);
       } catch (error) {
         console.error(error);
@@ -106,17 +72,6 @@ function ManagementDeliveries() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const handleDriverChange = (deliveryId, driverId) => {
     setSelectedDrivers((previous) => ({
@@ -199,233 +154,138 @@ function ManagementDeliveries() {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
-
-          <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
-          </div>
-
-          <button
-            type="button"
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
+    <ManagementLayout title="Deliveries">
+      <div className="management-welcome">
+        <div>
+          <p>Monitor deliveries and assign them to drivers.</p>
         </div>
+      </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
+      {message && <div style={messageStyle}>{message}</div>}
 
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              type="button"
-              className={`management-nav-item ${
-                label === "Deliveries" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon size={19} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
-          <button
-            type="button"
-            className="management-logout-button"
-            onClick={handleLogout}
-          >
-            <LogOut size={19} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              type="button"
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
-
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Deliveries</h2>
-            </div>
+      <section className="management-panel-card">
+        {loading ? (
+          <div className="management-empty-table">
+            <p>Loading deliveries...</p>
           </div>
-
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+        ) : deliveries.length === 0 ? (
+          <div className="management-empty-table">
+            <Truck size={32} />
+            <h4>No deliveries found</h4>
+            <p>Delivery records will appear here.</p>
           </div>
-        </header>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Delivery</th>
+                  <th style={thStyle}>Order</th>
+                  <th style={thStyle}>Driver</th>
+                  <th style={thStyle}>Address</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Created</th>
+                </tr>
+              </thead>
 
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>Monitor deliveries and assign them to drivers.</p>
-            </div>
-          </div>
+              <tbody>
+                {deliveries.map((delivery) => {
+                  const driverName =
+                    delivery.driver_username ||
+                    delivery.driver_name ||
+                    delivery.driver?.username;
 
-          {message && <div style={messageStyle}>{message}</div>}
+                  const isUnassigned = !driverName;
 
-          <section className="management-panel-card">
-            {loading ? (
-              <div className="management-empty-table">
-                <p>Loading deliveries...</p>
-              </div>
-            ) : deliveries.length === 0 ? (
-              <div className="management-empty-table">
-                <Truck size={32} />
-                <h4>No deliveries found</h4>
-                <p>Delivery records will appear here.</p>
-              </div>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Delivery</th>
-                      <th style={thStyle}>Order</th>
-                      <th style={thStyle}>Driver</th>
-                      <th style={thStyle}>Address</th>
-                      <th style={thStyle}>Status</th>
-                      <th style={thStyle}>Created</th>
-                    </tr>
-                  </thead>
+                  return (
+                    <tr key={delivery.id}>
+                      <td style={tdStyle}>
+                        <strong>#{delivery.id}</strong>
+                      </td>
 
-                  <tbody>
-                    {deliveries.map((delivery) => {
-                      const driverName =
-                        delivery.driver_username ||
-                        delivery.driver_name ||
-                        delivery.driver?.username;
+                      <td style={tdStyle}>#{delivery.order || "—"}</td>
 
-                      const isUnassigned = !driverName;
-
-                      return (
-                        <tr key={delivery.id}>
-                          <td style={tdStyle}>
-                            <strong>#{delivery.id}</strong>
-                          </td>
-
-                          <td style={tdStyle}>#{delivery.order || "—"}</td>
-
-                          <td style={tdStyle}>
-                            {isUnassigned ? (
-                              <div style={assignContainer}>
-                                <select
-                                  value={selectedDrivers[delivery.id] || ""}
-                                  onChange={(event) =>
-                                    handleDriverChange(
-                                      delivery.id,
-                                      event.target.value,
-                                    )
-                                  }
-                                  style={selectStyle}
-                                  disabled={assigningDelivery === delivery.id}
-                                >
-                                  <option value="">Select driver</option>
-
-                                  {drivers.map((driver) => (
-                                    <option key={driver.id} value={driver.id}>
-                                      {driver.username}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleAssignDriver(delivery)}
-                                  disabled={
-                                    !selectedDrivers[delivery.id] ||
-                                    assigningDelivery === delivery.id
-                                  }
-                                  style={assignButton}
-                                >
-                                  <UserPlus size={14} />
-
-                                  {assigningDelivery === delivery.id
-                                    ? "Assigning..."
-                                    : "Assign"}
-                                </button>
-                              </div>
-                            ) : (
-                              <div style={assignedDriver}>
-                                <div style={assignedDriverIcon}>
-                                  {driverName.charAt(0).toUpperCase()}
-                                </div>
-
-                                <strong>{driverName}</strong>
-                              </div>
-                            )}
-                          </td>
-
-                          <td style={tdStyle}>
-                            {delivery.delivery_address ||
-                              delivery.address ||
-                              "—"}
-                          </td>
-
-                          <td style={tdStyle}>
-                            <span
-                              style={{
-                                ...statusStyle,
-                                ...getStatusStyle(delivery.status),
-                              }}
+                      <td style={tdStyle}>
+                        {isUnassigned ? (
+                          <div style={assignContainer}>
+                            <select
+                              value={selectedDrivers[delivery.id] || ""}
+                              onChange={(event) =>
+                                handleDriverChange(
+                                  delivery.id,
+                                  event.target.value,
+                                )
+                              }
+                              style={selectStyle}
+                              disabled={assigningDelivery === delivery.id}
                             >
-                              {formatStatus(delivery.status)}
-                            </span>
-                          </td>
+                              <option value="">Select driver</option>
 
-                          <td style={tdStyle}>
-                            {delivery.created_at
-                              ? new Date(
-                                  delivery.created_at,
-                                ).toLocaleDateString("en-KE")
-                              : "—"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
-    </div>
+                              {drivers.map((driver) => (
+                                <option key={driver.id} value={driver.id}>
+                                  {driver.username}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => handleAssignDriver(delivery)}
+                              disabled={
+                                !selectedDrivers[delivery.id] ||
+                                assigningDelivery === delivery.id
+                              }
+                              style={assignButton}
+                            >
+                              <UserPlus size={14} />
+
+                              {assigningDelivery === delivery.id
+                                ? "Assigning..."
+                                : "Assign"}
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={assignedDriver}>
+                            <div style={assignedDriverIcon}>
+                              {driverName.charAt(0).toUpperCase()}
+                            </div>
+
+                            <strong>{driverName}</strong>
+                          </div>
+                        )}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {delivery.delivery_address || delivery.address || "—"}
+                      </td>
+
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            ...statusStyle,
+                            ...getStatusStyle(delivery.status),
+                          }}
+                        >
+                          {formatStatus(delivery.status)}
+                        </span>
+                      </td>
+
+                      <td style={tdStyle}>
+                        {delivery.created_at
+                          ? new Date(delivery.created_at).toLocaleDateString(
+                              "en-KE",
+                            )
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </ManagementLayout>
   );
 }
 

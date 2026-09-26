@@ -1,56 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Package,
   ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  MapPin,
-  LogOut,
-  Menu,
-  X,
+  Package,
   RefreshCw,
-  ChevronRight,
+  X,
   XCircle,
   Save,
 } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementOrders.css";
 
 function ManagementOrders() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [updatingOrder, setUpdatingOrder] = useState(null);
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["User Profiles", Users, "/management/user-profiles"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-    ["Delivery Zones", MapPin, "/management/delivery-zones"],
-  ];
 
   const statusOptions = [
     { value: "PENDING_PAYMENT", label: "Pending Payment" },
@@ -99,17 +68,7 @@ function ManagementOrders() {
           return;
         }
 
-        setUsername(profile.data.username || "");
-
-        try {
-          const response = await api.get("/management/orders/");
-          setOrders(Array.isArray(response.data) ? response.data : []);
-        } catch (error) {
-          console.error("Orders error:", error);
-          setMessage("Unable to load orders.");
-        } finally {
-          setLoading(false);
-        }
+        await loadOrders();
       } catch (error) {
         console.error("Authentication error:", error);
         navigate("/login");
@@ -118,17 +77,6 @@ function ManagementOrders() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const formatStatus = (status) => {
     return String(status || "UNKNOWN")
@@ -289,237 +237,140 @@ function ManagementOrders() {
   };
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
+    <ManagementLayout title="Orders">
+      <div className="management-welcome orders-management-header">
+        <div>
+          <p>
+            Manage customer orders, review order details, and update delivery
+            progress.
+          </p>
+        </div>
 
+        <button
+          type="button"
+          className="orders-refresh-button"
+          onClick={loadOrders}
+          disabled={loading}
+        >
+          <RefreshCw size={15} />
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {message && <div className="orders-management-message">{message}</div>}
+
+      <section className="management-panel-card">
+        <div className="orders-table-header">
           <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
+            <h3>Customer Orders</h3>
+            <p>
+              {orders.length} {orders.length === 1 ? "order" : "orders"} in the
+              system
+            </p>
           </div>
-
-          <button
-            type="button"
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
-
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              type="button"
-              className={`management-nav-item ${
-                label === "Orders" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon size={19} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
-          <button
-            type="button"
-            className="management-logout-button"
-            onClick={handleLogout}
-          >
-            <LogOut size={19} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              type="button"
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
-
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Orders</h2>
-            </div>
+        {loading ? (
+          <div className="management-empty-table">
+            <p>Loading orders...</p>
           </div>
-
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+        ) : orders.length === 0 ? (
+          <div className="management-empty-table">
+            <ShoppingCart size={32} />
+            <h4>No orders found</h4>
+            <p>Customer orders will appear here.</p>
           </div>
-        </header>
+        ) : (
+          <div className="orders-table-wrapper">
+            <table className="orders-management-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
 
-        <div className="management-content">
-          <div className="management-welcome orders-management-header">
-            <div>
-              <p>
-                Manage customer orders, review order details, and update
-                delivery progress.
-              </p>
-            </div>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order.id}>
+                    <td>
+                      <button
+                        type="button"
+                        className="order-number-link"
+                        onClick={() => openOrderDetails(order)}
+                        title={`View order #${order.id}`}
+                      >
+                        #{order.id}
+                      </button>
+                    </td>
 
-            <button
-              type="button"
-              className="orders-refresh-button"
-              onClick={loadOrders}
-              disabled={loading}
-            >
-              <RefreshCw size={15} />
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
+                    <td>
+                      <div className="order-customer">
+                        <div className="order-customer-avatar">
+                          {String(
+                            order.customer_username || order.customer || "U",
+                          )
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+
+                        <span>
+                          {order.customer_username ||
+                            order.customer ||
+                            "Unknown customer"}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="order-items-count">
+                        {getItemCount(order)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <strong className="order-total-amount">
+                        KES {formatAmount(order.total_amount)}
+                      </strong>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`order-payment-badge ${getPaymentClass(
+                          order.payment_status,
+                        )}`}
+                      >
+                        {getPaymentLabel(order.payment_status)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`order-status-badge ${getStatusClass(
+                          order.status,
+                        )}`}
+                      >
+                        {formatStatus(order.status)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="order-date">
+                        {formatDate(order.created_at)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          {message && (
-            <div className="orders-management-message">{message}</div>
-          )}
-
-          <section className="management-panel-card">
-            <div className="orders-table-header">
-              <div>
-                <h3>Customer Orders</h3>
-                <p>
-                  {orders.length} {orders.length === 1 ? "order" : "orders"} in
-                  the system
-                </p>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="management-empty-table">
-                <p>Loading orders...</p>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="management-empty-table">
-                <ShoppingCart size={32} />
-                <h4>No orders found</h4>
-                <p>Customer orders will appear here.</p>
-              </div>
-            ) : (
-              <div className="orders-table-wrapper">
-                <table className="orders-management-table">
-                  <thead>
-                    <tr>
-                      <th>Order</th>
-                      <th>Customer</th>
-                      <th>Items</th>
-                      <th>Total</th>
-                      <th>Payment</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id}>
-                        <td>
-                          <button
-                            type="button"
-                            className="order-number-link"
-                            onClick={() => openOrderDetails(order)}
-                            title={`View order #${order.id}`}
-                          >
-                            #{order.id}
-                          </button>
-                        </td>
-
-                        <td>
-                          <div className="order-customer">
-                            <div className="order-customer-avatar">
-                              {String(
-                                order.customer_username ||
-                                  order.customer ||
-                                  "U",
-                              )
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-
-                            <span>
-                              {order.customer_username ||
-                                order.customer ||
-                                "Unknown customer"}
-                            </span>
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="order-items-count">
-                            {getItemCount(order)}
-                          </span>
-                        </td>
-
-                        <td>
-                          <strong className="order-total-amount">
-                            KES {formatAmount(order.total_amount)}
-                          </strong>
-                        </td>
-
-                        <td>
-                          <span
-                            className={`order-payment-badge ${getPaymentClass(
-                              order.payment_status,
-                            )}`}
-                          >
-                            {getPaymentLabel(order.payment_status)}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span
-                            className={`order-status-badge ${getStatusClass(
-                              order.status,
-                            )}`}
-                          >
-                            {formatStatus(order.status)}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="order-date">
-                            {formatDate(order.created_at)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
+        )}
+      </section>
 
       {selectedOrder && (
         <div className="order-details-overlay" onClick={closeOrderDetails}>
@@ -724,7 +575,7 @@ function ManagementOrders() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

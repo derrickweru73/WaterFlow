@@ -1,33 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Package,
   ShoppingCart,
   CreditCard,
-  Boxes,
-  Truck,
   Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  MapPin,
-  LogOut,
-  Menu,
-  X,
   Plus,
   Search,
   UserPlus,
+  X,
 } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementCustomers.css";
 
 function ManagementCustomers() {
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,21 +34,6 @@ function ManagementCustomers() {
   });
 
   const [formError, setFormError] = useState("");
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Delivery Zones", MapPin, "/management/delivery-zones"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const buildCustomers = (orders) => {
     const customerMap = new Map();
@@ -96,7 +69,6 @@ function ManagementCustomers() {
       customer.totalOrders += 1;
 
       const paymentStatus = String(order.payment_status || "").toUpperCase();
-
       const orderStatus = String(order.status || "").toUpperCase();
 
       const completed =
@@ -188,17 +160,6 @@ function ManagementCustomers() {
 
     loadPage();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const handleFormChange = (event) => {
     const { name, value } = event.target;
@@ -365,242 +326,154 @@ function ManagementCustomers() {
   };
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
+    <ManagementLayout title="Customers">
+      <div className="management-welcome">
+        <div>
+          <p>Manage customer accounts and view their order activity.</p>
+        </div>
+
+        <div className="customer-header-actions">
+          <button className="customer-add-button" onClick={openCreateModal}>
+            <Plus />
+            Add Customer
+          </button>
+        </div>
+      </div>
+
+      {message && <div className="customer-success">{message}</div>}
+
+      {error && <div className="customer-error">{error}</div>}
+
+      <div className="customer-stats">
+        <div className="customer-stat-card">
+          <div className="customer-stat-icon">
+            <Users />
+          </div>
 
           <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
+            <span>Total Customers</span>
+            <strong>{totalCustomers}</strong>
           </div>
-
-          <button
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
-          >
-            <X />
-          </button>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
+        <div className="customer-stat-card">
+          <div className="customer-stat-icon">
+            <UserPlus />
+          </div>
 
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              className={`management-nav-item ${
-                label === "Customers" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
-          <button className="management-logout-button" onClick={handleLogout}>
-            <LogOut />
-            <span>Logout</span>
-          </button>
+          <div>
+            <span>Active Customers</span>
+            <strong>{activeCustomers}</strong>
+          </div>
         </div>
-      </aside>
 
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu />
-            </button>
-
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Customers</h2>
-            </div>
+        <div className="customer-stat-card">
+          <div className="customer-stat-icon">
+            <ShoppingCart />
           </div>
 
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
-
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+          <div>
+            <span>Total Orders</span>
+            <strong>{totalOrders}</strong>
           </div>
-        </header>
-
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>Manage customer accounts and view their order activity.</p>
-            </div>
-
-            <div className="customer-header-actions">
-              <button className="customer-add-button" onClick={openCreateModal}>
-                <Plus />
-                Add Customer
-              </button>
-            </div>
-          </div>
-
-          {message && <div className="customer-success">{message}</div>}
-
-          {error && <div className="customer-error">{error}</div>}
-
-          <div className="customer-stats">
-            <div className="customer-stat-card">
-              <div className="customer-stat-icon">
-                <Users />
-              </div>
-
-              <div>
-                <span>Total Customers</span>
-                <strong>{totalCustomers}</strong>
-              </div>
-            </div>
-
-            <div className="customer-stat-card">
-              <div className="customer-stat-icon">
-                <UserPlus />
-              </div>
-
-              <div>
-                <span>Active Customers</span>
-                <strong>{activeCustomers}</strong>
-              </div>
-            </div>
-
-            <div className="customer-stat-card">
-              <div className="customer-stat-icon">
-                <ShoppingCart />
-              </div>
-
-              <div>
-                <span>Total Orders</span>
-                <strong>{totalOrders}</strong>
-              </div>
-            </div>
-
-            <div className="customer-stat-card">
-              <div className="customer-stat-icon">
-                <CreditCard />
-              </div>
-
-              <div>
-                <span>Customer Revenue</span>
-                <strong>{formatAmount(totalRevenue)}</strong>
-              </div>
-            </div>
-          </div>
-
-          <section className="management-panel-card">
-            <div className="customer-section-header">
-              <div>
-                <h3>Customer List</h3>
-                <p>{filteredCustomers.length} customers displayed</p>
-              </div>
-
-              <div className="customer-search">
-                <Search />
-                <input
-                  type="text"
-                  placeholder="Search customers..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="customer-loading">Loading customers...</div>
-            ) : filteredCustomers.length === 0 ? (
-              <div className="customer-empty">
-                <Users />
-                <h3>No customers found</h3>
-                <p>
-                  {searchTerm
-                    ? "Try changing your search."
-                    : "No customer accounts are available yet."}
-                </p>
-              </div>
-            ) : (
-              <div className="customer-table-wrapper">
-                <table className="customer-table">
-                  <thead>
-                    <tr>
-                      <th>Customer</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Orders</th>
-                      <th>Total Spent</th>
-                      <th>Last Order</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredCustomers.map((customer) => (
-                      <tr key={customer.id}>
-                        <td>
-                          <div className="customer-name">
-                            <div className="customer-avatar">
-                              {String(customer.username || "C")
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-
-                            <div>
-                              <strong>{customer.username}</strong>
-                              <span>ID #{customer.id}</span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td>{customer.email}</td>
-
-                        <td>{customer.phone}</td>
-
-                        <td>
-                          <span className="customer-order-count">
-                            {customer.totalOrders}
-                          </span>
-                        </td>
-
-                        <td className="customer-amount">
-                          {formatAmount(customer.totalSpent)}
-                        </td>
-
-                        <td>{formatDate(customer.lastOrder)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
         </div>
-      </main>
+
+        <div className="customer-stat-card">
+          <div className="customer-stat-icon">
+            <CreditCard />
+          </div>
+
+          <div>
+            <span>Customer Revenue</span>
+            <strong>{formatAmount(totalRevenue)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <section className="management-panel-card">
+        <div className="customer-section-header">
+          <div>
+            <h3>Customer List</h3>
+            <p>{filteredCustomers.length} customers displayed</p>
+          </div>
+
+          <div className="customer-search">
+            <Search />
+            <input
+              type="text"
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="customer-loading">Loading customers...</div>
+        ) : filteredCustomers.length === 0 ? (
+          <div className="customer-empty">
+            <Users />
+            <h3>No customers found</h3>
+            <p>
+              {searchTerm
+                ? "Try changing your search."
+                : "No customer accounts are available yet."}
+            </p>
+          </div>
+        ) : (
+          <div className="customer-table-wrapper">
+            <table className="customer-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Orders</th>
+                  <th>Total Spent</th>
+                  <th>Last Order</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredCustomers.map((customer) => (
+                  <tr key={customer.id}>
+                    <td>
+                      <div className="customer-name">
+                        <div className="customer-avatar">
+                          {String(customer.username || "C")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+
+                        <div>
+                          <strong>{customer.username}</strong>
+                          <span>ID #{customer.id}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>{customer.email}</td>
+
+                    <td>{customer.phone}</td>
+
+                    <td>
+                      <span className="customer-order-count">
+                        {customer.totalOrders}
+                      </span>
+                    </td>
+
+                    <td className="customer-amount">
+                      {formatAmount(customer.totalSpent)}
+                    </td>
+
+                    <td>{formatDate(customer.lastOrder)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {showModal && (
         <div
@@ -711,7 +584,7 @@ function ManagementCustomers() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

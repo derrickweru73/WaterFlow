@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { CreditCard, X, ExternalLink, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementPayments.css";
 
 function ManagementPayments() {
@@ -109,7 +109,7 @@ function ManagementPayments() {
     setSelectedPayment(null);
   };
 
-  const openOrder = (orderId) => {
+  const openOrder = () => {
     setSelectedPayment(null);
     navigate("/management/orders");
   };
@@ -129,164 +129,91 @@ function ManagementPayments() {
   };
 
   return (
-    <div className="management-layout">
-      <aside className="management-sidebar">
-        <div className="management-brand">
-          <h2>WaterFlow</h2>
-          <span>Management</span>
+    <ManagementLayout title="Payments">
+      <div className="management-welcome">
+        <div>
+          <p>View and monitor WaterFlow customer payments.</p>
         </div>
+      </div>
 
-        <nav className="management-nav">
-          <a href="/management/dashboard" className="management-nav-item">
-            Dashboard
-          </a>
-
-          <a href="/management/products" className="management-nav-item">
-            Products
-          </a>
-
-          <a href="/management/orders" className="management-nav-item">
-            Orders
-          </a>
-
-          <a
-            href="/management/payments"
-            className="management-nav-item management-nav-active"
-          >
-            Payments
-          </a>
-
-          <a href="/management/inventory" className="management-nav-item">
-            Inventory
-          </a>
-
-          <a href="/management/deliveries" className="management-nav-item">
-            Deliveries
-          </a>
-
-          <a href="/management/customers" className="management-nav-item">
-            Customers
-          </a>
-
-          <a href="/management/drivers" className="management-nav-item">
-            Drivers
-          </a>
-
-          <a href="/management/notifications" className="management-nav-item">
-            Notifications
-          </a>
-
-          <a href="/management/reports" className="management-nav-item">
-            Reports
-          </a>
-
-          <a href="/management/subscriptions" className="management-nav-item">
-            Subscriptions
-          </a>
-        </nav>
-
-        <div className="management-sidebar-bottom">
-          <a href="/login" className="management-nav-item">
-            Logout
-          </a>
-        </div>
-      </aside>
-
-      <main className="management-main">
-        <header className="management-topbar">
+      <div className="management-panel-card">
+        <div className="management-panel-header">
           <div>
-            <p className="management-page-label">Management Panel</p>
-            <h2>Payments</h2>
-          </div>
-        </header>
-
-        <section className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>View and monitor WaterFlow customer payments.</p>
-            </div>
+            <h2>Customer Payments</h2>
+            <p>Payment information from customer orders.</p>
           </div>
 
-          <div className="management-panel-card">
-            <div className="management-panel-header">
-              <div>
-                <h2>Customer Payments</h2>
-                <p>Payment information from customer orders.</p>
-              </div>
+          <CreditCard size={22} />
+        </div>
 
-              <CreditCard size={22} />
-            </div>
+        {loading ? (
+          <div className="management-loading">Loading payments...</div>
+        ) : error ? (
+          <div className="management-empty-table">{error}</div>
+        ) : orders.length === 0 ? (
+          <div className="management-empty-table">No payments found.</div>
+        ) : (
+          <div className="management-table-wrapper">
+            <table className="management-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Payment Status</th>
+                  <th>Order Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
 
-            {loading ? (
-              <div className="management-loading">Loading payments...</div>
-            ) : error ? (
-              <div className="management-empty-table">{error}</div>
-            ) : orders.length === 0 ? (
-              <div className="management-empty-table">No payments found.</div>
-            ) : (
-              <div className="management-table-wrapper">
-                <table className="management-table">
-                  <thead>
-                    <tr>
-                      <th>Order</th>
-                      <th>Customer</th>
-                      <th>Amount</th>
-                      <th>Payment Status</th>
-                      <th>Order Status</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order.id}>
+                    <td>
+                      <button
+                        type="button"
+                        className="management-payment-order-link"
+                        onClick={() => openPaymentDetails(order)}
+                        title={`View payment details for order #${order.id}`}
+                      >
+                        #{order.id}
+                      </button>
+                    </td>
 
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id}>
-                        <td>
-                          <button
-                            type="button"
-                            className="management-payment-order-link"
-                            onClick={() => openPaymentDetails(order)}
-                            title={`View payment details for order #${order.id}`}
-                          >
-                            #{order.id}
-                          </button>
-                        </td>
+                    <td>{order.customer_username || "—"}</td>
 
-                        <td>{order.customer_username || "—"}</td>
+                    <td>
+                      <strong>{formatAmount(order.total_amount)}</strong>
+                    </td>
 
-                        <td>
-                          <strong>{formatAmount(order.total_amount)}</strong>
-                        </td>
+                    <td>
+                      <span
+                        className={`management-status ${getPaymentStatusClass(
+                          order.payment_status,
+                        )}`}
+                      >
+                        {formatStatus(order.payment_status || "PENDING")}
+                      </span>
+                    </td>
 
-                        <td>
-                          <span
-                            className={`management-status ${getPaymentStatusClass(
-                              order.payment_status,
-                            )}`}
-                          >
-                            {formatStatus(order.payment_status || "PENDING")}
-                          </span>
-                        </td>
+                    <td>
+                      <span
+                        className={`management-status ${getOrderStatusClass(
+                          order.status,
+                        )}`}
+                      >
+                        {formatStatus(order.status)}
+                      </span>
+                    </td>
 
-                        <td>
-                          <span
-                            className={`management-status ${getOrderStatusClass(
-                              order.status,
-                            )}`}
-                          >
-                            {formatStatus(order.status)}
-                          </span>
-                        </td>
-
-                        <td>{formatDate(order.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    <td>{formatDate(order.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
-      </main>
+        )}
+      </div>
 
       {selectedPayment && (
         <div
@@ -460,7 +387,7 @@ function ManagementPayments() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

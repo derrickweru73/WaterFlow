@@ -1,35 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  Boxes,
-  Truck,
-  Users,
-  UserRoundCog,
-  Bell,
-  BarChart3,
-  Repeat,
-  LogOut,
-  Menu,
-  MapPin,
-  X,
-  Plus,
-  Pencil,
-  Trash2,
-  Search,
-} from "lucide-react";
+import { Package, X, Plus, Pencil, Trash2, Search } from "lucide-react";
 import api from "../services/api";
-import "./ManagementDashboard.css";
+import ManagementLayout from "../components/ManagementLayout";
 import "./ManagementProducts.css";
 
 function ManagementProducts() {
   const navigate = useNavigate();
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("");
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -52,21 +29,6 @@ function ManagementProducts() {
     category_id: "",
     is_active: true,
   });
-
-  const menuItems = [
-    ["Dashboard", LayoutDashboard, "/management/dashboard"],
-    ["Products", Package, "/management/products"],
-    ["Delivery Zones", MapPin, "/management/delivery-zones"],
-    ["Orders", ShoppingCart, "/management/orders"],
-    ["Payments", CreditCard, "/management/payments"],
-    ["Inventory", Boxes, "/management/inventory"],
-    ["Deliveries", Truck, "/management/deliveries"],
-    ["Customers", Users, "/management/customers"],
-    ["Drivers", UserRoundCog, "/management/drivers"],
-    ["Notifications", Bell, "/management/notifications"],
-    ["Reports", BarChart3, "/management/reports"],
-    ["Subscriptions", Repeat, "/management/subscriptions"],
-  ];
 
   const loadData = async () => {
     try {
@@ -121,8 +83,6 @@ function ManagementProducts() {
           return;
         }
 
-        setUsername(profile.data.username || "admin");
-
         await loadData();
       } catch (err) {
         console.error("Management authentication error:", err);
@@ -152,17 +112,6 @@ function ManagementProducts() {
       );
     });
   }, [products, searchTerm]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/products");
-  };
-
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
-  };
 
   const openAddModal = () => {
     setEditingProduct(null);
@@ -330,242 +279,148 @@ function ManagementProducts() {
   };
 
   return (
-    <div className="management-layout">
-      <aside
-        className={`management-sidebar ${
-          sidebarOpen ? "management-sidebar-open" : ""
-        }`}
-      >
-        <div className="management-brand">
-          <div className="management-brand-icon">W</div>
-
-          <div>
-            <h1>WaterFlow</h1>
-            <span>Management</span>
-          </div>
-
-          <button
-            type="button"
-            className="management-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
+    <ManagementLayout title="Products">
+      <div className="management-welcome">
+        <div>
+          <p>
+            Manage WaterFlow products, pricing, categories and availability.
+          </p>
         </div>
 
-        <nav className="management-nav">
-          <p className="management-nav-title">MAIN MENU</p>
-
-          {menuItems.map(([label, Icon, path]) => (
-            <button
-              key={label}
-              type="button"
-              className={`management-nav-item ${
-                label === "Products" ? "management-nav-active" : ""
-              }`}
-              onClick={() => handleNavigation(path)}
-            >
-              <Icon size={19} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="management-sidebar-bottom">
+        <div className="products-header-actions">
           <button
             type="button"
-            className="management-logout-button"
-            onClick={handleLogout}
+            className="products-add-button"
+            onClick={openAddModal}
           >
-            <LogOut size={19} />
-            <span>Logout</span>
+            <Plus size={16} />
+            Add Product
           </button>
         </div>
-      </aside>
+      </div>
 
-      {sidebarOpen && (
-        <div
-          className="management-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
+      {message && (
+        <div className="products-message products-success">{message}</div>
       )}
 
-      <main className="management-main">
-        <header className="management-topbar">
-          <div className="management-topbar-left">
-            <button
-              type="button"
-              className="management-mobile-menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
+      {error && !showModal && (
+        <div className="products-message products-error">{error}</div>
+      )}
 
-            <div>
-              <p className="management-page-label">Management Panel</p>
-              <h2>Products</h2>
-            </div>
+      <section className="management-panel-card">
+        <div className="products-section-header">
+          <div>
+            <h3>Products</h3>
+            <p>
+              {filteredProducts.length} product
+              {filteredProducts.length === 1 ? "" : "s"} found
+            </p>
           </div>
 
-          <div className="management-topbar-right">
-            <div className="management-user">
-              <div className="management-avatar">
-                {username ? username.charAt(0).toUpperCase() : "A"}
-              </div>
+          <div className="products-search">
+            <Search size={15} />
 
-              <div className="management-user-info">
-                <strong>{username || "admin"}</strong>
-                <span>Administrator</span>
-              </div>
-            </div>
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
           </div>
-        </header>
-
-        <div className="management-content">
-          <div className="management-welcome">
-            <div>
-              <p>
-                Manage WaterFlow products, pricing, categories and availability.
-              </p>
-            </div>
-
-            <div className="products-header-actions">
-              <button
-                type="button"
-                className="products-add-button"
-                onClick={openAddModal}
-              >
-                <Plus size={16} />
-                Add Product
-              </button>
-            </div>
-          </div>
-
-          {message && (
-            <div className="products-message products-success">{message}</div>
-          )}
-
-          {error && !showModal && (
-            <div className="products-message products-error">{error}</div>
-          )}
-
-          <section className="management-panel-card">
-            <div className="products-section-header">
-              <div>
-                <h3>Products</h3>
-                <p>
-                  {filteredProducts.length} product
-                  {filteredProducts.length === 1 ? "" : "s"} found
-                </p>
-              </div>
-
-              <div className="products-search">
-                <Search size={15} />
-
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="management-empty-table">
-                <p>Loading products...</p>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="management-empty-table">
-                <Package size={32} />
-                <h4>No products found</h4>
-                <p>Click "Add Product" to add your first product.</p>
-              </div>
-            ) : (
-              <div className="products-table-wrapper">
-                <table className="products-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Product</th>
-                      <th>Category</th>
-                      <th>Price</th>
-                      <th>Inventory</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredProducts.map((product) => {
-                      const inventoryQuantity =
-                        product.inventory?.quantity ?? 0;
-
-                      return (
-                        <tr key={product.id}>
-                          <td>#{product.id}</td>
-
-                          <td className="products-product-name">
-                            <strong>{product.name}</strong>
-
-                            {product.description && (
-                              <span>{product.description}</span>
-                            )}
-                          </td>
-
-                          <td>{product.category?.name || "Uncategorized"}</td>
-
-                          <td className="products-price">
-                            {formatAmount(product.price)}
-                          </td>
-
-                          <td className="products-inventory">
-                            {inventoryQuantity}
-                          </td>
-
-                          <td>
-                            <span
-                              className={`products-status ${
-                                product.is_active
-                                  ? "products-active"
-                                  : "products-inactive"
-                              }`}
-                            >
-                              {product.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-
-                          <td>
-                            <div className="products-actions">
-                              <button
-                                type="button"
-                                className="products-edit-button"
-                                onClick={() => openEditModal(product)}
-                              >
-                                <Pencil size={14} />
-                                Edit
-                              </button>
-
-                              <button
-                                type="button"
-                                className="products-delete-button"
-                                onClick={() => handleDelete(product)}
-                              >
-                                <Trash2 size={14} />
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
         </div>
-      </main>
+
+        {loading ? (
+          <div className="management-empty-table">
+            <p>Loading products...</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="management-empty-table">
+            <Package size={32} />
+            <h4>No products found</h4>
+            <p>Click "Add Product" to add your first product.</p>
+          </div>
+        ) : (
+          <div className="products-table-wrapper">
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Inventory</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredProducts.map((product) => {
+                  const inventoryQuantity = product.inventory?.quantity ?? 0;
+
+                  return (
+                    <tr key={product.id}>
+                      <td>#{product.id}</td>
+
+                      <td className="products-product-name">
+                        <strong>{product.name}</strong>
+
+                        {product.description && (
+                          <span>{product.description}</span>
+                        )}
+                      </td>
+
+                      <td>{product.category?.name || "Uncategorized"}</td>
+
+                      <td className="products-price">
+                        {formatAmount(product.price)}
+                      </td>
+
+                      <td className="products-inventory">
+                        {inventoryQuantity}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`products-status ${
+                            product.is_active
+                              ? "products-active"
+                              : "products-inactive"
+                          }`}
+                        >
+                          {product.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="products-actions">
+                          <button
+                            type="button"
+                            className="products-edit-button"
+                            onClick={() => openEditModal(product)}
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="products-delete-button"
+                            onClick={() => handleDelete(product)}
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {showModal && (
         <div className="products-modal-overlay">
@@ -701,7 +556,7 @@ function ManagementProducts() {
           </div>
         </div>
       )}
-    </div>
+    </ManagementLayout>
   );
 }
 

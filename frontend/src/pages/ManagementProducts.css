@@ -252,11 +252,14 @@
     justify-content: center;
     padding: 20px;
     background: rgba(15, 23, 42, 0.55);
+    overflow-y: auto;
 }
 
 .products-modal {
     width: 100%;
     max-width: 500px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     background: #ffffff;
     border-radius: 14px;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
@@ -287,6 +290,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     width: 34px;
     height: 34px;
     border: none;
@@ -469,5 +473,31 @@
     .products-form-row {
         grid-template-columns: 1fr;
         gap: 0;
+    }
+
+    .products-modal-overlay {
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .products-modal {
+        max-height: calc(100vh - 30px);
+    }
+
+    .products-modal-header {
+        padding: 18px;
+    }
+
+    .products-modal form {
+        padding: 18px;
+    }
+
+    .products-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .products-cancel-button,
+    .products-save-button {
+        width: 100%;
     }
 }

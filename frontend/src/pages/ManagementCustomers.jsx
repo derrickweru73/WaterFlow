@@ -12,6 +12,7 @@ import {
   Bell,
   BarChart3,
   Repeat,
+  MapPin,
   LogOut,
   Menu,
   X,
@@ -28,15 +29,12 @@ function ManagementCustomers() {
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [username, setUsername] = useState("admin");
-
+  const [username, setUsername] = useState("");
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -51,85 +49,22 @@ function ManagementCustomers() {
   const [formError, setFormError] = useState("");
 
   const menuItems = [
-    {
-      label: "Dashboard",
-      path: "/management/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Products",
-      path: "/management/products",
-      icon: Package,
-    },
-    {
-      label: "Orders",
-      path: "/management/orders",
-      icon: ShoppingCart,
-    },
-    {
-      label: "Payments",
-      path: "/management/payments",
-      icon: CreditCard,
-    },
-    {
-      label: "Inventory",
-      path: "/management/inventory",
-      icon: Boxes,
-    },
-    {
-      label: "Deliveries",
-      path: "/management/deliveries",
-      icon: Truck,
-    },
-    {
-      label: "Drivers",
-      path: "/management/drivers",
-      icon: UserRoundCog,
-    },
-    {
-      label: "Customers",
-      path: "/management/customers",
-      icon: Users,
-    },
-    {
-      label: "Notifications",
-      path: "/management/notifications",
-      icon: Bell,
-    },
-    {
-      label: "Reports",
-      path: "/management/reports",
-      icon: BarChart3,
-    },
-    {
-      label: "Subscriptions",
-      path: "/management/subscriptions",
-      icon: Repeat,
-    },
+    ["Dashboard", LayoutDashboard, "/management/dashboard"],
+    ["Products", Package, "/management/products"],
+    ["Delivery Zones", MapPin, "/management/delivery-zones"],
+    ["Orders", ShoppingCart, "/management/orders"],
+    ["Payments", CreditCard, "/management/payments"],
+    ["Inventory", Boxes, "/management/inventory"],
+    ["Deliveries", Truck, "/management/deliveries"],
+    ["Customers", Users, "/management/customers"],
+    ["Drivers", UserRoundCog, "/management/drivers"],
+    ["Notifications", Bell, "/management/notifications"],
+    ["Reports", BarChart3, "/management/reports"],
+    ["Subscriptions", Repeat, "/management/subscriptions"],
   ];
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, []);
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    setSidebarOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("username");
-    navigate("/login");
-  };
-
   const buildCustomers = (orders) => {
-    const customerMap = {};
+    const customerMap = new Map();
 
     orders.forEach((order) => {
       const customerId =
@@ -145,45 +80,62 @@ function ManagementCustomers() {
           ? order.customer
           : `Customer ${customerId}`);
 
-      const key = String(customerId);
-
-      if (!customerMap[key]) {
-        customerMap[key] = {
+      if (!customerMap.has(String(customerId))) {
+        customerMap.set(String(customerId), {
           id: customerId,
           username: customerUsername,
-          orderCount: 0,
+          email: order.customer_email || order.email || "—",
+          phone: order.customer_phone || order.phone_number || "—",
+          totalOrders: 0,
           totalSpent: 0,
           lastOrder: null,
-        };
+        });
       }
 
-      customerMap[key].orderCount += 1;
+      const customer = customerMap.get(String(customerId));
 
-      const paidStatuses = [
-        "PAID",
-        "PROCESSING",
-        "ASSIGNED",
-        "OUT_FOR_DELIVERY",
-        "DELIVERED",
-      ];
+      customer.totalOrders += 1;
 
-      if (
-        order.payment_status === "COMPLETED" ||
-        paidStatuses.includes(order.status)
-      ) {
-        customerMap[key].totalSpent += Number(order.total_amount || 0);
+      const paymentStatus = String(order.payment_status || "").toUpperCase();
+
+      const orderStatus = String(order.status || "").toUpperCase();
+
+      const completed =
+        paymentStatus === "COMPLETED" ||
+        [
+          "PAID",
+          "PROCESSING",
+          "ASSIGNED",
+          "OUT_FOR_DELIVERY",
+          "DELIVERED",
+        ].includes(orderStatus);
+
+      if (completed) {
+        customer.totalSpent += Number(order.total_amount || 0);
       }
 
       if (
-        !customerMap[key].lastOrder ||
-        new Date(order.created_at) > new Date(customerMap[key].lastOrder)
+        order.created_at &&
+        (!customer.lastOrder ||
+          new Date(order.created_at) > new Date(customer.lastOrder))
       ) {
-        customerMap[key].lastOrder = order.created_at;
+        customer.lastOrder = order.created_at;
+      }
+
+      if (customer.email === "—" && (order.customer_email || order.email)) {
+        customer.email = order.customer_email || order.email;
+      }
+
+      if (
+        customer.phone === "—" &&
+        (order.customer_phone || order.phone_number)
+      ) {
+        customer.phone = order.customer_phone || order.phone_number;
       }
     });
 
-    return Object.values(customerMap).sort(
-      (a, b) => b.orderCount - a.orderCount,
+    return Array.from(customerMap.values()).sort((a, b) =>
+      String(a.username).localeCompare(String(b.username)),
     );
   };
 
@@ -193,79 +145,66 @@ function ManagementCustomers() {
       setError("");
 
       const response = await api.get("/management/orders/");
-
       const orders = Array.isArray(response.data)
         ? response.data
         : response.data?.results || [];
 
       setCustomers(buildCustomers(orders));
     } catch (err) {
-      console.error("Failed to load customers:", err);
-
-      setError(
-        err.response?.data?.detail ||
-          "Failed to load customers. Please try again.",
-      );
+      console.error(err);
+      setError("Unable to load customers.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCustomers();
-  }, []);
+    const loadPage = async () => {
+      const token = localStorage.getItem("access_token");
 
-  const filteredCustomers = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-    if (!search) {
-      return customers;
-    }
+      try {
+        const profile = await api.get("/auth/protected/");
 
-    return customers.filter((customer) => {
-      return (
-        String(customer.username).toLowerCase().includes(search) ||
-        String(customer.id).toLowerCase().includes(search)
-      );
-    });
-  }, [customers, searchTerm]);
+        if (
+          String(profile.data.role || "")
+            .trim()
+            .toUpperCase() !== "MANAGEMENT"
+        ) {
+          navigate("/products");
+          return;
+        }
 
-  const formatAmount = (amount) =>
-    `KES ${Number(amount || 0).toLocaleString()}`;
+        setUsername(profile.data.username || "");
+        await loadCustomers();
+      } catch (err) {
+        console.error(err);
+        navigate("/login");
+      }
+    };
 
-  const formatDate = (date) => {
-    if (!date) return "—";
+    loadPage();
+  }, [navigate]);
 
-    return new Date(date).toLocaleDateString("en-KE", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/products");
   };
 
-  const resetForm = () => {
-    setForm({
-      username: "",
-      email: "",
-      phone_number: "",
-      password: "",
-      confirmPassword: "",
-    });
-
-    setFormError("");
+  const handleNavigation = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
   };
 
-  const openModal = () => {
-    resetForm();
+  const handleRefresh = async () => {
     setMessage("");
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    if (saving) return;
-
-    setShowModal(false);
-    resetForm();
+    setError("");
+    await loadCustomers();
   };
 
   const handleFormChange = (event) => {
@@ -275,6 +214,27 @@ function ManagementCustomers() {
       ...current,
       [name]: value,
     }));
+
+    setFormError("");
+  };
+
+  const openCreateModal = () => {
+    setForm({
+      username: "",
+      email: "",
+      phone_number: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setFormError("");
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    if (saving) return;
+
+    setShowModal(false);
+    setFormError("");
   };
 
   const handleCreateCustomer = async (event) => {
@@ -283,8 +243,13 @@ function ManagementCustomers() {
     setFormError("");
     setMessage("");
 
-    if (!form.username.trim()) {
-      setFormError("Username is required.");
+    if (
+      !form.username.trim() ||
+      !form.email.trim() ||
+      !form.phone_number.trim() ||
+      !form.password
+    ) {
+      setFormError("Please complete all required fields.");
       return;
     }
 
@@ -309,27 +274,100 @@ function ManagementCustomers() {
       });
 
       setShowModal(false);
-      resetForm();
+
+      setForm({
+        username: "",
+        email: "",
+        phone_number: "",
+        password: "",
+        confirmPassword: "",
+      });
+
       setMessage("Customer created successfully.");
 
       await loadCustomers();
     } catch (err) {
-      console.error("Failed to create customer:", err);
+      console.error(err);
 
-      const responseData = err.response?.data;
+      const data = err.response?.data;
 
-      if (typeof responseData === "object" && responseData !== null) {
-        const firstError = Object.values(responseData).flat()[0];
-
+      if (typeof data === "string") {
+        setFormError(data);
+      } else if (data?.username) {
         setFormError(
-          firstError || "Failed to create customer. Please try again.",
+          Array.isArray(data.username) ? data.username[0] : data.username,
         );
+      } else if (data?.email) {
+        setFormError(Array.isArray(data.email) ? data.email[0] : data.email);
+      } else if (data?.detail) {
+        setFormError(data.detail);
       } else {
-        setFormError("Failed to create customer. Please try again.");
+        setFormError("Unable to create customer.");
       }
     } finally {
       setSaving(false);
     }
+  };
+
+  const filteredCustomers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return customers;
+    }
+
+    return customers.filter((customer) => {
+      return (
+        String(customer.username || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(customer.email || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(customer.phone || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(customer.id || "")
+          .toLowerCase()
+          .includes(term)
+      );
+    });
+  }, [customers, searchTerm]);
+
+  const totalCustomers = customers.length;
+
+  const totalOrders = customers.reduce(
+    (sum, customer) => sum + customer.totalOrders,
+    0,
+  );
+
+  const totalRevenue = customers.reduce(
+    (sum, customer) => sum + Number(customer.totalSpent || 0),
+    0,
+  );
+
+  const activeCustomers = customers.filter(
+    (customer) => customer.totalOrders > 0,
+  ).length;
+
+  const formatAmount = (amount) => {
+    return `KES ${Number(amount || 0).toLocaleString()}`;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return "—";
+    }
+
+    return parsed.toLocaleDateString("en-KE", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -343,54 +381,42 @@ function ManagementCustomers() {
           <div className="management-brand-icon">W</div>
 
           <div>
-            <h2>WaterFlow</h2>
+            <h1>WaterFlow</h1>
             <span>Management</span>
           </div>
-        </div>
 
-        <div className="management-nav-title">MAIN MENU</div>
-
-        <nav className="management-nav">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.path}
-                type="button"
-                onClick={() => handleNavigation(item.path)}
-                className={`management-nav-item ${
-                  item.path === "/management/customers"
-                    ? "management-nav-active"
-                    : ""
-                }`}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="management-sidebar-bottom">
           <button
-            type="button"
-            onClick={handleLogout}
-            className="management-logout-button"
+            className="management-mobile-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
           >
-            <LogOut size={18} />
-            <span>Logout</span>
+            <X />
           </button>
         </div>
 
-        <button
-          type="button"
-          className="management-mobile-close"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close menu"
-        >
-          <X size={21} />
-        </button>
+        <nav className="management-nav">
+          <p className="management-nav-title">MAIN MENU</p>
+
+          {menuItems.map(([label, Icon, path]) => (
+            <button
+              key={label}
+              className={`management-nav-item ${
+                label === "Customers" ? "management-nav-active" : ""
+              }`}
+              onClick={() => handleNavigation(path)}
+            >
+              <Icon />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="management-sidebar-bottom">
+          <button className="management-logout-button" onClick={handleLogout}>
+            <LogOut />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
 
       {sidebarOpen && (
@@ -404,128 +430,116 @@ function ManagementCustomers() {
         <header className="management-topbar">
           <div className="management-topbar-left">
             <button
-              type="button"
               className="management-mobile-menu"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
-              <Menu size={22} />
+              <Menu />
             </button>
 
             <div>
-              <span className="management-page-label">Management Panel</span>
-              <h1>Customers</h1>
+              <p className="management-page-label">Management Panel</p>
+              <h2>Customers</h2>
             </div>
           </div>
 
           <div className="management-topbar-right">
             <div className="management-user">
               <div className="management-avatar">
-                {username.charAt(0).toUpperCase()}
+                {username ? username.charAt(0).toUpperCase() : "A"}
               </div>
 
               <div className="management-user-info">
-                <strong>{username}</strong>
-                <span>Management</span>
+                <strong>{username || "admin"}</strong>
+                <span>Administrator</span>
               </div>
             </div>
           </div>
         </header>
 
-        <section className="management-content">
-          <div className="customers-welcome">
+        <div className="management-content">
+          <div className="management-welcome">
             <div>
-              <h2>Customer Management</h2>
-              <p>Manage WaterFlow customers and view their order activity.</p>
+              <h1>Customers</h1>
+              <p>Manage customer accounts and view their order activity.</p>
             </div>
 
-            <div className="customers-header-actions">
+            <div className="customer-header-actions">
               <button
-                type="button"
-                onClick={loadCustomers}
-                className="customers-refresh-button"
+                className="customer-refresh-button"
+                onClick={handleRefresh}
                 disabled={loading}
               >
-                <RefreshCw size={16} />
+                <RefreshCw />
                 Refresh
               </button>
 
-              <button
-                type="button"
-                onClick={openModal}
-                className="customers-add-button"
-              >
-                <Plus size={16} />
+              <button className="customer-add-button" onClick={openCreateModal}>
+                <Plus />
                 Add Customer
               </button>
             </div>
           </div>
 
-          {message && (
-            <div className="customers-message customers-success">{message}</div>
-          )}
+          {message && <div className="customer-success">{message}</div>}
 
-          {error && (
-            <div className="customers-message customers-error">{error}</div>
-          )}
+          {error && <div className="customer-error">{error}</div>}
 
-          <div className="customers-summary">
-            <div className="customers-summary-item">
-              <div className="customers-summary-icon">
-                <Users size={18} />
+          <div className="customer-stats">
+            <div className="customer-stat-card">
+              <div className="customer-stat-icon">
+                <Users />
               </div>
 
               <div>
                 <span>Total Customers</span>
-                <strong>{customers.length}</strong>
+                <strong>{totalCustomers}</strong>
               </div>
             </div>
 
-            <div className="customers-summary-item">
-              <div className="customers-summary-icon">
-                <ShoppingCart size={18} />
+            <div className="customer-stat-card">
+              <div className="customer-stat-icon">
+                <UserPlus />
+              </div>
+
+              <div>
+                <span>Active Customers</span>
+                <strong>{activeCustomers}</strong>
+              </div>
+            </div>
+
+            <div className="customer-stat-card">
+              <div className="customer-stat-icon">
+                <ShoppingCart />
               </div>
 
               <div>
                 <span>Total Orders</span>
-                <strong>
-                  {customers.reduce(
-                    (total, customer) => total + customer.orderCount,
-                    0,
-                  )}
-                </strong>
+                <strong>{totalOrders}</strong>
               </div>
             </div>
 
-            <div className="customers-summary-item">
-              <div className="customers-summary-icon">
-                <CreditCard size={18} />
+            <div className="customer-stat-card">
+              <div className="customer-stat-icon">
+                <CreditCard />
               </div>
 
               <div>
-                <span>Total Customer Spend</span>
-                <strong>
-                  {formatAmount(
-                    customers.reduce(
-                      (total, customer) =>
-                        total + Number(customer.totalSpent || 0),
-                      0,
-                    ),
-                  )}
-                </strong>
+                <span>Customer Revenue</span>
+                <strong>{formatAmount(totalRevenue)}</strong>
               </div>
             </div>
           </div>
 
-          <div className="customers-panel">
-            <div className="customers-panel-header">
+          <section className="management-panel-card">
+            <div className="customer-section-header">
               <div>
-                <h2>Customer List</h2>
-                <p>Customers identified from management orders.</p>
+                <h3>Customer List</h3>
+                <p>{filteredCustomers.length} customers displayed</p>
               </div>
 
-              <div className="customers-search">
-                <Search size={16} />
+              <div className="customer-search">
+                <Search />
                 <input
                   type="text"
                   placeholder="Search customers..."
@@ -536,20 +550,25 @@ function ManagementCustomers() {
             </div>
 
             {loading ? (
-              <div className="customers-empty">Loading customers...</div>
+              <div className="customer-loading">Loading customers...</div>
             ) : filteredCustomers.length === 0 ? (
-              <div className="customers-empty">
-                {searchTerm
-                  ? "No customers match your search."
-                  : "No customers found."}
+              <div className="customer-empty">
+                <Users />
+                <h3>No customers found</h3>
+                <p>
+                  {searchTerm
+                    ? "Try changing your search."
+                    : "No customer accounts are available yet."}
+                </p>
               </div>
             ) : (
-              <div className="customers-table-wrapper">
-                <table className="customers-table">
+              <div className="customer-table-wrapper">
+                <table className="customer-table">
                   <thead>
                     <tr>
                       <th>Customer</th>
-                      <th>Customer ID</th>
+                      <th>Email</th>
+                      <th>Phone</th>
                       <th>Orders</th>
                       <th>Total Spent</th>
                       <th>Last Order</th>
@@ -560,24 +579,32 @@ function ManagementCustomers() {
                     {filteredCustomers.map((customer) => (
                       <tr key={customer.id}>
                         <td>
-                          <div className="customers-name">
-                            <div className="customers-avatar">
-                              {String(customer.username)
+                          <div className="customer-name">
+                            <div className="customer-avatar">
+                              {String(customer.username || "C")
                                 .charAt(0)
                                 .toUpperCase()}
                             </div>
 
-                            <strong>{customer.username}</strong>
+                            <div>
+                              <strong>{customer.username}</strong>
+
+                              <span>ID #{customer.id}</span>
+                            </div>
                           </div>
                         </td>
 
-                        <td className="customers-id">#{customer.id}</td>
+                        <td>{customer.email}</td>
 
-                        <td className="customers-orders">
-                          {customer.orderCount}
+                        <td>{customer.phone}</td>
+
+                        <td>
+                          <span className="customer-order-count">
+                            {customer.totalOrders}
+                          </span>
                         </td>
 
-                        <td className="customers-spent">
+                        <td className="customer-amount">
                           {formatAmount(customer.totalSpent)}
                         </td>
 
@@ -588,107 +615,101 @@ function ManagementCustomers() {
                 </table>
               </div>
             )}
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
 
       {showModal && (
-        <div className="customers-modal-overlay">
-          <div className="customers-modal">
-            <div className="customers-modal-header">
+        <div
+          className="customer-modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
+          <div className="customer-modal">
+            <div className="customer-modal-header">
               <div>
-                <h2>Add Customer</h2>
+                <h3>Add Customer</h3>
                 <p>Create a new WaterFlow customer account.</p>
               </div>
 
               <button
-                type="button"
-                className="customers-modal-close"
+                className="customer-modal-close"
                 onClick={closeModal}
                 disabled={saving}
               >
-                <X size={18} />
+                <X />
               </button>
             </div>
 
-            <form onSubmit={handleCreateCustomer}>
+            <form className="customer-form" onSubmit={handleCreateCustomer}>
               {formError && (
-                <div className="customers-modal-error">{formError}</div>
+                <div className="customer-form-error">{formError}</div>
               )}
 
-              <div className="customers-form-group">
-                <label htmlFor="customer-username">Username</label>
-                <input
-                  id="customer-username"
-                  name="username"
-                  type="text"
-                  value={form.username}
-                  onChange={handleFormChange}
-                  placeholder="Enter username"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="customers-form-group">
-                <label htmlFor="customer-email">Email</label>
-                <input
-                  id="customer-email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleFormChange}
-                  placeholder="Enter email address"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="customers-form-group">
-                <label htmlFor="customer-phone">Phone Number</label>
-                <input
-                  id="customer-phone"
-                  name="phone_number"
-                  type="text"
-                  value={form.phone_number}
-                  onChange={handleFormChange}
-                  placeholder="e.g. 0712345678"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="customers-form-row">
-                <div className="customers-form-group">
-                  <label htmlFor="customer-password">Password</label>
+              <div className="customer-form-grid">
+                <div className="customer-form-group">
+                  <label>Username</label>
                   <input
-                    id="customer-password"
-                    name="password"
+                    type="text"
+                    name="username"
+                    value={form.username}
+                    onChange={handleFormChange}
+                    placeholder="Enter username"
+                  />
+                </div>
+
+                <div className="customer-form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleFormChange}
+                    placeholder="customer@example.com"
+                  />
+                </div>
+
+                <div className="customer-form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="text"
+                    name="phone_number"
+                    value={form.phone_number}
+                    onChange={handleFormChange}
+                    placeholder="07XXXXXXXX"
+                  />
+                </div>
+
+                <div className="customer-form-group">
+                  <label>Password</label>
+                  <input
                     type="password"
+                    name="password"
                     value={form.password}
                     onChange={handleFormChange}
                     placeholder="Minimum 8 characters"
-                    autoComplete="new-password"
                   />
                 </div>
 
-                <div className="customers-form-group">
-                  <label htmlFor="customer-confirm-password">
-                    Confirm Password
-                  </label>
+                <div className="customer-form-group customer-form-full">
+                  <label>Confirm Password</label>
                   <input
-                    id="customer-confirm-password"
-                    name="confirmPassword"
                     type="password"
+                    name="confirmPassword"
                     value={form.confirmPassword}
                     onChange={handleFormChange}
-                    placeholder="Repeat password"
-                    autoComplete="new-password"
+                    placeholder="Confirm password"
                   />
                 </div>
               </div>
 
-              <div className="customers-modal-actions">
+              <div className="customer-modal-actions">
                 <button
                   type="button"
-                  className="customers-cancel-button"
+                  className="customer-cancel-button"
                   onClick={closeModal}
                   disabled={saving}
                 >
@@ -697,10 +718,9 @@ function ManagementCustomers() {
 
                 <button
                   type="submit"
-                  className="customers-save-button"
+                  className="customer-save-button"
                   disabled={saving}
                 >
-                  <UserPlus size={16} />
                   {saving ? "Creating..." : "Create Customer"}
                 </button>
               </div>

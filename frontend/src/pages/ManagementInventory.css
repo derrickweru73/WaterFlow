@@ -1,0 +1,349 @@
+.inventory-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.inventory-refresh-button,
+.inventory-add-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.inventory-refresh-button {
+    border: 1px solid #e5e1ea;
+    background: #ffffff;
+    color: #075985;
+}
+
+.inventory-refresh-button:hover {
+    background: #f0f7fa;
+}
+
+.inventory-refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.inventory-add-button {
+    border: 1px solid #075985;
+    background: #075985;
+    color: #ffffff;
+}
+
+.inventory-add-button:hover {
+    background: #0369a1;
+    border-color: #0369a1;
+}
+
+.inventory-message {
+    margin-bottom: 18px;
+    padding: 12px 15px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.inventory-success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.inventory-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.inventory-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.inventory-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.inventory-table th {
+    padding: 13px 10px;
+    border-bottom: 1px solid #ece9f1;
+    color: #777080;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.inventory-table td {
+    padding: 15px 10px;
+    border-bottom: 1px solid #f0edf3;
+    color: #514b5a;
+}
+
+.inventory-table tbody tr:hover {
+    background: #fafcff;
+}
+
+.inventory-product-name {
+    color: #172033 !important;
+}
+
+.inventory-quantity {
+    color: #172033 !important;
+    font-weight: 700;
+}
+
+.inventory-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.inventory-stock {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.inventory-low {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.inventory-out {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.inventory-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.inventory-edit-button,
+.inventory-delete-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.inventory-edit-button {
+    border: 1px solid #bae6fd;
+    background: #e8f7fb;
+    color: #075985;
+}
+
+.inventory-edit-button:hover {
+    background: #d7f0f7;
+}
+
+.inventory-delete-button {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.inventory-delete-button:hover {
+    background: #fee2e2;
+}
+
+.inventory-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.inventory-modal {
+    width: 100%;
+    max-width: 500px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+}
+
+.inventory-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.inventory-modal-header h2 {
+    margin: 0 0 5px;
+    color: #172033;
+    font-size: 20px;
+}
+
+.inventory-modal-header p {
+    margin: 0;
+    color: #7a8797;
+    font-size: 13px;
+}
+
+.inventory-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.inventory-modal-close:hover {
+    background: #e2e8f0;
+}
+
+.inventory-modal form {
+    padding: 24px;
+}
+
+.inventory-form-group {
+    margin-bottom: 20px;
+}
+
+.inventory-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.inventory-form-group input,
+.inventory-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d5dde5;
+    border-radius: 8px;
+    outline: none;
+    background: #ffffff;
+    color: #172033;
+    font-size: 14px;
+}
+
+.inventory-form-group input:focus,
+.inventory-form-group select:focus {
+    border-color: #075985;
+    box-shadow: 0 0 0 3px rgba(7, 89, 133, 0.1);
+}
+
+.inventory-selected-product {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.inventory-selected-product span {
+    color: #7a8797;
+    font-size: 12px;
+}
+
+.inventory-selected-product strong {
+    color: #172033;
+    font-size: 14px;
+}
+
+.inventory-modal-error {
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.inventory-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 5px;
+}
+
+.inventory-cancel-button,
+.inventory-save-button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.inventory-cancel-button {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.inventory-cancel-button:hover {
+    background: #e2e8f0;
+}
+
+.inventory-save-button {
+    background: #075985;
+    color: #ffffff;
+}
+
+.inventory-save-button:hover {
+    background: #0369a1;
+}
+
+.inventory-cancel-button:disabled,
+.inventory-save-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .inventory-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .inventory-refresh-button,
+    .inventory-add-button {
+        flex: 1;
+    }
+
+    .inventory-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+ 

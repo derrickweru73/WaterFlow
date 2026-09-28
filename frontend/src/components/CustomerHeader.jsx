@@ -7,6 +7,8 @@ import {
   Home,
   Package,
   Repeat,
+  UserRound,
+  LogIn,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -18,6 +20,7 @@ function CustomerHeader({ showLogout = false }) {
   const [cartCount, setCartCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
   const [customerName, setCustomerName] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const fetchCartCount = async () => {
     const token = localStorage.getItem("access_token");
@@ -90,12 +93,14 @@ function CustomerHeader({ showLogout = false }) {
 
     if (!token) {
       setCustomerName("");
+      setIsLoggedIn(false);
       return;
     }
 
     const savedUsername = localStorage.getItem("username") || "";
 
     setCustomerName(savedUsername);
+    setIsLoggedIn(true);
   };
 
   useEffect(() => {
@@ -240,71 +245,82 @@ function CustomerHeader({ showLogout = false }) {
         </nav>
 
         <div className="customer-header-right">
-           
-          {customerName && (
-            <Link
-              to="/profile"
-              aria-label="Open my profile"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                textDecoration: "none",
-                color: "inherit",
-                cursor: "pointer",
-                padding: "6px 8px",
-                borderRadius: "10px",
-                background: "transparent",
-              }}
-            >
-              <div
-                className="customer-avatar"
-                style={{
-                  flexShrink: 0,
-                }}
-              >
-                {customerName.charAt(0).toUpperCase()}
-              </div>
-
-              <div
+          {isLoggedIn && customerName ? (
+            <>
+              <Link
+                to="/profile"
+                aria-label="Open my profile"
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
+                  alignItems: "center",
+                  gap: "10px",
+                  textDecoration: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  padding: "6px 8px",
+                  borderRadius: "10px",
+                  background: "transparent",
                 }}
               >
-                <span
+                <div
+                  className="customer-avatar"
                   style={{
-                    fontSize: "11px",
-                    color: "#777080",
-                    lineHeight: "1.2",
+                    flexShrink: 0,
                   }}
                 >
-                  Welcome
-                </span>
+                  {customerName.charAt(0).toUpperCase()}
+                </div>
 
-                <strong
+                <div
                   style={{
-                    fontSize: "13px",
-                    color: "#172033",
-                    lineHeight: "1.2",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2px",
                   }}
                 >
-                  {customerName}
-                </strong>
-              </div>
-            </Link>
-          )}
-           
-          {showLogout && (
-            <button
-              type="button"
-              className="logout-button"
-              onClick={handleLogout}
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: "#777080",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    Welcome
+                  </span>
+
+                  <strong
+                    style={{
+                      fontSize: "13px",
+                      color: "#172033",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {customerName}
+                  </strong>
+                </div>
+              </Link>
+
+              {showLogout && (
+                <button
+                  type="button"
+                  className="logout-button"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="customer-sign-in">
+                Sign In
+              </Link>
+
+              <Link to="/register" className="customer-sign-up">
+                Sign Up
+              </Link>
+            </>
           )}
         </div>
       </div>
@@ -313,4 +329,4 @@ function CustomerHeader({ showLogout = false }) {
 }
 
 export default CustomerHeader;
- 
+

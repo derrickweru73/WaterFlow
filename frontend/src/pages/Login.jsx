@@ -32,15 +32,43 @@ function Login() {
     setLoading(true);
 
     try {
+      // Step 1: Log the user in
       const response = await api.post("/auth/login/", formData);
 
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("refresh_token", response.data.refresh);
       localStorage.setItem("username", formData.username);
 
+      // Step 2: Get the logged-in user's role
+      const profileResponse = await api.get("/auth/protected/");
+
+      const role = String(profileResponse.data.role || "")
+        .trim()
+        .toUpperCase();
+
+      // Step 3: Send each type of user to the correct dashboard/page
+      if (role === "MANAGEMENT") {
+        navigate("/management/dashboard");
+        return;
+      }
+
+      if (role === "DRIVER") {
+        navigate("/driver/dashboard");
+        return;
+      }
+
+      // Customers can return to the page they originally wanted
       navigate(returnTo);
     } catch (err) {
       console.error("Login error:", err);
+
+      // If the login succeeded but fetching the profile failed,
+      // remove the incomplete login session.
+      if (err.response?.config?.url?.includes("/auth/protected/")) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("username");
+      }
 
       setError(
         err.response?.data?.detail ||

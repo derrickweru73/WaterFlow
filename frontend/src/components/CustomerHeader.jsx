@@ -240,19 +240,62 @@ function CustomerHeader({ showLogout = false }) {
         </nav>
 
         <div className="customer-header-right">
+           
           {customerName && (
-            <Link to="/profile" className="customer-profile">
-              <div className="customer-avatar">
+            <Link
+              to="/profile"
+              aria-label="Open my profile"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                textDecoration: "none",
+                color: "inherit",
+                cursor: "pointer",
+                padding: "6px 8px",
+                borderRadius: "10px",
+                background: "transparent",
+              }}
+            >
+              <div
+                className="customer-avatar"
+                style={{
+                  flexShrink: 0,
+                }}
+              >
                 {customerName.charAt(0).toUpperCase()}
               </div>
 
-              <div className="customer-profile-name">
-                <span>Welcome</span>
-                <strong>{customerName}</strong>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "11px",
+                    color: "#777080",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  Welcome
+                </span>
+
+                <strong
+                  style={{
+                    fontSize: "13px",
+                    color: "#172033",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {customerName}
+                </strong>
               </div>
             </Link>
           )}
-
+           
           {showLogout && (
             <button
               type="button"

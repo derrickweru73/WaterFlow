@@ -57,6 +57,10 @@
     flex-shrink: 0;
 }
 
+.customer-profile-header-text {
+    flex: 1;
+}
+
 .customer-profile-header h1 {
     margin: 0 0 5px;
     color: #172033;
@@ -67,6 +71,45 @@
     margin: 0;
     color: #777080;
     font-size: 14px;
+}
+
+.customer-profile-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 15px;
+    background: #075985;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.customer-profile-edit:hover {
+    background: #0369a1;
+}
+
+.customer-profile-success {
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 9px;
+    background: #f0fdf4;
+    color: #166534;
+    font-size: 13px;
+}
+
+.customer-profile-form-error {
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
 }
 
 .customer-profile-details {
@@ -141,6 +184,119 @@
     background: #fecaca;
 }
 
+/* Edit form */
+
+.customer-profile-form {
+    padding-top: 25px;
+}
+
+.customer-profile-form-group {
+    margin-bottom: 20px;
+}
+
+.customer-profile-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.customer-profile-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 13px;
+    border: 1px solid #d9dee7;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #777080;
+}
+
+.customer-profile-input-wrapper:focus-within {
+    border-color: #075985;
+    box-shadow: 0 0 0 3px rgba(7, 89, 133, 0.08);
+}
+
+.customer-profile-input-wrapper input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #172033;
+    font-size: 14px;
+}
+
+.customer-profile-input-wrapper input::placeholder {
+    color: #a1a1aa;
+}
+
+.customer-profile-readonly {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 13px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #777080;
+    font-size: 14px;
+}
+
+.customer-profile-form-group small {
+    display: block;
+    margin-top: 6px;
+    color: #8a8790;
+    font-size: 12px;
+}
+
+.customer-profile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #eef0f3;
+}
+
+.customer-profile-cancel,
+.customer-profile-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.customer-profile-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.customer-profile-cancel:hover {
+    background: #e2e8f0;
+}
+
+.customer-profile-save {
+    background: #075985;
+    color: #ffffff;
+}
+
+.customer-profile-save:hover {
+    background: #0369a1;
+}
+
+.customer-profile-cancel:disabled,
+.customer-profile-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .customer-profile-loading,
 .customer-profile-error {
     max-width: 900px;
@@ -178,6 +334,15 @@
 
     .customer-profile-header {
         align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .customer-profile-header-text {
+        min-width: 0;
+    }
+
+    .customer-profile-edit {
+        margin-left: auto;
     }
 
     .customer-profile-details {
@@ -187,6 +352,55 @@
     .customer-profile-header h1 {
         font-size: 22px;
     }
+
+    .customer-profile-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .customer-profile-cancel,
+    .customer-profile-save {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+.customer-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.customer-profile:hover {
+    background: #f0f9ff;
+    text-decoration: none;
+}
+
+.customer-profile-active {
+    background: #f0f9ff;
+}
+
+.customer-profile-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.customer-profile-name span {
+    font-size: 11px;
+    color: #777080;
+    line-height: 1.2;
+}
+
+.customer-profile-name strong {
+    font-size: 13px;
+    color: #172033;
+    line-height: 1.2;
 }
 
  

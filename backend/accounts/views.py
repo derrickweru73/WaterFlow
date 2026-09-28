@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -5,7 +6,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile
-from .serializers import RegisterSerializer, ManagementUserProfileSerializer
+from .serializers import (
+    RegisterSerializer,
+    ManagementUserProfileSerializer,
+    CustomerProfileSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -56,6 +61,21 @@ class LogoutView(APIView):
         )
 
 
+class CustomerProfileView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomerProfileSerializer
+
+    def get_object(self):
+        profile, created = UserProfile.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                "role": UserProfile.Role.CUSTOMER,
+            },
+        )
+
+        return profile
+
+
 class ManagementUserProfileListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ManagementUserProfileSerializer
@@ -67,7 +87,9 @@ class ManagementUserProfileListView(generics.ListAPIView):
         if self.request.user.profile.role != UserProfile.Role.MANAGEMENT:
             return UserProfile.objects.none()
 
-        return UserProfile.objects.select_related("user").order_by("user__username")
+        return UserProfile.objects.select_related("user").order_by(
+            "user__username"
+        )
 
 
 class ManagementUserProfileUpdateView(generics.UpdateAPIView):

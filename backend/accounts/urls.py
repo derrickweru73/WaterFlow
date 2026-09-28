@@ -6,6 +6,7 @@ from .views import (
     RegisterView,
     ProtectedTestView,
     LogoutView,
+    CustomerProfileView,
     ManagementUserProfileListView,
     ManagementUserProfileUpdateView,
 )
@@ -18,6 +19,8 @@ urlpatterns = [
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
     path("protected/", ProtectedTestView.as_view(), name="protected"),
+
+    path("profile/", CustomerProfileView.as_view(), name="customer-profile"),
 
     path("logout/", LogoutView.as_view(), name="logout"),
 

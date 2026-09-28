@@ -33,7 +33,6 @@ function Payment() {
 
     const token = localStorage.getItem("access_token");
 
-    // User must be logged in before payment
     if (!token) {
       navigate("/login", {
         replace: true,
@@ -71,22 +70,38 @@ function Payment() {
         try {
           attempts += 1;
 
-          const orderResponse = await api.get(
-            `/my-orders/${order.id}/`,
-          );
+          const orderResponse = await api.get(`/my-orders/${order.id}/`);
 
           const updatedOrder = orderResponse.data;
 
-          if (
-            updatedOrder.payment_status === "COMPLETED" ||
-            updatedOrder.payment_status === "Completed"
-          ) {
-            setMessage(
-              "Payment successful! Redirecting to your order...",
-            );
+          console.log("Updated order status:", updatedOrder);
+
+          const paymentStatus = String(updatedOrder.payment_status || "")
+            .trim()
+            .toUpperCase();
+
+          const orderStatus = String(updatedOrder.status || "")
+            .trim()
+            .toUpperCase();
+
+          // M-Pesa payment is confirmed
+          const paymentSuccessful =
+            paymentStatus === "COMPLETED" ||
+            paymentStatus === "COMPLETE" ||
+            paymentStatus === "PAID" ||
+            orderStatus === "PAID" ||
+            orderStatus === "PROCESSING" ||
+            orderStatus === "ASSIGNED" ||
+            orderStatus === "OUT FOR DELIVERY" ||
+            orderStatus === "OUT_FOR_DELIVERY" ||
+            orderStatus === "DELIVERED";
+
+          if (paymentSuccessful) {
+            setMessage("Payment successful! Redirecting to your order...");
 
             setTimeout(() => {
               navigate("/orders", {
+                replace: true,
                 state: {
                   orderId: order.id,
                 },
@@ -96,15 +111,20 @@ function Payment() {
             return;
           }
 
-          if (
-            updatedOrder.payment_status === "FAILED" ||
-            updatedOrder.payment_status === "Failed"
-          ) {
-            setMessage("Payment failed. Please try again.");
+          // Payment was rejected or failed
+          const paymentFailed =
+            paymentStatus === "FAILED" ||
+            paymentStatus === "CANCELLED" ||
+            paymentStatus === "CANCELED" ||
+            orderStatus === "CANCELLED";
+
+          if (paymentFailed) {
+            setMessage("Payment failed or was cancelled. Please try again.");
             setPaying(false);
             return;
           }
 
+          // Continue checking while M-Pesa processes the payment
           if (attempts < maxAttempts) {
             setTimeout(checkPaymentStatus, 3000);
           } else {
@@ -119,6 +139,7 @@ function Payment() {
           if (error.response?.status === 401) {
             localStorage.removeItem("access_token");
             localStorage.removeItem("refresh_token");
+            localStorage.removeItem("username");
 
             navigate("/login", {
               replace: true,
@@ -130,13 +151,18 @@ function Payment() {
             return;
           }
 
-          setMessage(
-            "Unable to check payment status. Please check your order.",
-          );
-          setPaying(false);
+          if (attempts < maxAttempts) {
+            setTimeout(checkPaymentStatus, 3000);
+          } else {
+            setMessage(
+              "Unable to confirm your payment. Please check your order status.",
+            );
+            setPaying(false);
+          }
         }
       };
 
+      // Give M-Pesa a few seconds before checking the order
       setTimeout(checkPaymentStatus, 3000);
     } catch (error) {
       console.error("Payment error:", error);
@@ -144,6 +170,7 @@ function Payment() {
       if (error.response?.status === 401) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("username");
 
         navigate("/login", {
           replace: true,
@@ -169,10 +196,7 @@ function Payment() {
     return (
       <div className="products-page">
         <div className="products-container">
-          <CustomerHeader
-            returnTo="/checkout"
-            returnLabel="Return to Checkout"
-          />
+          <CustomerHeader />
 
           <section className="products-intro">
             <h2>Payment</h2>
@@ -194,60 +218,40 @@ function Payment() {
   return (
     <div className="products-page">
       <div className="products-container">
-        <CustomerHeader
-          returnTo="/checkout"
-          returnLabel="Return to Checkout"
-        />
+        <CustomerHeader />
 
         <section className="products-intro">
           <h2>Payment</h2>
           <p>Complete your order using M-Pesa.</p>
         </section>
 
-        {message && (
-          <p className="products-message">
-            {message}
-          </p>
-        )}
+        {message && <p className="products-message">{message}</p>}
 
         <div className="product-card">
           <h3>M-Pesa Payment</h3>
 
           <form onSubmit={handlePayment}>
             <div className="form-group">
-              <label htmlFor="phoneNumber">
-                M-Pesa Phone Number
-              </label>
+              <label htmlFor="phoneNumber">M-Pesa Phone Number</label>
 
               <input
                 id="phoneNumber"
                 type="tel"
                 value={phoneNumber}
-                onChange={(e) =>
-                  setPhoneNumber(e.target.value)
-                }
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="e.g. 0712345678"
                 required
                 disabled={paying}
               />
             </div>
 
-            <button
-              type="submit"
-              className="product-button"
-              disabled={paying}
-            >
-              {paying
-                ? "Waiting for payment..."
-                : "Pay with M-Pesa"}
+            <button type="submit" className="product-button" disabled={paying}>
+              {paying ? "Waiting for payment..." : "Pay with M-Pesa"}
             </button>
           </form>
         </div>
 
-        <div
-          className="product-card"
-          style={{ marginTop: "25px" }}
-        >
+        <div className="product-card" style={{ marginTop: "25px" }}>
           <h3>Order Summary</h3>
 
           <p className="product-description">
@@ -267,10 +271,7 @@ function Payment() {
                 {item.product_name} × {item.quantity}
               </span>
 
-              <strong>
-                KSh{" "}
-                {Number(item.subtotal || 0).toLocaleString()}
-              </strong>
+              <strong>KSh {Number(item.subtotal || 0).toLocaleString()}</strong>
             </div>
           ))}
 
@@ -278,12 +279,12 @@ function Payment() {
 
           <h3>
             Total: KSh{" "}
-            {Number(order.total || 0).toLocaleString()}
+            {Number(order.total_amount ?? order.total ?? 0).toLocaleString()}
           </h3>
 
           <p className="product-description">
-            You will receive an M-Pesa payment prompt on your
-            phone after clicking the payment button.
+            You will receive an M-Pesa payment prompt on your phone after
+            clicking the payment button.
           </p>
         </div>
       </div>
@@ -292,4 +293,3 @@ function Payment() {
 }
 
 export default Payment;
- 

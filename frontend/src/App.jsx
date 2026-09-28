@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Subscriptions from "./pages/Subscriptions";
 import DriverDashboard from "./pages/DriverDashboard";
+import CustomerProfile from "./pages/CustomerProfile";
 
 import ManagementDashboard from "./pages/ManagementDashboard";
 import ManagementProducts from "./pages/ManagementProducts";
@@ -35,6 +36,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/profile" element={<CustomerProfile />} />
         <Route
           path="/management/delivery-zones"
           element={<ManagementDeliveryZones />}

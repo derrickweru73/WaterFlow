@@ -241,7 +241,7 @@ function CustomerHeader({ showLogout = false }) {
 
         <div className="customer-header-right">
           {customerName && (
-            <div className="customer-profile">
+            <Link to="/profile" className="customer-profile">
               <div className="customer-avatar">
                 {customerName.charAt(0).toUpperCase()}
               </div>
@@ -250,7 +250,7 @@ function CustomerHeader({ showLogout = false }) {
                 <span>Welcome</span>
                 <strong>{customerName}</strong>
               </div>
-            </div>
+            </Link>
           )}
 
           {showLogout && (

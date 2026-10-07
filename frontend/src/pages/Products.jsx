@@ -14,6 +14,43 @@ import CustomerHeader from "../components/CustomerHeader";
 import "./Products.css";
 
 const GUEST_CART_KEY = "waterflow_guest_cart";
+const getProductVisual = (productName = "") => {
+  const name = productName.toLowerCase();
+
+  if (name.includes("300ml")) {
+    return "small-bottle";
+  }
+
+  if (name.includes("500ml")) {
+    return "medium-bottle";
+  }
+
+  if (name.includes("1l")) {
+    return "one-litre-bottle";
+  }
+
+  if (name.includes("5l")) {
+    return "five-litre-container";
+  }
+
+  if (name.includes("10l")) {
+    return "ten-litre-container";
+  }
+
+  if (name.includes("15l")) {
+    return "fifteen-litre-container";
+  }
+
+  if (name.includes("20l")) {
+    return "twenty-litre-container";
+  }
+
+  if (name.includes("25l")) {
+    return "twenty-five-litre-container";
+  }
+
+  return "water-container";
+};
 
 function Products() {
   const location = useLocation();
@@ -256,8 +293,19 @@ function Products() {
                 return (
                   <article className="customer-product-card" key={product.id}>
                     <div className="product-visual">
-                      <div className="product-water-icon">
-                        <Droplets size={48} strokeWidth={1.4} />
+                      <div className="product-package">
+                        <div
+                          className={`water-package ${getProductVisual(product.name)}`}
+                        >
+                          <div className="package-cap"></div>
+                          <div className="package-neck"></div>
+                          <div className="package-body">
+                            <div className="package-label">
+                              <span>WATER</span>
+                              <small>WaterFlow</small>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       {stock > 0 ? (

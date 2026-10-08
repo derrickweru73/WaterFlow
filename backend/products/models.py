@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -18,6 +19,11 @@ class Product(models.Model):
         Category,
         on_delete=models.CASCADE,
         related_name="products"
+    )
+    image = models.ImageField(
+        upload_to="products/",
+        blank=True,
+        null=True
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

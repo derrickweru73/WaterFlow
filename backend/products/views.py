@@ -3,6 +3,8 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, status
+from rest_framework.parsers import FormParser, MultiPartParser
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -85,12 +87,14 @@ class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsManagement]
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class ProductUpdateView(generics.UpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsManagement]
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class ProductDeleteView(generics.DestroyAPIView):

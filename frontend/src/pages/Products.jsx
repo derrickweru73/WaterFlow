@@ -13,43 +13,43 @@ import api from "../services/api";
 import CustomerHeader from "../components/CustomerHeader";
 import "./Products.css";
 
+import image300ml from "../assets/product-images/300ml.png";
+import image500ml from "../assets/product-images/500ml.png";
+import image5l from "../assets/product-images/5l.png";
+import image10l from "../assets/product-images/10l.png";
+import image18_9l from "../assets/product-images/18.9l.png";
+import image25l from "../assets/product-images/25l.png";
+
 const GUEST_CART_KEY = "waterflow_guest_cart";
-const getProductVisual = (productName = "") => {
+
+const getProductImage = (productName = "") => {
   const name = productName.toLowerCase();
 
   if (name.includes("300ml")) {
-    return "small-bottle";
+    return image300ml;
   }
 
   if (name.includes("500ml")) {
-    return "medium-bottle";
-  }
-
-  if (name.includes("1l")) {
-    return "one-litre-bottle";
-  }
-
-  if (name.includes("5l")) {
-    return "five-litre-container";
-  }
-
-  if (name.includes("10l")) {
-    return "ten-litre-container";
-  }
-
-  if (name.includes("15l")) {
-    return "fifteen-litre-container";
-  }
-
-  if (name.includes("20l")) {
-    return "twenty-litre-container";
+    return image500ml;
   }
 
   if (name.includes("25l")) {
-    return "twenty-five-litre-container";
+    return image25l;
   }
 
-  return "water-container";
+  if (name.includes("18.9l") || name.includes("20l")) {
+    return image18_9l;
+  }
+
+  if (name.includes("10l")) {
+    return image10l;
+  }
+
+  if (name.includes("5l")) {
+    return image5l;
+  }
+
+  return image5l;
 };
 
 function Products() {
@@ -293,20 +293,11 @@ function Products() {
                 return (
                   <article className="customer-product-card" key={product.id}>
                     <div className="product-visual">
-                      <div className="product-package">
-                        <div
-                          className={`water-package ${getProductVisual(product.name)}`}
-                        >
-                          <div className="package-cap"></div>
-                          <div className="package-neck"></div>
-                          <div className="package-body">
-                            <div className="package-label">
-                              <span>WATER</span>
-                              <small>WaterFlow</small>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <img
+                        src={getProductImage(product.name)}
+                        alt={product.name}
+                        className="product-image"
+                      />
 
                       {stock > 0 ? (
                         <span className="stock-badge">
@@ -413,3 +404,4 @@ function Products() {
 }
 
 export default Products;
+ 

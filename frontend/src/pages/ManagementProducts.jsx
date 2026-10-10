@@ -28,6 +28,7 @@ function ManagementProducts() {
     price: "",
     category_id: "",
     is_active: true,
+    image: null,
   });
 
   const loadData = async () => {
@@ -86,8 +87,10 @@ function ManagementProducts() {
         await loadData();
       } catch (err) {
         console.error("Management authentication error:", err);
+
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+
         navigate("/login");
       }
     };
@@ -122,6 +125,7 @@ function ManagementProducts() {
       price: "",
       category_id: "",
       is_active: true,
+      image: null,
     });
 
     setMessage("");
@@ -138,6 +142,7 @@ function ManagementProducts() {
       price: product.price ?? "",
       category_id: product.category?.id ? String(product.category.id) : "",
       is_active: product.is_active !== false,
+      image: null,
     });
 
     setMessage("");
@@ -156,11 +161,16 @@ function ManagementProducts() {
   };
 
   const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
+    const { name, value, type, checked, files } = event.target;
 
     setForm((previous) => ({
       ...previous,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "file"
+            ? files[0] || null
+            : value,
     }));
   };
 
@@ -189,13 +199,17 @@ function ManagementProducts() {
       return;
     }
 
-    const payload = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      price: Number(form.price),
-      category_id: Number(form.category_id),
-      is_active: form.is_active,
-    };
+    const payload = new FormData();
+
+    payload.append("name", form.name.trim());
+    payload.append("description", form.description.trim());
+    payload.append("price", Number(form.price));
+    payload.append("category_id", Number(form.category_id));
+    payload.append("is_active", form.is_active);
+
+    if (form.image) {
+      payload.append("image", form.image);
+    }
 
     try {
       if (editingProduct) {
@@ -217,6 +231,7 @@ function ManagementProducts() {
         price: "",
         category_id: "",
         is_active: true,
+        image: null,
       });
 
       await loadData();
@@ -473,6 +488,42 @@ function ManagementProducts() {
                   rows="3"
                   disabled={saving}
                 />
+              </div>
+
+              <div className="products-form-group">
+                <label htmlFor="product-image">Product Image</label>
+
+                {editingProduct?.image ? (
+                  <div className="current-product-image">
+                    <img src={editingProduct.image} alt={editingProduct.name} />
+
+                    <div className="current-product-image-info">
+                      <strong>Current image</strong>
+                      <span>
+                        This is the image currently assigned to this product.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="no-product-image">
+                    <span>No image uploaded yet.</span>
+                  </div>
+                )}
+
+                <input
+                  id="product-image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleChange}
+                  disabled={saving}
+                />
+
+                {editingProduct?.image && !form.image && (
+                  <small>
+                    Current image will be kept unless you select a new one.
+                  </small>
+                )}
               </div>
 
               <div className="products-form-row">

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import InfoPages from "./pages/InfoPages";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -85,6 +85,12 @@ function App() {
           path="/management/subscriptions"
           element={<ManagementSubscriptions />}
         />
+        {/* WaterFlow information and support pages */}
+        <Route path="/about" element={<InfoPages />} />
+        <Route path="/mission" element={<InfoPages />} />
+        <Route path="/why-waterflow" element={<InfoPages />} />
+        <Route path="/contact" element={<InfoPages />} />
+        <Route path="/help-support" element={<InfoPages />} />
       </Routes>
     </BrowserRouter>
   );

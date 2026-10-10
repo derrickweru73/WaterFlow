@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CustomerFooter from "../components/CustomerFooter";
 import { Link, useLocation } from "react-router-dom";
 import {
   ArrowRight,
@@ -22,7 +23,7 @@ import image25l from "../assets/product-images/25l.png";
 
 const GUEST_CART_KEY = "waterflow_guest_cart";
 
-const getProductImage = (productName = "") => {
+const getFallbackProductImage = (productName = "") => {
   const name = productName.toLowerCase();
 
   if (name.includes("300ml")) {
@@ -50,6 +51,14 @@ const getProductImage = (productName = "") => {
   }
 
   return image5l;
+};
+
+const getProductImage = (product) => {
+  if (product?.image) {
+    return product.image;
+  }
+
+  return getFallbackProductImage(product?.name);
 };
 
 function Products() {
@@ -203,6 +212,7 @@ function Products() {
 
             <div className="hero-delivery-card">
               <Truck size={20} />
+
               <div>
                 <strong>Reliable delivery</strong>
                 <span>To your doorstep</span>
@@ -216,10 +226,12 @@ function Products() {
             <div className="quick-action-icon">
               <Package size={21} />
             </div>
+
             <div className="quick-action-text">
               <strong>My Orders</strong>
               <span>View and track your orders</span>
             </div>
+
             <ArrowRight size={18} />
           </Link>
 
@@ -227,10 +239,12 @@ function Products() {
             <div className="quick-action-icon">
               <ShoppingCart size={21} />
             </div>
+
             <div className="quick-action-text">
               <strong>Shopping Cart</strong>
               <span>Review your selected items</span>
             </div>
+
             <ArrowRight size={18} />
           </Link>
 
@@ -238,10 +252,12 @@ function Products() {
             <div className="quick-action-icon">
               <Bell size={21} />
             </div>
+
             <div className="quick-action-text">
               <strong>Notifications</strong>
               <span>Stay updated on your orders</span>
             </div>
+
             <ArrowRight size={18} />
           </Link>
         </section>
@@ -271,7 +287,9 @@ function Products() {
           {!loading && products.length === 0 && !message && (
             <div className="products-empty">
               <Droplets size={38} />
+
               <h3>No products available</h3>
+
               <p>
                 There are currently no water products available. Please check
                 again later.
@@ -294,7 +312,7 @@ function Products() {
                   <article className="customer-product-card" key={product.id}>
                     <div className="product-visual">
                       <img
-                        src={getProductImage(product.name)}
+                        src={getProductImage(product)}
                         alt={product.name}
                         className="product-image"
                       />
@@ -323,6 +341,7 @@ function Products() {
                       <div className="customer-product-bottom">
                         <div>
                           <span className="price-label">Price</span>
+
                           <strong className="customer-product-price">
                             KSh {Number(product.price).toLocaleString()}
                           </strong>
@@ -360,6 +379,7 @@ function Products() {
             <div className="trust-icon">
               <Droplets size={21} />
             </div>
+
             <div>
               <strong>Quality Water</strong>
               <span>Clean and reliable drinking water</span>
@@ -370,6 +390,7 @@ function Products() {
             <div className="trust-icon">
               <Truck size={21} />
             </div>
+
             <div>
               <strong>Doorstep Delivery</strong>
               <span>Get your order delivered to you</span>
@@ -380,6 +401,7 @@ function Products() {
             <div className="trust-icon">
               <CheckCircle2 size={21} />
             </div>
+
             <div>
               <strong>Easy Ordering</strong>
               <span>Order, pay and track in one place</span>
@@ -388,20 +410,9 @@ function Products() {
         </section>
       </main>
 
-      <footer className="customer-footer">
-        <div>
-          <strong>
-            <Droplets size={17} />
-            WaterFlow
-          </strong>
-          <span>Water delivery made simple.</span>
-        </div>
-
-        <span>© 2026 WaterFlow</span>
-      </footer>
+      <CustomerFooter />
     </div>
   );
 }
 
 export default Products;
- 

@@ -1,0 +1,195 @@
+.waterflow-footer {
+    width: 100%;
+    margin-top: 35px;
+    background: #0f2438;
+    color: #ffffff;
+    font-family: inherit;
+}
+
+.waterflow-footer-container {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 30px 30px 25px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.9fr 1.3fr;
+    gap: 28px;
+    box-sizing: border-box;
+}
+
+.waterflow-footer-brand {
+    min-width: 0;
+}
+
+.waterflow-footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.waterflow-footer-logo-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.waterflow-footer-brand>p {
+    max-width: 290px;
+    margin: 0 0 12px;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.waterflow-footer-socials {
+    margin-top: 10px;
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.waterflow-footer-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.waterflow-footer-column h3 {
+    margin: 0 0 6px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.waterflow-footer-column h3::after {
+    content: "";
+    display: block;
+    width: 28px;
+    height: 2px;
+    margin-top: 6px;
+    border-radius: 5px;
+    background: #38bdf8;
+}
+
+.waterflow-footer-column>a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1.5;
+    transition: color 0.2s ease;
+}
+
+.waterflow-footer-column>a:hover {
+    color: #7dd3fc;
+}
+
+.waterflow-footer-contact p {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.waterflow-footer-contact p svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #38bdf8;
+}
+
+.waterflow-footer-contact a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.waterflow-footer-column .waterflow-footer-contact-link {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    color: #7dd3fc;
+    font-weight: 700;
+}
+
+.waterflow-footer-bottom {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 12px 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.waterflow-footer-bottom p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .waterflow-footer-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 25px;
+        padding: 28px 24px 22px;
+    }
+
+    .waterflow-footer-bottom {
+        padding: 12px 24px;
+    }
+}
+
+@media (max-width: 560px) {
+    .waterflow-footer {
+        margin-top: 25px;
+    }
+
+    .waterflow-footer-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 25px 18px;
+        padding: 25px 18px 20px;
+    }
+
+    .waterflow-footer-brand {
+        grid-column: 1 / -1;
+    }
+
+    .waterflow-footer-brand>p {
+        max-width: 100%;
+    }
+
+    .waterflow-footer-logo {
+        font-size: 20px;
+    }
+
+    .waterflow-footer-column {
+        gap: 8px;
+    }
+
+    .waterflow-footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 18px;
+        gap: 5px;
+    }
+}

@@ -177,5 +177,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://water-flow-x4wn.vercel.app",
     "https://water-flow-x4wn-git-main-derrick-weru-s-projects.vercel.app",
+    "https://water-flow-x4wn-66mg00se9-derrick-weru-s-projects.vercel.app",
 ]
  

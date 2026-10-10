@@ -18,7 +18,6 @@ CheckCircle,
 HelpCircle,
 } from "lucide-react";
 
-import CustomerFooter from "../components/CustomerFooter";
 import "./InfoPages.css";
 
 const pageContent = {
@@ -483,7 +482,7 @@ return ( <main className="info-page"> <section className="info-hero"> <div class
     </section>
   )}
 
-  <CustomerFooter />
+   
 </main>
  
 );

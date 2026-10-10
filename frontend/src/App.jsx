@@ -1,6 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import CustomerLayout from "./CustomerLayout";
-
 import InfoPages from "./pages/InfoPages";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
@@ -27,6 +25,7 @@ import ManagementReports from "./pages/ManagementReports";
 import ManagementSubscriptions from "./pages/ManagementSubscriptions";
 import ManagementDeliveryZones from "./pages/ManagementDeliveryZones";
 import ManagementUserProfiles from "./pages/ManagementUserProfiles";
+import CustomerLayout from "./CustomerLayout";
 
 function CustomerPage({ children }) {
   return <CustomerLayout>{children}</CustomerLayout>;
@@ -36,127 +35,75 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Customer routes */}
         <Route path="/" element={<Navigate to="/products" replace />} />
-
         <Route
           path="/products"
           element={<CustomerPage><Products /></CustomerPage>}
         />
-
         <Route
           path="/cart"
           element={<CustomerPage><Cart /></CustomerPage>}
         />
-
         <Route
           path="/checkout"
           element={<CustomerPage><Checkout /></CustomerPage>}
         />
-
         <Route
           path="/payment"
           element={<CustomerPage><Payment /></CustomerPage>}
         />
-
         <Route
           path="/orders"
           element={<CustomerPage><Orders /></CustomerPage>}
         />
-
         <Route
           path="/profile"
           element={<CustomerPage><CustomerProfile /></CustomerPage>}
         />
-
+        <Route
+          path="/management/delivery-zones"
+          element={<ManagementDeliveryZones />}
+        />
         <Route
           path="/subscriptions"
           element={<CustomerPage><Subscriptions /></CustomerPage>}
         />
-
         <Route
           path="/notifications"
           element={<CustomerPage><Notifications /></CustomerPage>}
         />
-
         <Route
           path="/login"
           element={<CustomerPage><Login /></CustomerPage>}
         />
-
         <Route
           path="/register"
           element={<CustomerPage><Register /></CustomerPage>}
         />
 
-        <Route
-          path="/about"
-          element={<CustomerPage><InfoPages /></CustomerPage>}
-        />
+        {/* Driver routes */}
+        <Route path="/driver/dashboard" element={<DriverDashboard />} />
 
-        <Route
-          path="/mission"
-          element={<CustomerPage><InfoPages /></CustomerPage>}
-        />
+        {/* Management routes */}
+        <Route path="/management/dashboard" element={<ManagementDashboard />} />
 
-        <Route
-          path="/why-waterflow"
-          element={<CustomerPage><InfoPages /></CustomerPage>}
-        />
+        <Route path="/management/products" element={<ManagementProducts />} />
 
-        <Route
-          path="/contact"
-          element={<CustomerPage><InfoPages /></CustomerPage>}
-        />
+        <Route path="/management/orders" element={<ManagementOrders />} />
 
-        <Route
-          path="/help-support"
-          element={<CustomerPage><InfoPages /></CustomerPage>}
-        />
-
-        <Route
-          path="/driver/dashboard"
-          element={<DriverDashboard />}
-        />
-
-        <Route
-          path="/management/dashboard"
-          element={<ManagementDashboard />}
-        />
-
-        <Route
-          path="/management/products"
-          element={<ManagementProducts />}
-        />
-
-        <Route
-          path="/management/orders"
-          element={<ManagementOrders />}
-        />
-
-        <Route
-          path="/management/inventory"
-          element={<ManagementInventory />}
-        />
+        <Route path="/management/inventory" element={<ManagementInventory />} />
 
         <Route
           path="/management/deliveries"
           element={<ManagementDeliveries />}
         />
 
-        <Route
-          path="/management/drivers"
-          element={<ManagementDrivers />}
-        />
+        <Route path="/management/drivers" element={<ManagementDrivers />} />
 
-        <Route
-          path="/management/payments"
-          element={<ManagementPayments />}
-        />
+        <Route path="/management/payments" element={<ManagementPayments />} />
 
-        <Route
-          path="/management/customers"
-          element={<ManagementCustomers />}
-        />
+        <Route path="/management/customers" element={<ManagementCustomers />} />
 
         <Route
           path="/management/user-profiles"
@@ -168,19 +115,33 @@ function App() {
           element={<ManagementNotifications />}
         />
 
-        <Route
-          path="/management/reports"
-          element={<ManagementReports />}
-        />
+        <Route path="/management/reports" element={<ManagementReports />} />
 
         <Route
           path="/management/subscriptions"
           element={<ManagementSubscriptions />}
         />
 
+        {/* WaterFlow information and support pages */}
         <Route
-          path="/management/delivery-zones"
-          element={<ManagementDeliveryZones />}
+          path="/about"
+          element={<CustomerPage><InfoPages /></CustomerPage>}
+        />
+        <Route
+          path="/mission"
+          element={<CustomerPage><InfoPages /></CustomerPage>}
+        />
+        <Route
+          path="/why-waterflow"
+          element={<CustomerPage><InfoPages /></CustomerPage>}
+        />
+        <Route
+          path="/contact"
+          element={<CustomerPage><InfoPages /></CustomerPage>}
+        />
+        <Route
+          path="/help-support"
+          element={<CustomerPage><InfoPages /></CustomerPage>}
         />
       </Routes>
     </BrowserRouter>

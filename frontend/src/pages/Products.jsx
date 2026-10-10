@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import CustomerFooter from "../components/CustomerFooter";
 import { Link, useLocation } from "react-router-dom";
 import {
   ArrowRight,
@@ -410,7 +409,7 @@ function Products() {
         </section>
       </main>
 
-      <CustomerFooter />
+      
     </div>
   );
 }
